@@ -1,3 +1,4 @@
+
 (function () {
 'use strict';
 window.originalHandleProductFormSubmit = null;
@@ -383,6 +384,13 @@ function clearProductFormImages() {
             preview.style.display = "none";
         }
     });
+
+    // Los botones de "quitar imagen" solo tienen sentido mientras haya una
+    // imagen puesta — se ocultan junto con la vista previa.
+    ["remove-image-1", "remove-image-2", "remove-image-3"].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = "none";
+    });
     
 
     const fileInputs = ["image-upload-1", "image-upload-2", "image-upload-3"];
@@ -391,6 +399,33 @@ function clearProductFormImages() {
         if (fileInput) fileInput.value = "";
     });
 }
+
+// Quita una sola imagen del formulario (por si el admin se equivocó al
+// subir), sin tocar las otras dos ni el resto del producto. Solo limpia
+// el estado local del formulario — el borrado real en Storage/Drive (si
+// ya se había llegado a subir el archivo) ocurre al guardar, ya que
+// actualizarProductoZNR compara contra la imagen anterior y borra la que
+// cambió/desapareció.
+function removeAdminImage(slot) {
+    const textInput = document.getElementById(`product-image${slot}`);
+    if (textInput) textInput.value = "";
+
+    const preview = document.getElementById(`preview-image-upload-${slot}`);
+    if (preview) {
+        preview.removeAttribute("src");
+        preview.style.display = "none";
+    }
+
+    const removeBtn = document.getElementById(`remove-image-${slot}`);
+    if (removeBtn) removeBtn.style.display = "none";
+
+    const fileInput = document.getElementById(`image-upload-${slot}`);
+    if (fileInput) fileInput.value = "";
+
+    const progress = document.getElementById(`progress-image-upload-${slot}`);
+    if (progress) progress.style.width = "0%";
+}
+window.removeAdminImage = removeAdminImage;
 
 function fillFormForEdit(product) {
 
@@ -426,6 +461,8 @@ function fillFormForEdit(product) {
             preview1.src = product.Imagen1;
             preview1.style.display = "block";
         }
+        const removeBtn1 = document.getElementById("remove-image-1");
+        if (removeBtn1) removeBtn1.style.display = "flex";
     }
     
     if (product.Imagen2) {
@@ -434,6 +471,8 @@ function fillFormForEdit(product) {
             preview2.src = product.Imagen2;
             preview2.style.display = "block";
         }
+        const removeBtn2 = document.getElementById("remove-image-2");
+        if (removeBtn2) removeBtn2.style.display = "flex";
     }
     
     if (product.Imagen3) {
@@ -442,6 +481,8 @@ function fillFormForEdit(product) {
             preview3.src = product.Imagen3;
             preview3.style.display = "block";
         }
+        const removeBtn3 = document.getElementById("remove-image-3");
+        if (removeBtn3) removeBtn3.style.display = "flex";
     }
     
 
@@ -578,6 +619,15 @@ function setupImageUpload(fileInputId, textInputId, previewId, progressId) {
         const slotMatch = fileInputId.match(/\d+$/);
         const startSlot = slotMatch ? parseInt(slotMatch[0]) : 1;
 
+        // Mostrar el botón de "quitar" en cuanto se eligen archivos, en los
+        // mismos slots donde uploadImagesInQueue va a pintar la miniatura
+        // (startSlot, startSlot+1, ... hasta el slot 3 como tope).
+        const numSlots = Math.min(files.length, 3 - startSlot + 1);
+        for (let i = 0; i < numSlots; i++) {
+            const btn = document.getElementById(`remove-image-${startSlot + i}`);
+            if (btn) btn.style.display = "flex";
+        }
+
         // Función de subida para admin (usa token de admin)
         const adminUploadFn = async (file, slot) => {
             // Usamos la función existente uploadImageToDrive que ya tiene la lógica de compresión y token
@@ -666,6 +716,9 @@ function clearImageUploads() {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
+    document.querySelectorAll(".admin-remove-img-btn").forEach(btn => {
+        btn.style.display = "none";
+    });
     const extraPreviews = document.querySelectorAll(".custom-preview"); 
   extraPreviews.forEach(preview => {
     preview.style.backgroundImage = "none";
