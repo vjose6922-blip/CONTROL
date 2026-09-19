@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -48,6 +49,19 @@
 <link rel="apple-touch-icon" href="logo.svg">
 <meta name="mobile-web-app-capable" content="yes">
  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Botón "quitar imagen" por slot (Imagen 1/2/3) — para poder deshacer una
+   subida por error sin tener que borrar/recrear todo el producto. */
+.image-preview-wrap{ position:relative; display:inline-block; }
+.admin-remove-img-btn{
+  display:none; position:absolute; top:-8px; right:-8px;
+  width:22px; height:22px; border-radius:50%; border:none;
+  background:#e53935; color:#fff; font-size:14px; line-height:1;
+  align-items:center; justify-content:center; cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.35); z-index:2;
+}
+.admin-remove-img-btn:hover{ background:#c62828; }
+</style>
 </head>
 <body class="admin-body">
  <div id="global-loader" class="global-loader hidden">
@@ -276,7 +290,10 @@
  <div class="image-upload-area">
 <input type="file" id="image-upload-1" accept="image/*" multiple>
  <div class="image-preview-container">
+ <div class="image-preview-wrap">
  <img id="preview-image-upload-1" class="image-preview" style="display: none;">
+ <button type="button" class="admin-remove-img-btn" id="remove-image-1" onclick="removeAdminImage(1)" title="Quitar esta imagen">✕</button>
+ </div>
  <input type="text" id="product-image1" name="Imagen1" class="image-url-input" placeholder="URL de la imagen" readonly>
  </div>
  <div class="progress-bar">
@@ -289,7 +306,10 @@
  <div class="image-upload-area">
 <input type="file" id="image-upload-2" accept="image/*" multiple>
  <div class="image-preview-container">
+ <div class="image-preview-wrap">
  <img id="preview-image-upload-2" class="image-preview" style="display: none;">
+ <button type="button" class="admin-remove-img-btn" id="remove-image-2" onclick="removeAdminImage(2)" title="Quitar esta imagen">✕</button>
+ </div>
  <input type="text" id="product-image2" name="Imagen2" class="image-url-input" placeholder="URL de la imagen" readonly>
  </div>
  <div class="progress-bar">
@@ -302,7 +322,10 @@
  <div class="image-upload-area">
 <input type="file" id="image-upload-3" accept="image/*" multiple>
  <div class="image-preview-container">
+ <div class="image-preview-wrap">
  <img id="preview-image-upload-3" class="image-preview" style="display: none;">
+ <button type="button" class="admin-remove-img-btn" id="remove-image-3" onclick="removeAdminImage(3)" title="Quitar esta imagen">✕</button>
+ </div>
  <input type="text" id="product-image3" name="Imagen3" class="image-url-input" placeholder="URL de la imagen" readonly>
  </div>
  <div class="progress-bar">
