@@ -3,7 +3,7 @@ const DYNAMIC_CACHE = 'zr-admin-dynamic-v1';
 
 const STATIC_ASSETS = [
   './',
-  'admin.html',
+  'index.html',
   'notificaciones.html',
   'Tools.html',
   'styles.css',

@@ -84,7 +84,7 @@ document.head.appendChild(link);
 const scriptMap = {
 'index.html': 'script.js',
 'looks.html': 'looks.js',
-'admin.html': 'admin.js',
+'index.html': 'admin.js',
 'notificaciones.html': null
 };
 const scriptName = scriptMap[pageUrl.split('/').pop()];

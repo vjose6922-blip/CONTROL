@@ -2,7 +2,7 @@
   "name": "Z&R Admin",
   "short_name": "Z&R Admin",
   "description": "Panel de administración de Z&R",
-  "start_url": "admin.html",
+  "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

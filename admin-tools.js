@@ -1,4 +1,4 @@
-// Estilos compartidos de admin.html / Tools.html / notificaciones.html (inyectados por JS para no usar un .css aparte)
+// Estilos compartidos de index.html / Tools.html / notificaciones.html (inyectados por JS para no usar un .css aparte)
 document.head.insertAdjacentHTML('beforeend', `<style>
 :root {
   --modal-bg: #1a1a2e;
@@ -739,7 +739,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 [data-theme="light"] #theme-toggle .icon-sun { display: none; }
 [data-theme="light"] #theme-toggle .icon-moon { display: inline; }
 
-/* ===== admin.html / Tools.html: son oscuros por defecto, esto los aclara ===== */
+/* ===== index.html / Tools.html: son oscuros por defecto, esto los aclara ===== */
 [data-theme="light"] .admin-header {
   background: rgba(255, 255, 255, 0.95) !important;
   border-bottom-color: rgba(0, 0, 0, 0.08) !important;
@@ -2058,7 +2058,7 @@ window.eliminarCuentaVendedorAdmin = async function(uid, nombre) {
   }
 };
 
-// Toggle de tema claro/oscuro (botón #theme-toggle en admin.html, Tools.html y notificaciones.html)
+// Toggle de tema claro/oscuro (botón #theme-toggle en index.html, Tools.html y notificaciones.html)
 document.getElementById('theme-toggle')?.addEventListener('click', () => {
   const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
   document.documentElement.dataset.theme = next;
