@@ -1,5 +1,5 @@
 /* ============================================================
-   ZNR DevConsole (extendida + REPL con soporte CSP)
+   ZNR DevConsole (extendida, sin eval / sin REPL)
    ============================================================ */
 (function () {
   "use strict";
@@ -35,19 +35,6 @@
   var networkTypeFilter = { fetch: true, xhr: true, ws: true };
   var panelOpen = false;
   var currentTab = "console";
-
-  // ---------- Estado REPL ----------
-  var replCommands = [];            // cada entrada: { command, result, error? }
-  var replHistoryIndex = -1;
-  // Detección de CSP que bloquea eval
-  var evalBlocked = false;
-  try {
-    (0, eval)("1+1");
-  } catch (e) {
-    if (e instanceof EvalError || e.name === "EvalError") {
-      evalBlocked = true;
-    }
-  }
 
   // ---------- Utilidades ----------
   function ts() {
@@ -109,33 +96,21 @@
   });
 
   window.addEventListener("error", function (e) {
-
-  // Error de carga de un recurso (img, script, css, etc.)
-  if (e.target && e.target !== window) {
-
-    var url =
-      e.target.currentSrc ||
-      e.target.src ||
-      e.target.href ||
-      "";
-
-    var tag = e.target.tagName || "RESOURCE";
-
+    if (e.target && e.target !== window) {
+      var url = e.target.currentSrc || e.target.src || e.target.href || "";
+      var tag = e.target.tagName || "RESOURCE";
+      addConsoleEntry("error", [
+        tag + " resourceLoadError",
+        "No se pudo cargar <" + tag.toLowerCase() + ">: " + url
+      ]);
+      return;
+    }
     addConsoleEntry("error", [
-      tag + " resourceLoadError",
-      "No se pudo cargar <" + tag.toLowerCase() + ">: " + url
+      (e.message || "Error") +
+      (e.filename ? " @ " + e.filename + ":" + e.lineno : "")
     ]);
+  }, true);
 
-    return;
-  }
-
-  // Error normal de JavaScript
-  addConsoleEntry("error", [
-    (e.message || "Error") +
-    (e.filename ? " @ " + e.filename + ":" + e.lineno : "")
-  ]);
-
-}, true);
   window.addEventListener("unhandledrejection", function (e) {
     addConsoleEntry("error", ["Promise rechazada sin manejar:", e.reason]);
   });
@@ -290,7 +265,6 @@
 
   // ---------- UI: se construye solo cuando document.body ya existe ----------
   function buildUI() {
-    // Estilos
     var css = "\
       #znr-dc-btn{position:fixed;top:16px;right:16px;z-index:999;\
         width:48px;height:48px;border-radius:50%;background:#1e1e2e;color:#fff;\
@@ -344,16 +318,6 @@
       table.znr-table{width:100%;border-collapse:collapse;}\
       table.znr-table td,table.znr-table th{padding:3px 6px;border-bottom:1px solid #2a2a3d;text-align:left;}\
       table.znr-table th{color:#f39c12;font-weight:normal;}\
-      /* REPL */\
-      #znr-repl-container{display:flex;flex-direction:column;height:100%;}\
-      #znr-repl-input{background:#151521;border:1px solid #3a3a52;color:#eee;font-family:inherit;\
-        font-size:12px;padding:6px;resize:vertical;min-height:60px;width:100%;box-sizing:border-box;}\
-      #znr-repl-toolbar{margin:4px 0;display:flex;gap:6px;}\
-      #znr-repl-output{flex:1;overflow:auto;margin-top:6px;border-top:1px solid #2a2a3d;padding-top:6px;}\
-      .znr-repl-cmd{color:#5dade2;}\
-      .znr-repl-result{color:#e6e6e6;white-space:pre-wrap;word-break:break-all;padding-left:16px;}\
-      .znr-repl-error{color:#ff6b6b;white-space:pre-wrap;word-break:break-all;padding-left:16px;}\
-      .znr-repl-warn{color:#f4d03f;background:rgba(244,208,63,.1);padding:6px;border-radius:4px;margin-bottom:6px;}\
       ";
     var styleEl = document.createElement("style");
     styleEl.id = "znr-dc-style";
@@ -379,7 +343,6 @@
         '<button class="znr-tab" data-tab="idb">IndexedDB</button>' +
         '<button class="znr-tab" data-tab="perf">Rendimiento</button>' +
         '<button class="znr-tab" data-tab="info">Info</button>' +
-        '<button class="znr-tab" data-tab="repl">REPL</button>' +
         '<input class="znr-filter" id="znr-dc-search" placeholder="filtrar…" style="width:120px;">' +
         '<div class="znr-spacer"></div>' +
         '<button class="znr-btn-mini" id="znr-dc-clear">Limpiar</button>' +
@@ -408,7 +371,6 @@
     document.getElementById("znr-dc-clear").addEventListener("click", function () {
       if (currentTab === "console") { consoleLogs = []; counters.errors = 0; renderConsole(); }
       else if (currentTab === "network") { networkLogs = []; counters.failedReq = 0; renderNetwork(); }
-      else if (currentTab === "repl") { replCommands = []; renderRepl(); }
       updateBadge();
     });
     document.getElementById("znr-dc-copy").addEventListener("click", function () {
@@ -427,11 +389,6 @@
         tabBtn.classList.add("active");
         currentTab = tabBtn.getAttribute("data-tab");
         renderCurrentTab();
-        // Enfoque automático al input del REPL si se cambia a esa pestaña
-        if (currentTab === "repl") {
-          var inp = document.getElementById("znr-repl-input");
-          if (inp) setTimeout(function() { inp.focus(); }, 50);
-        }
       });
     });
 
@@ -446,7 +403,7 @@
         if (newHeight > 120 && newHeight < window.innerHeight - 40) panel.style.height = newHeight + "px";
       });
     })();
-  } // fin de buildUI()
+  }
 
   if (document.body) {
     buildUI();
@@ -454,7 +411,6 @@
     document.addEventListener("DOMContentLoaded", buildUI);
   }
 
-  // ---------- updateBadge ----------
   function updateBadge() {
     var total = counters.errors + counters.failedReq;
     var badge = document.getElementById("znr-dc-badge");
@@ -475,7 +431,6 @@
     else if (currentTab === "idb") renderIDB();
     else if (currentTab === "perf") renderPerf();
     else if (currentTab === "info") renderInfo();
-    else if (currentTab === "repl") renderRepl();
   }
 
   function getFilter() {
@@ -862,115 +817,6 @@
       '</div>';
   }
 
-  // ---------- REPL (con soporte CSP) ----------
-  function renderRepl() {
-    var body = document.getElementById("znr-dc-body");
-    var html = '<div id="znr-repl-container">' +
-      '<div id="znr-repl-toolbar">' +
-        '<button class="znr-btn-mini" id="znr-repl-run">▶ Ejecutar</button> ' +
-        '<button class="znr-btn-mini" id="znr-repl-clear">Limpiar historial</button>' +
-      '</div>' +
-      '<textarea id="znr-repl-input" rows="3" placeholder="Escribe código JavaScript (Ctrl+Enter para ejecutar)"></textarea>' +
-      '<div id="znr-repl-output"></div>' +
-      '</div>';
-
-    // Si eval está bloqueado por CSP, mostrar advertencia persistente
-    if (evalBlocked) {
-      html = html.replace('<div id="znr-repl-output">', 
-        '<div class="znr-repl-warn">⚠️ La política de seguridad (CSP) bloquea eval. El REPL no puede ejecutar código. Usa la consola nativa del navegador (F12) para depurar.</div><div id="znr-repl-output">');
-    }
-
-    body.innerHTML = html;
-
-    var output = document.getElementById("znr-repl-output");
-    if (replCommands.length === 0) {
-      output.innerHTML = '<div class="znr-empty">No se han ejecutado comandos aún.</div>';
-    } else {
-      output.innerHTML = replCommands.map(function (item) {
-        var resultHtml = item.error ?
-          '<div class="znr-repl-error">⚠️ ' + escapeHtml(item.result) + '</div>' :
-          '<div class="znr-repl-result">' + escapeHtml(item.result) + '</div>';
-        return '<div><span class="znr-repl-cmd">▶ ' + escapeHtml(item.command) + '</span>' + resultHtml + '</div>';
-      }).join("");
-      output.scrollTop = output.scrollHeight;
-    }
-
-    // Eventos
-    var input = document.getElementById("znr-repl-input");
-    var runBtn = document.getElementById("znr-repl-run");
-    var clearBtn = document.getElementById("znr-repl-clear");
-
-    // Si eval está bloqueado, desactivamos el input y el botón
-    if (evalBlocked) {
-      if (input) { input.disabled = true; input.placeholder = "REPL deshabilitado por CSP"; }
-      if (runBtn) { runBtn.disabled = true; runBtn.style.opacity = "0.5"; }
-      return;
-    }
-
-    function executeRepl() {
-      var code = input.value.trim();
-      if (!code) return;
-      var result;
-      var error = false;
-      try {
-        // Usamos eval en el ámbito global
-        result = (0, eval)(code);
-        if (result === undefined) {
-          result = "undefined";
-        } else {
-          result = safeStringify(result);
-          if (result === undefined) result = "undefined";
-        }
-      } catch (e) {
-        result = e.stack || e.message || String(e);
-        error = true;
-      }
-      replCommands.push({ command: code, result: result, error: error });
-      replHistoryIndex = replCommands.length;
-      renderRepl();
-      input.value = "";
-      input.focus();
-    }
-
-    runBtn.addEventListener("click", executeRepl);
-
-    input.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        executeRepl();
-      }
-      if (e.key === "ArrowUp" && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        if (replCommands.length === 0) return;
-        var idx = replHistoryIndex - 1;
-        if (idx < 0) idx = 0;
-        replHistoryIndex = idx;
-        input.value = replCommands[idx].command;
-        input.selectionStart = input.selectionEnd = input.value.length;
-      }
-      if (e.key === "ArrowDown" && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        if (replCommands.length === 0) return;
-        var idx = replHistoryIndex + 1;
-        if (idx >= replCommands.length) {
-          replHistoryIndex = replCommands.length;
-          input.value = "";
-        } else {
-          replHistoryIndex = idx;
-          input.value = replCommands[idx].command;
-        }
-      }
-    });
-
-    clearBtn.addEventListener("click", function () {
-      replCommands = [];
-      replHistoryIndex = -1;
-      renderRepl();
-    });
-
-    input.focus();
-  }
-
   // ---------- Exportar reporte completo ----------
   function exportFullReport() {
     var report = {
@@ -982,12 +828,11 @@
       mensajesServiceWorker: swMessages,
       localStorage: (function () { try { return Object.assign({}, localStorage); } catch (e) { return {}; } })(),
       sessionStorage: (function () { try { return Object.assign({}, sessionStorage); } catch (e) { return {}; } })(),
-      cookies: document.cookie,
-      repl: replCommands
+      cookies: document.cookie
     };
     downloadText("znr-devconsole-reporte-" + Date.now() + ".json", JSON.stringify(report, null, 2));
     originalConsole.info("[ZNR DevConsole] Reporte exportado.");
   }
 
-  originalConsole.info("%c[ZNR DevConsole] Activo (extendida + REPL con soporte CSP). Haz clic en el botón 🛠 (arriba a la derecha).", "color:#f39c12;font-weight:bold;");
+  originalConsole.info("%c[ZNR DevConsole] Activo (extendida, sin eval). Haz clic en el botón 🛠 (arriba a la derecha).", "color:#f39c12;font-weight:bold;");
 })();
