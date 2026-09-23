@@ -1,4 +1,3 @@
-
 (function () {
 'use strict';
 window.originalHandleProductFormSubmit = null;
@@ -25,6 +24,12 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   aprobarVendedor: VENDEDORES_API_URL_ADMIN,
   rechazarVendedor: VENDEDORES_API_URL_ADMIN,
   vendedoresAdmin: VENDEDORES_API_URL_ADMIN,
+  loginAdmin: VENDEDORES_API_URL_ADMIN,
+  verificarSesionAdmin: VENDEDORES_API_URL_ADMIN,
+  crearAdmin: VENDEDORES_API_URL_ADMIN,
+  listarAdmins: VENDEDORES_API_URL_ADMIN,
+  desactivarAdmin: VENDEDORES_API_URL_ADMIN,
+  reactivarAdmin: VENDEDORES_API_URL_ADMIN,
   login: AUTH_API_URL_ADMIN,
   verificarAdmin: AUTH_API_URL_ADMIN,
   list: CATALOGO_API_URL_ADMIN,
@@ -92,12 +97,16 @@ return;
 adminSession = data.session || "ok";
 sessionStorage.setItem("admin_token", document.getElementById("admin-token").value);
 sessionStorage.setItem("admin_session", "true");
+sessionStorage.setItem("admin_rol", "master");
+sessionStorage.setItem("admin_ciudad", "*");
+sessionStorage.removeItem("admin_nombre");
 document.getElementById("admin-login-view").hidden = true;
 document.getElementById("admin-panel-view").hidden = false;
 initImageUploads();
 loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
+aplicarVisibilidadPorRol();
 } catch (err) {
 console.error(err);
 await showCustomAlert({
@@ -106,6 +115,153 @@ message: "Error al iniciar sesión. Intenta nuevamente.",
 icon: "",
 confirmText: "Aceptar"
 });
+} finally {
+hideLoader();
+}
+}
+
+// Login individual para cuentas de admin/moderador de ciudad, creadas
+// por el Master desde la sección "Administradores". Separado de
+// handleAdminLogin (que sigue siendo el acceso Master con
+// contraseña+token) porque valida contra una acción y colección
+// distintas (loginAdmin / admins, en vez de login / auth-api).
+async function handleAdminLoginCuenta(e) {
+e.preventDefault();
+const telefono = document.getElementById("cuenta-telefono").value;
+const password = document.getElementById("cuenta-password").value;
+showLoader("Verificando credenciales...");
+try {
+const data = await apiRequest("POST", { action: "loginAdmin", telefono, password });
+if (!data || !data.ok) {
+await showCustomAlert({
+title: " Acceso denegado",
+message: data && data.error ? data.error : "Credenciales incorrectas.",
+icon: "",
+confirmText: "Intentar nuevamente"
+});
+return;
+}
+adminSession = "ok";
+sessionStorage.setItem("admin_token", data.token);
+sessionStorage.setItem("admin_session", "true");
+sessionStorage.setItem("admin_rol", data.rol || "admin");
+sessionStorage.setItem("admin_ciudad", data.ciudad || "");
+sessionStorage.setItem("admin_nombre", data.nombre || "");
+document.getElementById("admin-login-view").hidden = true;
+document.getElementById("admin-panel-view").hidden = false;
+initImageUploads();
+loadAdminProducts();
+startNotificationMonitoring();
+initAdminViewToggle();
+aplicarVisibilidadPorRol();
+} catch (err) {
+console.error(err);
+await showCustomAlert({
+title: " Error",
+message: "Error al iniciar sesión. Intenta nuevamente.",
+icon: "",
+confirmText: "Aceptar"
+});
+} finally {
+hideLoader();
+}
+}
+
+// Muestra/oculta la sección "Administradores" según el rol de la
+// sesión activa. Las sesiones guardadas ANTES de este cambio no
+// tienen admin_rol en sessionStorage — se tratan como Master por
+// compatibilidad, ya que hasta ahora solo tú usabas este panel.
+function aplicarVisibilidadPorRol() {
+const rol = sessionStorage.getItem("admin_rol") || "master";
+const masterSection = document.getElementById("admin-master-section");
+if (masterSection) masterSection.hidden = rol !== "master";
+if (rol === "master") cargarListaAdmins();
+}
+
+function escHtmlAdmin(s) {
+const d = document.createElement("div");
+d.textContent = s == null ? "" : String(s);
+return d.innerHTML;
+}
+
+async function cargarListaAdmins() {
+const cont = document.getElementById("admin-cuentas-list");
+const countLabel = document.getElementById("tile-admin-count");
+if (!cont) return;
+try {
+const data = await apiRequest("GET", { action: "listarAdmins" });
+if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
+const admins = data.admins || [];
+if (countLabel) countLabel.textContent = admins.length + (admins.length === 1 ? " cuenta" : " cuentas");
+if (admins.length === 0) {
+cont.innerHTML = '<div style="text-align:center;padding:24px;color:#999;">Aún no hay cuentas creadas</div>';
+return;
+}
+cont.innerHTML = admins.map((a) => `
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-border-subtle, #333);">
+  <div>
+    <strong>${escHtmlAdmin(a.nombre)}</strong> — ${escHtmlAdmin(a.rol)} · ${escHtmlAdmin(a.ciudad)}
+    <div style="font-size:12px;opacity:.7;">${escHtmlAdmin(a.telefono)} · ${a.activo ? "Activa" : "Desactivada"}</div>
+  </div>
+  <button type="button" class="text-button" data-uid="${escHtmlAdmin(a.uid)}" data-activo="${a.activo ? "1" : "0"}" onclick="handleToggleAdminActivo(this)">${a.activo ? "Desactivar" : "Reactivar"}</button>
+</div>
+`).join("");
+} catch (err) {
+console.error(err);
+cont.innerHTML = '<div style="text-align:center;padding:24px;color:#e53935;">Error al cargar cuentas</div>';
+}
+}
+
+async function handleToggleAdminActivo(btn) {
+const uid = btn.dataset.uid;
+const activo = btn.dataset.activo === "1";
+showLoader(activo ? "Desactivando..." : "Reactivando...");
+try {
+const data = await apiRequest("POST", { action: activo ? "desactivarAdmin" : "reactivarAdmin", uid });
+if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
+cargarListaAdmins();
+} catch (err) {
+console.error(err);
+await showCustomAlert({ title: " Error", message: "No se pudo actualizar la cuenta.", icon: "", confirmText: "Aceptar" });
+} finally {
+hideLoader();
+}
+}
+window.handleToggleAdminActivo = handleToggleAdminActivo;
+
+// El Master elige país/ciudad al crear la cuenta desde ciudades.js —
+// la misma fuente que ya usa el registro de vendedor y el selector
+// de ciudad del comprador, así todo el proyecto habla de las mismas
+// ciudades.
+async function handleCrearAdminSubmit(e) {
+e.preventDefault();
+const nombre = document.getElementById("nuevo-admin-nombre").value;
+const telefono = document.getElementById("nuevo-admin-telefono").value;
+const rol = document.getElementById("nuevo-admin-rol").value;
+const pais = document.getElementById("nuevo-admin-pais").value;
+const ciudad = document.getElementById("nuevo-admin-ciudad").value;
+if (!pais || !ciudad) {
+await showCustomAlert({ title: " Falta ciudad", message: "Selecciona país y ciudad para esta cuenta.", icon: "", confirmText: "Aceptar" });
+return;
+}
+showLoader("Creando cuenta...");
+try {
+const data = await apiRequest("POST", { action: "crearAdmin", nombre, telefono, rol, pais, ciudad });
+if (!data || !data.ok) {
+await showCustomAlert({ title: " No se pudo crear", message: (data && data.error) || "Intenta de nuevo.", icon: "", confirmText: "Aceptar" });
+return;
+}
+await showCustomAlert({
+title: " Cuenta creada",
+message: `Comparte esta contraseña temporal con ${nombre} (teléfono ${data.telefono}): ${data.codigo}`,
+icon: "",
+confirmText: "Listo"
+});
+document.getElementById("crear-admin-form").reset();
+cargarListaAdmins();
+} catch (err) {
+console.error(err);
+await showCustomAlert({ title: " Error", message: "Error al crear la cuenta.", icon: "", confirmText: "Aceptar" });
 } finally {
 hideLoader();
 }
@@ -852,6 +1008,26 @@ function actualizarEstadoAutostart(btn) {
 document.addEventListener("DOMContentLoaded", () => {
 const loginForm = document.getElementById("admin-login-form");
 if (loginForm) loginForm.addEventListener("submit", handleAdminLogin);
+const loginFormCuenta = document.getElementById("admin-login-form-cuenta");
+if (loginFormCuenta) loginFormCuenta.addEventListener("submit", handleAdminLoginCuenta);
+const toggleLoginCuenta = document.getElementById("toggle-login-cuenta");
+if (toggleLoginCuenta && loginForm && loginFormCuenta) {
+toggleLoginCuenta.addEventListener("click", () => {
+const mostrandoCuenta = !loginFormCuenta.hidden;
+loginFormCuenta.hidden = mostrandoCuenta;
+loginForm.hidden = !mostrandoCuenta;
+toggleLoginCuenta.textContent = mostrandoCuenta
+? "¿Eres admin o moderador de una ciudad? Inicia sesión con tu cuenta"
+: "¿Eres el Master? Inicia sesión con contraseña y token";
+});
+}
+const crearAdminForm = document.getElementById("crear-admin-form");
+if (crearAdminForm) crearAdminForm.addEventListener("submit", handleCrearAdminSubmit);
+const nuevoAdminPais = document.getElementById("nuevo-admin-pais");
+const nuevoAdminCiudad = document.getElementById("nuevo-admin-ciudad");
+if (nuevoAdminPais && nuevoAdminCiudad && typeof enlazarPaisCiudad === "function") {
+enlazarPaisCiudad(nuevoAdminPais, nuevoAdminCiudad);
+}
 const logoutBtn = document.getElementById("admin-logout-btn");
 if (logoutBtn) {
 const newLogoutBtn = logoutBtn.cloneNode(true);
@@ -930,23 +1106,37 @@ renderAdminProductsWithFilters();
 }
 const hasSession = sessionStorage.getItem("admin_session");
 const savedToken = sessionStorage.getItem("admin_token") || "";
+const savedRol = sessionStorage.getItem("admin_rol") || "master";
 function _forceAdminLogout() {
 _imageUploadsInitialized = false;
 sessionStorage.removeItem("admin_session");
 sessionStorage.removeItem("admin_token");
+sessionStorage.removeItem("admin_rol");
+sessionStorage.removeItem("admin_ciudad");
+sessionStorage.removeItem("admin_nombre");
 localStorage.removeItem("admin_token");
 adminSession = null;
 }
 if (hasSession === "true" && savedToken && document.getElementById("admin-panel-view")) {
 (async () => {
 try {
+let sesionValida = false;
+if (savedRol === "master") {
 const apiUrl = resolverApiUrlAdmin("verificarAdmin");
 if (!apiUrl) { _forceAdminLogout(); return; }
-
 const res = await fetch(apiUrl + "?" + new URLSearchParams({ action: "verificarAdmin", token: savedToken }).toString());
 const data = await res.json();
+sesionValida = !!(data && (data.valid === true || data.ok === true));
+} else {
+const data = await apiRequest("GET", { action: "verificarSesionAdmin" });
+sesionValida = !!(data && data.ok);
+if (sesionValida) {
+sessionStorage.setItem("admin_rol", data.rol || savedRol);
+sessionStorage.setItem("admin_ciudad", data.ciudad || "");
+}
+}
 
-if (data && (data.valid === true || data.ok === true)) {
+if (sesionValida) {
 adminSession = "ok";
 document.getElementById("admin-login-view").hidden = true;
 document.getElementById("admin-panel-view").hidden = false;
@@ -955,6 +1145,7 @@ setTimeout(() => {
   loadAdminProducts();
   startNotificationMonitoring();
   initAdminViewToggle();
+  aplicarVisibilidadPorRol();
   window.dispatchEvent(new CustomEvent('adminReady'));
 }, 200);
 } else {
@@ -971,6 +1162,7 @@ initImageUploads();
 loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
+aplicarVisibilidadPorRol();
 window.dispatchEvent(new CustomEvent('adminReady'));
 }
 })();
@@ -984,6 +1176,9 @@ stopNotificationMonitoring();
 adminSession = null;
 sessionStorage.removeItem("admin_session");
 sessionStorage.removeItem("admin_token");
+sessionStorage.removeItem("admin_rol");
+sessionStorage.removeItem("admin_ciudad");
+sessionStorage.removeItem("admin_nombre");
 localStorage.removeItem("admin_token");
 const loginView = document.getElementById("admin-login-view");
 const panelView = document.getElementById("admin-panel-view");
