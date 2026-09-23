@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -116,6 +115,18 @@
  </div>
  <button type="submit" class="primary-button full-width" style="margin-top: 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-logout"/></svg> Ingresar</button>
  </form>
+ <button type="button" id="toggle-login-cuenta" class="text-button full-width" style="margin-top: 14px;">¿Eres admin o moderador de una ciudad? Inicia sesión con tu cuenta</button>
+ <form id="admin-login-form-cuenta" class="form-vertical" hidden style="margin-top: 14px;">
+ <div class="form-row">
+ <label>Teléfono</label>
+ <input type="tel" id="cuenta-telefono" required placeholder="10 dígitos" />
+ </div>
+ <div class="form-row">
+ <label>Contraseña</label>
+ <input type="password" id="cuenta-password" required placeholder="Ingresa tu contraseña" />
+ </div>
+ <button type="submit" class="primary-button full-width" style="margin-top: 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-logout"/></svg> Ingresar</button>
+ </form>
  </div>
  </main>
  <main class="admin-main" id="admin-panel-view" hidden>
@@ -175,6 +186,66 @@
  </a>
  </div>
  <a href="notificaciones.html" class="admin-cta-bar">Ver todas las notificaciones <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-arrow-right"/></svg></a>
+ </section>
+ <section class="admin-section" id="admin-master-section" hidden>
+ <div class="admin-section-header">
+ <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-settings"/></svg></span> Administradores</h2>
+ </div>
+ <div class="admin-cards-grid admin-cards-grid-compact">
+ <div class="admin-card grid-tile" id="admin-crear-cuenta-section">
+ <div class="admin-card-header tile-header" onclick="openGridTile('admin-crear-cuenta-section','crear-admin-body')">
+ <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-plus"/></svg></span>
+ <h2 class="tile-title">Nueva cuenta</h2>
+ <span class="tile-subtitle">Dar de alta un admin o moderador de ciudad</span>
+ <div class="tile-actions">
+ <button type="button" class="tile-close-btn" aria-label="Cerrar" onclick="event.stopPropagation(); closeGridTile('admin-crear-cuenta-section','crear-admin-body')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
+ </div>
+ </div>
+ <div id="crear-admin-body" style="display:none;">
+ <form id="crear-admin-form" class="form-vertical">
+ <div class="form-row">
+ <label>Nombre *</label>
+ <input type="text" id="nuevo-admin-nombre" required placeholder="Nombre de la persona" />
+ </div>
+ <div class="form-row">
+ <label>Teléfono *</label>
+ <input type="tel" id="nuevo-admin-telefono" required placeholder="10 dígitos" />
+ </div>
+ <div class="form-row">
+ <label>Rol *</label>
+ <select id="nuevo-admin-rol" required>
+ <option value="admin">Admin</option>
+ <option value="moderador">Moderador</option>
+ </select>
+ </div>
+ <div class="form-row">
+ <label>País *</label>
+ <select id="nuevo-admin-pais" required></select>
+ </div>
+ <div class="form-row">
+ <label>Ciudad *</label>
+ <select id="nuevo-admin-ciudad" required></select>
+ </div>
+ <button type="submit" class="primary-button full-width" style="margin-top: 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-plus"/></svg> Crear cuenta</button>
+ </form>
+ </div>
+ </div>
+ <div class="admin-card grid-tile" id="admin-lista-cuentas-section">
+ <div class="admin-card-header tile-header" onclick="openGridTile('admin-lista-cuentas-section','lista-admin-body')">
+ <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-catalog"/></svg></span>
+ <h2 class="tile-title">Cuentas existentes</h2>
+ <span class="tile-subtitle" id="tile-admin-count">0 cuentas</span>
+ <div class="tile-actions">
+ <button type="button" class="tile-close-btn" aria-label="Cerrar" onclick="event.stopPropagation(); closeGridTile('admin-lista-cuentas-section','lista-admin-body')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
+ </div>
+ </div>
+ <div id="lista-admin-body" style="display:none;">
+ <div class="admin-products-list" id="admin-cuentas-list">
+ <div style="text-align: center; padding: 40px; color: #999;">Cargando cuentas...</div>
+ </div>
+ </div>
+ </div>
+ </div>
  </section>
  <section class="admin-section" id="admin-tools-section">
  <div class="admin-section-header">
@@ -392,6 +463,7 @@
  </main>
 <script src="admin-tools.js" defer></script>
 <script src="api-config.js"></script>
+<script src="ciudades.js" defer></script>
  <script type="module" src="fcm-init.js"></script>
  <script src="icons.js" defer></script>
  <script src="common.js" defer></script>
