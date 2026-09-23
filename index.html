@@ -71,6 +71,30 @@
   box-shadow:0 1px 4px rgba(0,0,0,.35); z-index:2;
 }
 .admin-remove-img-btn:hover{ background:#c62828; }
+
+/* ── Permisos por rol ─────────────────────────────── */
+.admin-section[hidden],
+.grid-tile[hidden] {
+  display: none !important;
+}
+/* Moderador: ve el catálogo pero no puede tocarlo */
+body[data-rol="moderador"] .admin-product-actions,
+body[data-rol="moderador"] .admin-card-actions,
+body[data-rol="moderador"] .edit-product-btn,
+body[data-rol="moderador"] .delete-product-btn,
+body[data-rol="moderador"] #reset-form-btn,
+body[data-rol="moderador"] #product-form button[type="submit"] {
+  display: none !important;
+}
+/* Moderador: el formulario de alta queda visible pero deshabilitado,
+   por si llegara a abrirse desde una URL vieja */
+body[data-rol="moderador"] #product-form input,
+body[data-rol="moderador"] #product-form textarea,
+body[data-rol="moderador"] #product-form select {
+  pointer-events: none;
+  opacity: .6;
+} 
+ 
 </style>
 </head>
 <body class="admin-body">
@@ -144,7 +168,7 @@
  <span class="admin-stat-label">Sin Stock</span>
  </div>
  </div>
- <section class="admin-section" id="admin-notif-section">
+ <section class="admin-section" id="admin-notif-section" data-role="notif">
  <div class="admin-section-header">
  <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-bell"/></svg></span> Notificaciones <span id="notif-badge">0</span></h2>
  </div>
@@ -187,7 +211,7 @@
  </div>
  <a href="notificaciones.html" class="admin-cta-bar">Ver todas las notificaciones <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-arrow-right"/></svg></a>
  </section>
- <section class="admin-section" id="admin-master-section" hidden>
+ <section class="admin-section" id="admin-master-section" data-role="admins" hidden>
  <div class="admin-section-header">
  <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-settings"/></svg></span> Administradores</h2>
  </div>
@@ -247,7 +271,7 @@
  </div>
  </div>
  </section>
- <section class="admin-section" id="admin-tools-section">
+ <section class="admin-section" id="admin-tools-section" data-role="tools">
  <div class="admin-section-header">
  <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-settings"/></svg></span> Herramientas</h2>
  </div>
@@ -299,13 +323,13 @@
  </div>
  </section>
 <div id="upload-log" style="position:fixed; bottom:10px; right:10px; background:#333; color:#0f0; padding:8px 12px; border-radius:8px; font-size:12px; max-width:300px; z-index:9999; display:none;"></div>
- <section class="admin-section" id="admin-products-outer">
+ <section class="admin-section" id="admin-products-outer" data-role="productos">
  <div class="admin-section-header">
  <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-plus"/></svg></span> Productos</h2>
  </div>
 
  <div class="admin-cards-grid admin-cards-grid-compact">
- <div class="admin-card grid-tile" id="admin-create-section">
+ <div class="admin-card grid-tile" id="admin-create-section" data-role="productos-escribir">
  <div class="admin-card-header tile-header" onclick="openGridTile('admin-create-section','create-product-body')">
  <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-plus"/></svg></span>
  <h2 id="product-form-title" class="tile-title">Crear Producto</h2>
