@@ -50,6 +50,23 @@ let adminFilteredProducts = [];
 let adminProductsPerPage = 10;
 let lastNotifCount = 0;
 let notificationInterval = null;
+// ── Permisos por rol ────────────────────────────────────────────
+// Fuente única de verdad para la UI. Si cambia acá, cambia en toda
+// la app. El backend (catalogo-api / vendedores-api) valida lo mismo
+// por su lado — esto es solo la capa de presentación.
+const ROL_PERMISOS = {
+  master:    ["notif", "admins", "tools", "productos", "productos-escribir"],
+  admin:     ["notif", "tools", "productos", "productos-escribir"],
+  moderador: ["notif", "productos"],
+};
+
+function tienePermiso(permiso) {
+  const rol = sessionStorage.getItem("admin_rol") || "master";
+  const set = ROL_PERMISOS[rol] || ROL_PERMISOS.moderador;
+  return set.includes(permiso);
+}
+window.tienePermiso = tienePermiso;
+  
 async function apiRequest(method, body) {
 try {
 const url = resolverApiUrlAdmin((body && body.action) || "");
@@ -106,7 +123,6 @@ initImageUploads();
 loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
-aplicarVisibilidadPorRol();
 } catch (err) {
 console.error(err);
 await showCustomAlert({
@@ -153,7 +169,6 @@ initImageUploads();
 loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
-aplicarVisibilidadPorRol();
 } catch (err) {
 console.error(err);
 await showCustomAlert({
@@ -172,10 +187,19 @@ hideLoader();
 // tienen admin_rol en sessionStorage — se tratan como Master por
 // compatibilidad, ya que hasta ahora solo tú usabas este panel.
 function aplicarVisibilidadPorRol() {
-const rol = sessionStorage.getItem("admin_rol") || "master";
-const masterSection = document.getElementById("admin-master-section");
-if (masterSection) masterSection.hidden = rol !== "master";
-if (rol === "master") cargarListaAdmins();
+  const rol = sessionStorage.getItem("admin_rol") || "master";
+
+  // Refleja el rol en <body> para que el CSS también pueda reaccionar
+  document.body.dataset.rol = rol;
+
+  // 1) Secciones / tiles con data-role
+  document.querySelectorAll("[data-role]").forEach((el) => {
+    const requeridos = el.dataset.role.split(/\s+/);
+    el.hidden = !requeridos.some(tienePermiso);
+  });
+
+  // 2) Cargar datos que dependen del rol
+  if (tienePermiso("admins")) cargarListaAdmins();
 }
 
 function escHtmlAdmin(s) {
@@ -185,18 +209,22 @@ return d.innerHTML;
 }
 
 async function cargarListaAdmins() {
-const cont = document.getElementById("admin-cuentas-list");
-const countLabel = document.getElementById("tile-admin-count");
-if (!cont) return;
-try {
-const data = await apiRequest("GET", { action: "listarAdmins" });
-if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
-const admins = data.admins || [];
-if (countLabel) countLabel.textContent = admins.length + (admins.length === 1 ? " cuenta" : " cuentas");
-if (admins.length === 0) {
-cont.innerHTML = '<div style="text-align:center;padding:24px;color:#999;">Aún no hay cuentas creadas</div>';
-return;
-}
+  const cont = document.getElementById("admin-cuentas-list");
+  const countLabel = document.getElementById("tile-admin-count");
+  if (!cont) return;
+  try {
+    const data = await apiRequest("GET", { action: "listarAdmins" });
+    if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
+
+    // ▼ ÚNICO CAMBIO: blindaje contra respuestas que no sean array
+    const admins = Array.isArray(data.admins) ? data.admins : [];
+    // ▲
+
+    if (countLabel) countLabel.textContent = admins.length + (admins.length === 1 ? " cuenta" : " cuentas");
+    if (admins.length === 0) {
+      cont.innerHTML = '<div style="text-align:center;padding:24px;color:#999;">Aún no hay cuentas creadas</div>';
+      return;
+    }
 cont.innerHTML = admins.map((a) => `
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-border-subtle, #333);">
   <div>
@@ -268,26 +296,41 @@ hideLoader();
 }
 
 async function loadAdminProducts() {
-showLoader("Cargando productos...");
-try {
-const data = await apiRequest("GET", { action: "list" });
-adminProducts = data.products || data || [];
-updateAdminStats();
-populateAdminCategoryFilter();
-adminCurrentPage = 1;
-renderAdminProductsWithFilters();
-} catch (err) {
-console.error(err);
-await showCustomAlert({
-title: " Error",
-message: "Error al cargar productos. Verifica tu conexión.",
-icon: "",
-confirmText: "Aceptar"
-});
-} finally {
-hideLoader();
+  showLoader("Cargando productos...");
+  try {
+    const data = await apiRequest("GET", { action: "list" });
+
+    // El servidor puede devolver varias formas; aceptamos solo las que
+    // resulten en un array real. Si no, mostramos el error del backend
+    // en vez de tirar un TypeError críptico más abajo.
+    const lista = Array.isArray(data)
+      ? data
+      : (data && Array.isArray(data.products))
+        ? data.products
+        : null;
+
+    if (!lista) {
+      throw new Error((data && data.error) || "Respuesta inválida del servidor");
+    }
+
+    adminProducts = lista;
+    updateAdminStats();
+    populateAdminCategoryFilter();
+    adminCurrentPage = 1;
+    renderAdminProductsWithFilters();
+  } catch (err) {
+    console.error(err);
+    await showCustomAlert({
+      title: "Error",
+      message: "Error al cargar productos: " + (err.message || "Verifica tu conexión."),
+      icon: "",
+      confirmText: "Aceptar"
+    });
+  } finally {
+    hideLoader();
+  }
 }
-}
+  
 function renderAdminProductsWithFilters() {
 const searchTerm = document.getElementById("admin-search-input")?.value.toLowerCase() || "";
 const categoryFilter = document.getElementById("admin-category-filter")?.value || "";
@@ -659,12 +702,20 @@ function fillFormForEdit(product) {
 }
 
 async function handleProductFormSubmit(e) {
-e.preventDefault();
-if (!adminSession) { showTemporaryMessage(" Sesión no válida", "error"); return; }
-if (window.hasPendingImageUploads && window.hasPendingImageUploads()) {
-showTemporaryMessage(" Espera a que terminen de subir las imágenes...", "error");
-return;
-}
+  e.preventDefault();
+  if (!adminSession) { showTemporaryMessage(" Sesión no válida", "error"); return; }
+
+  // ▼▼▼ ESTAS 4 LÍNEAS SON LO ÚNICO NUEVO ▼▼▼
+  if (!tienePermiso("productos-escribir")) {
+    showTemporaryMessage("Tu rol no puede modificar el catálogo", "error");
+    return;
+  }
+  // ▲▲▲ FIN DE LO NUEVO ▲▲▲
+
+  if (window.hasPendingImageUploads && window.hasPendingImageUploads()) {
+    showTemporaryMessage(" Espera a que terminen de subir las imágenes...", "error");
+    return;
+  }
 const id = document.getElementById("product-id").value;
 const data = {
 Nombre: document.getElementById("product-name").value.trim(),
@@ -720,7 +771,13 @@ hideLoader();
 }
 }
 async function deleteProduct(id) {
-if (!adminSession) { showTemporaryMessage(" Sesión no válida", "error"); return; }
+  if (!adminSession) { showTemporaryMessage(" Sesión no válida", "error"); return; }
+
+  // ▼▼▼ ESTAS 4 LÍNEAS SON LO ÚNICO NUEVO ▼▼▼
+  if (!tienePermiso("productos-escribir")) {
+    showTemporaryMessage("Tu rol no puede eliminar productos", "error");
+    return;
+  }
 const confirmDelete = await new Promise((resolve) => {
 showCustomConfirm({
 title: "Eliminar producto",
