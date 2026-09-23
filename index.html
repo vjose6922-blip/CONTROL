@@ -383,6 +383,11 @@ body[data-rol="moderador"] #product-form select {
  <option value="Chamarra para Caballero">Chamarra para Caballero</option>
  </select>
  </div>
+ <div class="form-row" id="product-ciudad-row" style="display:none;">
+ <label>Ciudad de publicación (solo Master)</label>
+ <select id="product-pais"></select>
+ <select id="product-ciudad"></select>
+ </div>
  <div class="form-row">
  <label>Badge</label>
  <select id="product-badge" name="Badge">
@@ -494,6 +499,7 @@ body[data-rol="moderador"] #product-form select {
  <script src="znr-devconsole.js" defer></script>
 <script src="cache-manager.js" defer></script>
 <script src="offline-manager.js" defer></script>
+<script src="ciudades.js" defer></script>
 <script src="admin.js" defer></script>
 <script>
 // Registra el token de notificaciones push del admin.

@@ -200,6 +200,16 @@ function aplicarVisibilidadPorRol() {
 
   // 2) Cargar datos que dependen del rol
   if (tienePermiso("admins")) cargarListaAdmins();
+
+  // 3) Ciudad de publicación en el form de producto Z&R: solo el Master
+  // la elige (admin/moderador de ciudad la tienen fija en el backend).
+  const filaCiudad = document.getElementById("product-ciudad-row");
+  if (filaCiudad) {
+    filaCiudad.style.display = rol === "master" ? "" : "none";
+    if (rol === "master" && window.ZNR_CIUDADES) {
+      enlazarPaisCiudad(document.getElementById("product-pais"), document.getElementById("product-ciudad"));
+    }
+  }
 }
 
 function escHtmlAdmin(s) {
@@ -729,6 +739,10 @@ Imagen1: document.getElementById("product-image1").value.trim(),
 Imagen2: document.getElementById("product-image2").value.trim(),
 Imagen3: document.getElementById("product-image3").value.trim(),
 };
+if ((sessionStorage.getItem("admin_rol") || "master") === "master") {
+  data.pais = document.getElementById("product-pais")?.value || "";
+  data.ciudad = document.getElementById("product-ciudad")?.value || "";
+}
 if (!data.Nombre) {
 await showCustomAlert({
 title: " Campo requerido",
