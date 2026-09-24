@@ -57,7 +57,7 @@ let notificationInterval = null;
 // por su lado — esto es solo la capa de presentación.
 const ROL_PERMISOS = {
   master:    ["notif", "admins", "tools", "productos", "productos-escribir"],
-  admin:     ["notif", "tools", "productos", "productos-escribir"],
+  admin:     ["notif", "admins", "tools", "productos", "productos-escribir"],
   moderador: ["notif", "productos"],
 };
 
@@ -204,6 +204,40 @@ function aplicarVisibilidadPorRol() {
   // 2) Cargar datos que dependen del rol
   if (tienePermiso("admins")) cargarListaAdmins();
 
+  // "Nueva cuenta" / "Cuentas existentes": el Master gestiona admins y
+  // moderadores de cualquier ciudad; un admin de ciudad solo da de alta y
+  // ve SUS PROPIOS moderadores, siempre en su propia ciudad. El backend ya
+  // impone esto (crearAdmin/listarAdmins) — aquí solo ajustamos el
+  // formulario para que no ofrezca opciones que de todos modos se van a
+  // ignorar o rechazar.
+  const rolSelect = document.getElementById("nuevo-admin-rol");
+  const paisRow = document.getElementById("nuevo-admin-pais")?.closest(".form-row");
+  const ciudadRow = document.getElementById("nuevo-admin-ciudad")?.closest(".form-row");
+  const seccionTitulo = document.getElementById("admin-master-section-title");
+  const crearSubtitulo = document.getElementById("crear-cuenta-subtitle");
+  const listaTitulo = document.getElementById("lista-cuentas-title");
+  const paisSelect = document.getElementById("nuevo-admin-pais");
+  const ciudadSelect = document.getElementById("nuevo-admin-ciudad");
+  if (rol === "admin") {
+    if (rolSelect) { rolSelect.value = "moderador"; rolSelect.disabled = true; }
+    if (paisRow) paisRow.style.display = "none";
+    if (ciudadRow) ciudadRow.style.display = "none";
+    if (paisSelect) paisSelect.required = false;
+    if (ciudadSelect) ciudadSelect.required = false;
+    if (seccionTitulo) seccionTitulo.textContent = "Mis moderadores";
+    if (crearSubtitulo) crearSubtitulo.textContent = "Dar de alta un moderador en tu ciudad";
+    if (listaTitulo) listaTitulo.textContent = "Moderadores existentes";
+  } else if (rol === "master") {
+    if (rolSelect) rolSelect.disabled = false;
+    if (paisRow) paisRow.style.display = "";
+    if (ciudadRow) ciudadRow.style.display = "";
+    if (paisSelect) paisSelect.required = true;
+    if (ciudadSelect) ciudadSelect.required = true;
+    if (seccionTitulo) seccionTitulo.textContent = "Administradores";
+    if (crearSubtitulo) crearSubtitulo.textContent = "Dar de alta un admin o moderador de ciudad";
+    if (listaTitulo) listaTitulo.textContent = "Cuentas existentes";
+  }
+
   // "Mi cuenta" (cambiar contraseña): oculto para el Master heredado, que
   // no tiene doc en `admins` y por lo tanto no puede usar cambiarPasswordAdmin.
   const cuentaSection = document.getElementById("admin-cuenta-section");
@@ -278,15 +312,18 @@ window.handleToggleAdminActivo = handleToggleAdminActivo;
 // El Master elige país/ciudad al crear la cuenta desde ciudades.js —
 // la misma fuente que ya usa el registro de vendedor y el selector
 // de ciudad del comprador, así todo el proyecto habla de las mismas
-// ciudades.
+// ciudades. Un admin de ciudad no elige nada de esto: crea siempre un
+// moderador en su propia ciudad, y el backend ignora lo que mande aquí
+// para ese caso (ver crearAdmin en vendedores-api).
 async function handleCrearAdminSubmit(e) {
 e.preventDefault();
+const rolSesion = sessionStorage.getItem("admin_rol") || "master";
 const nombre = document.getElementById("nuevo-admin-nombre").value;
 const telefono = document.getElementById("nuevo-admin-telefono").value;
 const rol = document.getElementById("nuevo-admin-rol").value;
 const pais = document.getElementById("nuevo-admin-pais").value;
 const ciudad = document.getElementById("nuevo-admin-ciudad").value;
-if (!pais || !ciudad) {
+if (rolSesion === "master" && (!pais || !ciudad)) {
 await showCustomAlert({ title: " Falta ciudad", message: "Selecciona país y ciudad para esta cuenta.", icon: "", confirmText: "Aceptar" });
 return;
 }
