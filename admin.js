@@ -30,6 +30,7 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   listarAdmins: VENDEDORES_API_URL_ADMIN,
   desactivarAdmin: VENDEDORES_API_URL_ADMIN,
   reactivarAdmin: VENDEDORES_API_URL_ADMIN,
+  cambiarPasswordAdmin: VENDEDORES_API_URL_ADMIN,
   login: AUTH_API_URL_ADMIN,
   verificarAdmin: AUTH_API_URL_ADMIN,
   list: CATALOGO_API_URL_ADMIN,
@@ -123,6 +124,7 @@ initImageUploads();
 loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
+aplicarVisibilidadPorRol();
 } catch (err) {
 console.error(err);
 await showCustomAlert({
@@ -169,6 +171,7 @@ initImageUploads();
 loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
+aplicarVisibilidadPorRol();
 } catch (err) {
 console.error(err);
 await showCustomAlert({
@@ -200,6 +203,11 @@ function aplicarVisibilidadPorRol() {
 
   // 2) Cargar datos que dependen del rol
   if (tienePermiso("admins")) cargarListaAdmins();
+
+  // "Mi cuenta" (cambiar contraseña): oculto para el Master heredado, que
+  // no tiene doc en `admins` y por lo tanto no puede usar cambiarPasswordAdmin.
+  const cuentaSection = document.getElementById("admin-cuenta-section");
+  if (cuentaSection) cuentaSection.hidden = rol === "master";
 
   // 3) Ciudad de publicación en el form de producto Z&R: solo el Master
   // la elige (admin/moderador de ciudad la tienen fija en el backend).
@@ -303,6 +311,42 @@ await showCustomAlert({ title: " Error", message: "Error al crear la cuenta.", i
 } finally {
 hideLoader();
 }
+}
+
+// Autoservicio de contraseña para admin/moderador de ciudad. La cuenta
+// Master heredada (ADMIN_TOKEN) no tiene doc en `admins` — cambiarPasswordAdmin
+// la rechaza por diseño, así que este formulario ni se muestra para ese rol
+// (ver aplicarVisibilidadPorRol).
+async function handleCambiarPasswordSubmit(e) {
+  e.preventDefault();
+  const oldPassword = document.getElementById("cambiar-password-actual").value;
+  const newPassword = document.getElementById("cambiar-password-nueva").value;
+  const confirmPassword = document.getElementById("cambiar-password-confirmar").value;
+
+  if (newPassword !== confirmPassword) {
+    await showCustomAlert({ title: " Las contraseñas no coinciden", message: "La nueva contraseña y su confirmación deben ser iguales.", icon: "", confirmText: "Aceptar" });
+    return;
+  }
+  if (newPassword.length < 6) {
+    await showCustomAlert({ title: " Contraseña muy corta", message: "La nueva contraseña debe tener al menos 6 caracteres.", icon: "", confirmText: "Aceptar" });
+    return;
+  }
+
+  showLoader("Actualizando contraseña...");
+  try {
+    const data = await apiRequest("POST", { action: "cambiarPasswordAdmin", oldPassword, newPassword });
+    if (!data || !data.ok) {
+      await showCustomAlert({ title: " No se pudo cambiar", message: (data && data.error) || "Intenta de nuevo.", icon: "", confirmText: "Aceptar" });
+      return;
+    }
+    document.getElementById("cambiar-password-form").reset();
+    await showCustomAlert({ title: " Contraseña actualizada", message: "Tu contraseña se cambió correctamente.", icon: "", confirmText: "Listo" });
+  } catch (err) {
+    console.error(err);
+    await showCustomAlert({ title: " Error", message: "Error al cambiar la contraseña.", icon: "", confirmText: "Aceptar" });
+  } finally {
+    hideLoader();
+  }
 }
 
 async function loadAdminProducts() {
@@ -1094,6 +1138,8 @@ toggleLoginCuenta.textContent = mostrandoCuenta
 }
 const crearAdminForm = document.getElementById("crear-admin-form");
 if (crearAdminForm) crearAdminForm.addEventListener("submit", handleCrearAdminSubmit);
+const cambiarPasswordForm = document.getElementById("cambiar-password-form");
+if (cambiarPasswordForm) cambiarPasswordForm.addEventListener("submit", handleCambiarPasswordSubmit);
 const nuevoAdminPais = document.getElementById("nuevo-admin-pais");
 const nuevoAdminCiudad = document.getElementById("nuevo-admin-ciudad");
 if (nuevoAdminPais && nuevoAdminCiudad && typeof enlazarPaisCiudad === "function") {
