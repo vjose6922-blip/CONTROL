@@ -1588,6 +1588,48 @@ async function openSugerenciasConfiableModal() {
   }
 }
 
+// ── Backfill de ciudad en productos viejos (Comunidad + Z&R) ────────────────
+async function backfillCiudadComunidadBtn() {
+  const token = sessionStorage.getItem('admin_token') || '';
+  if (!confirm('Esto pone la ciudad del vendedor en todos sus productos de Comunidad que aún no la tienen. ¿Continuar?')) return;
+  try {
+    const api = "https://catalogo-api-1038143238323.us-central1.run.app";
+    const params = new URLSearchParams({ action: 'backfillCiudadComunidad', token });
+    const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() }).then(r => r.json());
+    if (!res.ok) throw new Error(res.error || 'Error del servidor');
+    alert(`Listo: ${res.actualizados} de ${res.revisados} productos actualizados. (Los que no se movieron son de vendedores que tampoco tienen ciudad asignada todavía — resuélvelo primero en "Vendedores sin ciudad".)`);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+window.backfillCiudadComunidadBtn = backfillCiudadComunidadBtn;
+
+async function asignarCiudadMasivaZNRBtn() {
+  const token = sessionStorage.getItem('admin_token') || '';
+  const rol = sessionStorage.getItem('admin_rol') || 'master';
+  let pais = null, ciudad = null;
+  if (rol === 'master') {
+    pais = prompt('País para TODOS los productos Z&R sin ciudad:', 'México');
+    if (!pais) return;
+    ciudad = prompt('Ciudad para TODOS los productos Z&R sin ciudad:');
+    if (!ciudad) return;
+  } else if (!confirm(`Esto asigna TODOS los productos Z&R sin ciudad a tu ciudad (${sessionStorage.getItem('admin_ciudad') || ''}). ¿Continuar?`)) {
+    return;
+  }
+  try {
+    const api = "https://catalogo-api-1038143238323.us-central1.run.app";
+    const params = new URLSearchParams({ action: 'asignarCiudadMasivaProductosZNR', token });
+    if (pais) params.append('pais', pais);
+    if (ciudad) params.append('ciudad', ciudad);
+    const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() }).then(r => r.json());
+    if (!res.ok) throw new Error(res.error || 'Error del servidor');
+    alert(`Listo: ${res.actualizados} productos Z&R actualizados.`);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+window.asignarCiudadMasivaZNRBtn = asignarCiudadMasivaZNRBtn;
+
 // ── Vendedores sin ciudad (migración de cuentas viejas) ─────────────────────
 async function openVendedoresSinCiudadModal() {
   const old = document.getElementById('modal-vendedores-sin-ciudad');
