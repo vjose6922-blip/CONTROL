@@ -168,6 +168,40 @@ body[data-rol="moderador"] #product-form select {
  <span class="admin-stat-label">Sin Stock</span>
  </div>
  </div>
+ <section class="admin-section" id="admin-cuenta-section" hidden>
+ <div class="admin-section-header">
+ <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-lock"/></svg></span> Mi cuenta</h2>
+ </div>
+ <div class="admin-cards-grid admin-cards-grid-compact">
+ <div class="admin-card grid-tile" id="admin-cambiar-password-section">
+ <div class="admin-card-header tile-header" onclick="openGridTile('admin-cambiar-password-section','cambiar-password-body')">
+ <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-lock"/></svg></span>
+ <h2 class="tile-title">Cambiar contraseña</h2>
+ <span class="tile-subtitle">Actualiza tu contraseña de acceso</span>
+ <div class="tile-actions">
+ <button type="button" class="tile-close-btn" aria-label="Cerrar" onclick="event.stopPropagation(); closeGridTile('admin-cambiar-password-section','cambiar-password-body')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
+ </div>
+ </div>
+ <div id="cambiar-password-body" style="display:none;">
+ <form id="cambiar-password-form" class="form-vertical">
+ <div class="form-row">
+ <label>Contraseña actual *</label>
+ <input type="password" id="cambiar-password-actual" required placeholder="Tu contraseña actual" />
+ </div>
+ <div class="form-row">
+ <label>Nueva contraseña *</label>
+ <input type="password" id="cambiar-password-nueva" required minlength="6" placeholder="Mínimo 6 caracteres" />
+ </div>
+ <div class="form-row">
+ <label>Confirmar nueva contraseña *</label>
+ <input type="password" id="cambiar-password-confirmar" required minlength="6" placeholder="Repite la nueva contraseña" />
+ </div>
+ <button type="submit" class="primary-button full-width" style="margin-top: 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-lock"/></svg> Cambiar contraseña</button>
+ </form>
+ </div>
+ </div>
+ </div>
+ </section>
  <section class="admin-section" id="admin-notif-section" data-role="notif">
  <div class="admin-section-header">
  <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-bell"/></svg></span> Notificaciones <span id="notif-badge">0</span></h2>
