@@ -81,6 +81,7 @@
       <button type="button" class="admin-mini-card" data-tool="reentrenar"><span class="amc-label">Reentrenar modelo IA</span></button>
       <button type="button" class="admin-mini-card" data-tool="syncvendedor"><span class="amc-label">Sincronizar productos de vendedor</span></button>
       <button type="button" class="admin-mini-card" data-tool="algolia"><span class="amc-label">Resincronizar Comunidad con Algolia</span></button>
+      <button type="button" class="admin-mini-card" data-tool="sinciudad"><span class="amc-label">Vendedores sin ciudad</span></button>
     </div>
   </section>
   <button type="button" id="tools-back" hidden style="margin-bottom:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:inherit;cursor:pointer;font-size:13px;padding:8px 16px;border-radius:20px;">&larr; Volver a herramientas</button>
@@ -90,6 +91,7 @@
 <script src="api-config.js"></script>
 <script src="icons.js" defer></script>
 <script src="common.js" defer></script>
+<script src="ciudades.js" defer></script>
 <script src="admin-tools.js" defer></script>
 <script>
 // Guard: sin token de admin, de vuelta al login.
@@ -104,7 +106,8 @@ const EMBED_TOOLS = {
   donaciones: ['modal-donaciones-stats', () => window.openDonacionesStatsModal()],
   planplus: ['modal-plan-plus-resumen', () => window.openPlanPlusResumenModal()],
   errores: ['modal-error-monitor', () => window.openErrorMonitorModal()],
-  syncvendedor: ['sync-vendedor-modal', () => window.openSyncVendedorModal()]
+  syncvendedor: ['sync-vendedor-modal', () => window.openSyncVendedorModal()],
+  sinciudad: ['modal-vendedores-sin-ciudad', () => window.openVendedoresSinCiudadModal()]
 };
 // Acciones que no dejan contenido embebido (pestaña nueva o confirm/alert flotante).
 const ACTION_TOOLS = {

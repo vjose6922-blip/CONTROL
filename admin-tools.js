@@ -1588,7 +1588,86 @@ async function openSugerenciasConfiableModal() {
   }
 }
 
-// ── Tiles de Crear Producto / Lista de Productos ───────────────────────────
+// ── Vendedores sin ciudad (migración de cuentas viejas) ─────────────────────
+async function openVendedoresSinCiudadModal() {
+  const old = document.getElementById('modal-vendedores-sin-ciudad');
+  if (old) old.remove();
+  const token = sessionStorage.getItem('admin_token') || '';
+  const rol = sessionStorage.getItem('admin_rol') || 'master';
+  const api = "https://vendedores-api-1038143238323.us-central1.run.app";
+  const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-vendedores-sin-ciudad';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML = `<div style="background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:0 0 32px;color:var(--modal-text);">
+    <div style="position:sticky;top:0;background:var(--modal-bg);padding:18px 20px 14px;border-bottom:1px solid var(--modal-border);display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2;">
+      <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('community')} Vendedores sin ciudad</h2>
+      <button id="btn-close-sinciudad" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+    </div>
+    <div id="vsc-body" style="padding:18px 20px;">Cargando…</div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('btn-close-sinciudad').onclick = () => modal.remove();
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+  const bodyEl = document.getElementById('vsc-body');
+
+  async function asignar(uid, row, paisSel, ciudadSel, btn) {
+    const pais = rol === 'master' ? paisSel.value : null;
+    const ciudad = rol === 'master' ? ciudadSel.value : null;
+    if (rol === 'master' && (!pais || !ciudad)) return alert('Elige país y ciudad.');
+    btn.disabled = true;
+    btn.textContent = 'Asignando…';
+    try {
+      const params = new URLSearchParams({ action: 'asignarCiudadVendedor', token, uid });
+      if (pais) params.append('pais', pais);
+      if (ciudad) params.append('ciudad', ciudad);
+      const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() }).then(r => r.json());
+      if (!res.ok) throw new Error(res.error || 'Error del servidor');
+      row.remove();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Reintentar';
+      alert('Error al asignar ciudad: ' + e.message);
+    }
+  }
+
+  try {
+    if (!token) throw new Error('Sin sesión de admin');
+    const res = await fetch(api + '?' + new URLSearchParams({ action: 'listarVendedoresSinCiudad', token })).then(r => r.json());
+    if (!res.ok) throw new Error(res.error || 'Error del servidor');
+
+    const vendors = res.vendors || [];
+    const nota = rol === 'master'
+      ? 'Elige país y ciudad para cada vendedor que reconozcas.'
+      : `Solo puedes reclamar vendedores para tu ciudad (${sessionStorage.getItem('admin_ciudad') || ''}).`;
+    bodyEl.innerHTML = `
+      <p style="font-size:.78rem;color:#aaa;margin:0 0 16px;">${nota}</p>
+      <div id="vsc-list">
+        ${vendors.length ? vendors.map(v => `
+          <div class="vsc-row" data-uid="${esc(v.uid)}" style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+            <div style="font-size:.85rem;color:#eee;font-weight:600;">${esc(v.nombre)} · ${esc(v.telefono)}</div>
+            <div style="font-size:.72rem;color:#888;margin:2px 0 8px;">${esc(v.puntoEntrega) || 'Sin punto de entrega registrado'}</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              ${rol === 'master' ? `<select class="vsc-pais" style="flex:1;padding:6px;border-radius:8px;"></select>
+              <select class="vsc-ciudad" style="flex:1;padding:6px;border-radius:8px;"></select>` : ''}
+              <button class="vsc-asignar-btn" style="padding:7px 14px;border:none;border-radius:20px;background:#2563eb;color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;">Asignar</button>
+            </div>
+          </div>`).join('') : '<p style="color:#aaa;text-align:center;padding:20px 0;">No hay vendedores pendientes de asignar.</p>'}
+      </div>`;
+
+    bodyEl.querySelectorAll('.vsc-row').forEach(row => {
+      if (rol === 'master') enlazarPaisCiudad(row.querySelector('.vsc-pais'), row.querySelector('.vsc-ciudad'));
+      const btn = row.querySelector('.vsc-asignar-btn');
+      btn.addEventListener('click', () => asignar(row.dataset.uid, row, row.querySelector('.vsc-pais'), row.querySelector('.vsc-ciudad'), btn));
+    });
+  } catch (e) {
+    bodyEl.innerHTML = '<p style="color:#ef4444;text-align:center;">Error al cargar: ' + (e.message || '') + '</p>';
+  }
+}
+
+
 // Colapsados: tarjeta compacta (igual a las mini-cards de Notificaciones).
 // Al tocarlas se abren a pantalla completa; solo el botón ✕ las cierra.
 function openGridTile(tileId, bodyId) {
