@@ -753,6 +753,20 @@ window.cancelGroupPurchase = cancelGroupPurchase;
 window.loadNotificationsOptimized = loadNotificationsOptimized;
 window.invalidateNotificationsCache = invalidateNotificationsCache;
 
+// ── Admin: Beneficiarios — tabs (Nuevas / Ediciones / Reportes) ──
+window.switchBenSubtab = function(tab, btn) {
+  document.querySelectorAll('.ben-subtab-btn').forEach(b => {
+    const active = b === btn;
+    b.classList.toggle('active', active);
+    b.style.background = active ? b.dataset.benColor : '#f0f0f0';
+    b.style.color = active ? '#fff' : '#555';
+  });
+  ['nuevas', 'ediciones', 'reportes'].forEach(t => {
+    const el = document.getElementById('ben-tab-' + t);
+    if (el) el.style.display = t === tab ? '' : 'none';
+  });
+};
+
 // ── Admin: Beneficiarios ─────────────────────────────────────
 window.loadBeneficiarios = async function(force) {
   const list = document.getElementById('admin-beneficiarios-list');
@@ -774,6 +788,8 @@ window.loadBeneficiarios = async function(force) {
       if (cnt)   cnt.textContent   = bens.length;
       if (badge) badge.textContent = bens.length;
     }
+    const benBadgeNuevas = document.getElementById('ben-badge-nuevas');
+    if (benBadgeNuevas) benBadgeNuevas.textContent = bens.length;
     if (bens.length === 0) { list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay solicitudes pendientes.</p>'; return; }
     const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     list.innerHTML = bens.map(b => `
@@ -906,6 +922,8 @@ window.loadSolicitudesBeneficiario = async function(force) {
     const sols = data.solicitudes || [];
     const cnt = document.getElementById('sc-solicitudes-ben');
     if (cnt) cnt.textContent = sols.length;
+    const benBadgeEdiciones = document.getElementById('ben-badge-ediciones');
+    if (benBadgeEdiciones) benBadgeEdiciones.textContent = sols.length;
     if (sols.length === 0) { list.innerHTML = '<p style="color:#aaa;text-align:center;padding:20px;">No hay solicitudes de edición o eliminación.</p>'; return; }
 
     const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1006,6 +1024,65 @@ window.adminRechazarSolicitudBeneficiario = async function(id, btn) {
     } catch(err) { alert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Rechazando…');
+  else await runFn();
+};
+
+// ── Admin: Reportes de beneficiarios (info falsa, estafa, robo de identidad, etc.) ──
+window.loadReportesBeneficiarios = async function(force) {
+  const list = document.getElementById('admin-reportes-beneficiario-list');
+  if (!list) return;
+  list.innerHTML = window.znrSkeletonRows(2);
+  try {
+    const token = sessionStorage.getItem('admin_token') || '';
+    const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF + '?' + new URLSearchParams({ action:'obtenerReportesBeneficiarios', token }));
+    const data  = await res.json();
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${data.error}</p>`; return; }
+    const reportes = data.reportes || [];
+    const badge = document.getElementById('ben-badge-reportes');
+    if (badge) badge.textContent = reportes.length;
+    if (reportes.length === 0) { list.innerHTML = '<p style="color:#aaa;text-align:center;padding:24px;">No hay reportes pendientes de revisar.</p>'; return; }
+
+    const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    reportes.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+    list.innerHTML = reportes.map(r => `
+      <div class="vendor-card" style="border-left:4px solid #ef4444;">
+        <div style="padding:14px 16px;">
+          <div style="font-weight:700;font-size:.9rem;">${Icon('flag',{size:13})} ${esc(r.nombre_beneficiario || r.beneficiario_id)}</div>
+          <div style="font-size:.72rem;color:#888;margin-top:2px;">${r.fecha ? new Date(r.fecha).toLocaleString('es-MX') : ''}${r.telefono_usuario ? ' · ' + _icPhone + ' ' + esc(r.telefono_usuario) : ''}</div>
+          <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${esc(r.motivo)}</div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button onclick="verBeneficiarioDesdeReporte('${esc(r.beneficiario_id)}')" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e0e7ff;color:#3730a3;font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver beneficiario</button>
+            <button onclick="adminMarcarReporteBeneficiarioRevisado('${esc(r.id)}', this)" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Marcar revisado</button>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(err) {
+    list.innerHTML = '<p style="color:#ef4444;text-align:center;padding:16px;">Error de conexión.</p>';
+  }
+};
+
+window.verBeneficiarioDesdeReporte = async function(id) {
+  try {
+    const res  = await fetch(BENEFICIARIOS_API_URL_NOTIF + '?' + new URLSearchParams({ action:'obtenerBeneficiario', id }));
+    const data = await res.json();
+    if (!data.ok || !data.beneficiario) { alert('No se pudo cargar el beneficiario (puede que ya no exista).'); return; }
+    window._benCache = window._benCache || {};
+    window._benCache[id] = { ...data.beneficiario, id };
+    window.openBeneficiarioModal(id);
+  } catch(err) { alert('Error de conexión.'); }
+};
+
+window.adminMarcarReporteBeneficiarioRevisado = async function(id, btn) {
+  const runFn = async () => {
+    try {
+      const token = sessionStorage.getItem('admin_token') || '';
+      const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'marcarReporteBeneficiarioRevisado', id, token }).toString() });
+      const data  = await res.json();
+      if (!data.ok) { alert('Error: ' + data.error); return; }
+      loadReportesBeneficiarios(true);
+    } catch(err) { alert('Error de conexión.'); }
+  };
+  if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Marcando…');
   else await runFn();
 };
 

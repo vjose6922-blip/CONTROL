@@ -418,15 +418,25 @@ border-radius: 8px;
  <div class="notif-section" id="section-beneficiarios" style="display:none;">
  <div class="notif-section-header" style="background:linear-gradient(135deg,#f97316,#ef4444);">
  <h2><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-heart-fill"/></svg> Beneficiarios <span class="section-count" id="sc-beneficiarios">0</span></h2>
- <button class="icon-button" id="refresh-beneficiarios-btn" onclick="loadBeneficiarios(true); loadSolicitudesBeneficiario(true);" title="Actualizar" style="background:rgba(255,255,255,.15);color:#fff;">
+ <button class="icon-button" id="refresh-beneficiarios-btn" onclick="loadBeneficiarios(true); loadSolicitudesBeneficiario(true); loadReportesBeneficiarios(true);" title="Actualizar" style="background:rgba(255,255,255,.15);color:#fff;">
    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#ic-refresh"/></svg>
  </button>
  </div>
  <div class="notif-section-body">
- <p style="margin:0 0 8px;font-size:.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;">Solicitudes nuevas</p>
+ <div style="display:flex;gap:6px;margin-bottom:14px;">
+ <button class="ben-subtab-btn active" data-ben-tab="nuevas" data-ben-color="#f97316" onclick="switchBenSubtab('nuevas', this)" style="flex:1;padding:9px 6px;border:none;border-radius:20px;background:#f97316;color:#fff;font-weight:700;font-size:.72rem;cursor:pointer;">Nuevas <span id="ben-badge-nuevas" style="background:rgba(255,255,255,.3);border-radius:10px;padding:1px 6px;margin-left:2px;">0</span></button>
+ <button class="ben-subtab-btn" data-ben-tab="ediciones" data-ben-color="#ea580c" onclick="switchBenSubtab('ediciones', this)" style="flex:1;padding:9px 6px;border:none;border-radius:20px;background:#f0f0f0;color:#555;font-weight:700;font-size:.72rem;cursor:pointer;">Ediciones <span id="ben-badge-ediciones" style="background:rgba(0,0,0,.08);border-radius:10px;padding:1px 6px;margin-left:2px;">0</span></button>
+ <button class="ben-subtab-btn" data-ben-tab="reportes" data-ben-color="#ef4444" onclick="switchBenSubtab('reportes', this)" style="flex:1;padding:9px 6px;border:none;border-radius:20px;background:#f0f0f0;color:#555;font-weight:700;font-size:.72rem;cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true"><use href="#ic-flag"/></svg> Reportes <span id="ben-badge-reportes" style="background:rgba(0,0,0,.08);border-radius:10px;padding:1px 6px;margin-left:2px;">0</span></button>
+ </div>
+ <div id="ben-tab-nuevas">
  <div id="admin-beneficiarios-list"><div class="zr-skel-card"><div class="zr-skel-avatar zr-skel-shimmer"></div><div class="zr-skel-lines"><div class="zr-skel-line w70 zr-skel-shimmer"></div><div class="zr-skel-line w40 zr-skel-shimmer"></div></div></div><div class="zr-skel-card"><div class="zr-skel-avatar zr-skel-shimmer"></div><div class="zr-skel-lines"><div class="zr-skel-line w70 zr-skel-shimmer"></div><div class="zr-skel-line w40 zr-skel-shimmer"></div></div></div><div class="zr-skel-card"><div class="zr-skel-avatar zr-skel-shimmer"></div><div class="zr-skel-lines"><div class="zr-skel-line w70 zr-skel-shimmer"></div><div class="zr-skel-line w40 zr-skel-shimmer"></div></div></div></div>
- <p style="margin:20px 0 8px;font-size:.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-edit"/></svg> Ediciones y eliminaciones <span class="section-count" id="sc-solicitudes-ben">0</span></p>
+ </div>
+ <div id="ben-tab-ediciones" style="display:none;">
  <div id="admin-solicitudes-beneficiario-list"><div class="zr-skel-card"><div class="zr-skel-avatar zr-skel-shimmer"></div><div class="zr-skel-lines"><div class="zr-skel-line w70 zr-skel-shimmer"></div><div class="zr-skel-line w40 zr-skel-shimmer"></div></div></div><div class="zr-skel-card"><div class="zr-skel-avatar zr-skel-shimmer"></div><div class="zr-skel-lines"><div class="zr-skel-line w70 zr-skel-shimmer"></div><div class="zr-skel-line w40 zr-skel-shimmer"></div></div></div><div class="zr-skel-card"><div class="zr-skel-avatar zr-skel-shimmer"></div><div class="zr-skel-lines"><div class="zr-skel-line w70 zr-skel-shimmer"></div><div class="zr-skel-line w40 zr-skel-shimmer"></div></div></div></div>
+ </div>
+ <div id="ben-tab-reportes" style="display:none;">
+ <div id="admin-reportes-beneficiario-list"><div class="zr-skel-card"><div class="zr-skel-avatar zr-skel-shimmer"></div><div class="zr-skel-lines"><div class="zr-skel-line w70 zr-skel-shimmer"></div><div class="zr-skel-line w40 zr-skel-shimmer"></div></div></div><div class="zr-skel-card"><div class="zr-skel-avatar zr-skel-shimmer"></div><div class="zr-skel-lines"><div class="zr-skel-line w70 zr-skel-shimmer"></div><div class="zr-skel-line w40 zr-skel-shimmer"></div></div></div></div>
+ </div>
  </div>
  </div>
 
@@ -476,6 +486,7 @@ border-radius: 8px;
  history.replaceState(null, '', '#' + section);
  if (section === 'beneficiarios' && typeof loadBeneficiarios === 'function') loadBeneficiarios();
 if (section === 'beneficiarios' && typeof loadSolicitudesBeneficiario === 'function') loadSolicitudesBeneficiario();
+if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'function') loadReportesBeneficiarios();
  if (section === 'reportes_live' && typeof loadReportesLive === 'function') loadReportesLive();
  }
 
@@ -529,6 +540,7 @@ if (section === 'beneficiarios' && typeof loadSolicitudesBeneficiario === 'funct
  if (typeof loadReportesLive === 'function') loadReportesLive();
  if (typeof loadBeneficiarios === 'function') loadBeneficiarios();
  if (typeof loadSolicitudesBeneficiario === 'function') loadSolicitudesBeneficiario();
+ if (typeof loadReportesBeneficiarios === 'function') loadReportesBeneficiarios();
 
  window.refreshAllAdminBadges = function() {
  window.refreshNotifPageKeepScroll && window.refreshNotifPageKeepScroll();
