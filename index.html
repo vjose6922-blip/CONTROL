@@ -93,8 +93,15 @@ body[data-rol="moderador"] #product-form textarea,
 body[data-rol="moderador"] #product-form select {
   pointer-events: none;
   opacity: .6;
-} 
- 
+}
+
+.empty-state { opacity: .65; font-size: .9em; padding: 8px 0; }
+.stats-staff-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.stats-staff-row { border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; }
+.stats-staff-name { font-weight: 600; }
+.stats-staff-rol { font-weight: 400; opacity: .65; font-size: .85em; }
+.stats-staff-metrics { display: flex; gap: 14px; flex-wrap: wrap; font-size: .85em; opacity: .85; margin-top: 4px; }
+
 </style>
 </head>
 <body class="admin-body">
@@ -168,6 +175,36 @@ body[data-rol="moderador"] #product-form select {
  <span class="admin-stat-label">Sin Stock</span>
  </div>
  </div>
+ <section class="admin-section" id="admin-stats-section" data-role="stats">
+ <div class="admin-section-header">
+ <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-settings"/></svg></span> Estadísticas de admins y moderadores</h2>
+ </div>
+ <div class="admin-cards-grid admin-cards-grid-compact">
+ <div class="admin-card grid-tile" id="admin-stats-tile">
+ <div class="admin-card-header tile-header" onclick="openGridTile('admin-stats-tile','stats-body')">
+ <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-settings"/></svg></span>
+ <h2 class="tile-title">Desempeño</h2>
+ <span class="tile-subtitle">Notificaciones y herramientas resueltas por persona</span>
+ <div class="tile-actions">
+ <button type="button" class="tile-close-btn" aria-label="Cerrar" onclick="event.stopPropagation(); closeGridTile('admin-stats-tile','stats-body')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
+ </div>
+ </div>
+ <div id="stats-body" style="display:none;">
+ <div class="form-row">
+ <label for="stats-dias-select">Periodo</label>
+ <select id="stats-dias-select" onchange="cargarEstadisticasStaff(this.value)">
+ <option value="7">Últimos 7 días</option>
+ <option value="30" selected>Últimos 30 días</option>
+ <option value="90">Últimos 90 días</option>
+ </select>
+ </div>
+ <div id="stats-staff-list" class="stats-staff-list"></div>
+ <div style="margin-top:16px;"><canvas id="stats-chart-volumen" height="180"></canvas></div>
+ <div style="margin-top:16px;"><canvas id="stats-chart-tiempo" height="180"></canvas></div>
+ </div>
+ </div>
+ </div>
+ </section>
  <section class="admin-section" id="admin-cuenta-section" hidden>
  <div class="admin-section-header">
  <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-lock"/></svg></span> Mi cuenta</h2>

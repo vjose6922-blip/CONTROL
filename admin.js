@@ -20,6 +20,8 @@ const AUTH_API_URL_ADMIN =
   "https://auth-api-1038143238323.us-central1.run.app"; // TODO: confirmá y pegá la URL real de auth-api
 const CATALOGO_API_URL_ADMIN =
   "https://catalogo-api-1038143238323.us-central1.run.app";
+const ADMIN_API_URL_ADMIN =
+  "https://admin-api-1038143238323.us-central1.run.app";
 const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   aprobarVendedor: VENDEDORES_API_URL_ADMIN,
   rechazarVendedor: VENDEDORES_API_URL_ADMIN,
@@ -31,6 +33,10 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   desactivarAdmin: VENDEDORES_API_URL_ADMIN,
   reactivarAdmin: VENDEDORES_API_URL_ADMIN,
   cambiarPasswordAdmin: VENDEDORES_API_URL_ADMIN,
+  iniciarTransicionAdmin: VENDEDORES_API_URL_ADMIN,
+  promoverModerador: VENDEDORES_API_URL_ADMIN,
+  eliminarAdmin: VENDEDORES_API_URL_ADMIN,
+  obtenerEstadisticasStaff: ADMIN_API_URL_ADMIN,
   login: AUTH_API_URL_ADMIN,
   verificarAdmin: AUTH_API_URL_ADMIN,
   list: CATALOGO_API_URL_ADMIN,
@@ -56,7 +62,7 @@ let notificationInterval = null;
 // la app. El backend (catalogo-api / vendedores-api) valida lo mismo
 // por su lado — esto es solo la capa de presentación.
 const ROL_PERMISOS = {
-  master:    ["notif", "admins", "tools", "productos", "productos-escribir"],
+  master:    ["notif", "admins", "stats", "tools", "productos", "productos-escribir"],
   admin:     ["notif", "admins", "tools", "productos", "productos-escribir"],
   moderador: ["notif", "productos"],
 };
@@ -203,6 +209,7 @@ function aplicarVisibilidadPorRol() {
 
   // 2) Cargar datos que dependen del rol
   if (tienePermiso("admins")) cargarListaAdmins();
+  if (tienePermiso("stats")) cargarEstadisticasStaff();
 
   // "Nueva cuenta" / "Cuentas existentes": el Master gestiona admins y
   // moderadores de cualquier ciudad; un admin de ciudad solo da de alta y
@@ -260,6 +267,78 @@ d.textContent = s == null ? "" : String(s);
 return d.innerHTML;
 }
 
+// Estadísticas de desempeño de admins/moderadores para el Master: lee
+// obtenerEstadisticasStaff (admin-api), que a su vez agrega la colección
+// staff_actividad que van llenando las demás APIs cada vez que alguien
+// resuelve algo en Notificaciones o en una herramienta. `dias` es la
+// ventana de tiempo que se está mirando (30 por defecto).
+let _statsChartVolumen = null;
+let _statsChartTiempo = null;
+
+async function cargarEstadisticasStaff(dias) {
+  const cont = document.getElementById("stats-staff-list");
+  if (cont) cont.innerHTML = '<p class="empty-state">Cargando...</p>';
+  try {
+    const data = await apiRequest("GET", { action: "obtenerEstadisticasStaff", dias: dias || 30 });
+    if (!data || !data.ok) {
+      if (cont) cont.innerHTML = '<p class="empty-state">No se pudieron cargar las estadísticas.</p>';
+      return;
+    }
+    renderEstadisticasStaff(data.staff || []);
+  } catch (err) {
+    console.error(err);
+    if (cont) cont.innerHTML = '<p class="empty-state">No se pudieron cargar las estadísticas.</p>';
+  }
+}
+
+function renderEstadisticasStaff(staff) {
+  const cont = document.getElementById("stats-staff-list");
+  if (cont) {
+    if (!staff.length) {
+      cont.innerHTML = '<p class="empty-state">Todavía no hay actividad registrada en este periodo.</p>';
+    } else {
+      cont.innerHTML = staff.map((p) => `
+        <div class="stats-staff-row">
+          <div class="stats-staff-name">${escHtmlAdmin(p.nombre)} <span class="stats-staff-rol">${escHtmlAdmin(p.rol)} · ${escHtmlAdmin(p.ciudad)}</span></div>
+          <div class="stats-staff-metrics">
+            <span>${p.total} acción${p.total === 1 ? "" : "es"} resuelta${p.total === 1 ? "" : "s"}</span>
+            <span>${p.tiempoRespuestaPromedioMin != null ? "~" + p.tiempoRespuestaPromedioMin + " min de respuesta" : "Sin solicitudes con tiempo medible"}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+  }
+
+  if (!window.Chart) return; // Chart.js no cargó (offline, bloqueado, etc.) — la lista de arriba sigue funcionando igual.
+
+  const ctxVolumen = document.getElementById("stats-chart-volumen");
+  if (ctxVolumen) {
+    if (_statsChartVolumen) _statsChartVolumen.destroy();
+    _statsChartVolumen = new Chart(ctxVolumen, {
+      type: "bar",
+      data: {
+        labels: staff.map((p) => p.nombre),
+        datasets: [{ label: "Acciones resueltas", data: staff.map((p) => p.total), backgroundColor: "#4f7cff" }],
+      },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+    });
+  }
+
+  const conTiempo = staff.filter((p) => p.tiempoRespuestaPromedioMin != null);
+  const ctxTiempo = document.getElementById("stats-chart-tiempo");
+  if (ctxTiempo) {
+    if (_statsChartTiempo) _statsChartTiempo.destroy();
+    _statsChartTiempo = new Chart(ctxTiempo, {
+      type: "bar",
+      data: {
+        labels: conTiempo.map((p) => p.nombre),
+        datasets: [{ label: "Tiempo de respuesta promedio (min)", data: conTiempo.map((p) => p.tiempoRespuestaPromedioMin), backgroundColor: "#ff9f4f" }],
+      },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+    });
+  }
+}
+
 async function cargarListaAdmins() {
   const cont = document.getElementById("admin-cuentas-list");
   const countLabel = document.getElementById("tile-admin-count");
@@ -277,13 +356,21 @@ async function cargarListaAdmins() {
       cont.innerHTML = '<div style="text-align:center;padding:24px;color:#999;">Aún no hay cuentas creadas</div>';
       return;
     }
+    window._ultimaListaAdmins = admins; // para que los botones de abajo busquen el nombre por uid sin meterlo en atributos HTML
+    const rolSesion = sessionStorage.getItem("admin_rol") || "master";
 cont.innerHTML = admins.map((a) => `
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-border-subtle, #333);">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-border-subtle, #333);flex-wrap:wrap;">
   <div>
     <strong>${escHtmlAdmin(a.nombre)}</strong> — ${escHtmlAdmin(a.rol)} · ${escHtmlAdmin(a.ciudad)}
     <div style="font-size:12px;opacity:.7;">${escHtmlAdmin(a.telefono)} · ${a.activo ? "Activa" : "Desactivada"}</div>
+    ${a.estado === "en_transicion" ? `<div style="font-size:12px;color:#ff9f4f;">⏳ En transición${a.fechaLimiteTransicion ? " hasta " + new Date(a.fechaLimiteTransicion).toLocaleDateString("es-MX") : ""}</div>` : ""}
   </div>
-  <button type="button" class="text-button" data-uid="${escHtmlAdmin(a.uid)}" data-activo="${a.activo ? "1" : "0"}" onclick="handleToggleAdminActivo(this)">${a.activo ? "Desactivar" : "Reactivar"}</button>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <button type="button" class="text-button" data-uid="${escHtmlAdmin(a.uid)}" data-activo="${a.activo ? "1" : "0"}" onclick="handleToggleAdminActivo(this)">${a.activo ? "Desactivar" : "Reactivar"}</button>
+    ${rolSesion === "master" && a.rol === "admin" && a.estado !== "en_transicion" ? `<button type="button" class="text-button" data-uid="${escHtmlAdmin(a.uid)}" onclick="handleIniciarTransicion(this)">Iniciar transición</button>` : ""}
+    ${rolSesion === "master" && a.rol === "moderador" ? `<button type="button" class="text-button" data-uid="${escHtmlAdmin(a.uid)}" onclick="handlePromoverModerador(this)">Promover a admin</button>` : ""}
+    ${rolSesion === "master" ? `<button type="button" class="text-button" style="color:#e53935;" data-uid="${escHtmlAdmin(a.uid)}" onclick="handleEliminarAdmin(this)">Eliminar cuenta</button>` : ""}
+  </div>
 </div>
 `).join("");
 } catch (err) {
@@ -291,6 +378,107 @@ console.error(err);
 cont.innerHTML = '<div style="text-align:center;padding:24px;color:#e53935;">Error al cargar cuentas</div>';
 }
 }
+
+function _nombrePorUid(uid) {
+  const a = (window._ultimaListaAdmins || []).find((x) => x.uid === uid);
+  return a ? a.nombre : uid;
+}
+
+// Paso 1 de la transición: marca al admin saliente como "en_transicion".
+// Sus productos siguen exactamente igual (mismo nombre, visibles) — esto
+// solo arranca el plazo de 15 días y lo deja anotado en el panel.
+async function handleIniciarTransicion(btn) {
+  const uid = btn.dataset.uid;
+  const nombre = _nombrePorUid(uid);
+  const confirmado = await new Promise((resolve) => {
+    showCustomConfirm({
+      title: "Iniciar transición",
+      message: `${nombre} quedará marcado "en transición" por 15 días. Sus productos siguen visibles con su nombre igual que ahora — esto no cambia nada más todavía. ¿Continuar?`,
+      icon: "",
+      confirmText: "Sí, iniciar",
+      cancelText: "Cancelar",
+      onConfirm: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+  if (!confirmado) return;
+  showLoader("Iniciando transición...");
+  try {
+    const data = await apiRequest("POST", { action: "iniciarTransicionAdmin", uid, dias: 15 });
+    if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
+    cargarListaAdmins();
+  } catch (err) {
+    console.error(err);
+    await showCustomAlert({ title: " Error", message: "No se pudo iniciar la transición.", icon: "", confirmText: "Aceptar" });
+  } finally {
+    hideLoader();
+  }
+}
+window.handleIniciarTransicion = handleIniciarTransicion;
+
+// Paso 2: sube de rol al moderador candidato (mismo uid, mismo teléfono y
+// contraseña — no es una cuenta nueva). Desde ese momento puede crear y ver
+// productos como cualquier admin.
+async function handlePromoverModerador(btn) {
+  const uid = btn.dataset.uid;
+  const nombre = _nombrePorUid(uid);
+  const confirmado = await new Promise((resolve) => {
+    showCustomConfirm({
+      title: "Promover a admin",
+      message: `${nombre} pasará de moderador a admin, con acceso para crear y ver productos. ¿Continuar?`,
+      icon: "",
+      confirmText: "Sí, promover",
+      cancelText: "Cancelar",
+      onConfirm: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+  if (!confirmado) return;
+  showLoader("Promoviendo cuenta...");
+  try {
+    const data = await apiRequest("POST", { action: "promoverModerador", uid });
+    if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
+    cargarListaAdmins();
+  } catch (err) {
+    console.error(err);
+    await showCustomAlert({ title: " Error", message: "No se pudo promover la cuenta.", icon: "", confirmText: "Aceptar" });
+  } finally {
+    hideLoader();
+  }
+}
+window.handlePromoverModerador = handlePromoverModerador;
+
+// Paso 3: borra la cuenta del admin saliente. Esto también borra sus
+// productos ZNR (creadoPor = su uid) para que los del nuevo admin ocupen el
+// lugar al instante — avisar bien fuerte antes, no tiene vuelta atrás.
+async function handleEliminarAdmin(btn) {
+  const uid = btn.dataset.uid;
+  const nombre = _nombrePorUid(uid);
+  const confirmado = await new Promise((resolve) => {
+    showCustomConfirm({
+      title: "Eliminar cuenta",
+      message: `Esto borra la cuenta de ${nombre} Y TODOS sus productos ZNR de inmediato. Asegúrate de que el nuevo admin ya subió los suyos antes de continuar. Esta acción no se puede deshacer. ¿Eliminar de todos modos?`,
+      icon: "",
+      confirmText: "Sí, eliminar todo",
+      cancelText: "Cancelar",
+      onConfirm: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+  if (!confirmado) return;
+  showLoader("Eliminando cuenta y productos...");
+  try {
+    const data = await apiRequest("POST", { action: "eliminarAdmin", uid });
+    if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
+    cargarListaAdmins();
+  } catch (err) {
+    console.error(err);
+    await showCustomAlert({ title: " Error", message: "No se pudo eliminar la cuenta.", icon: "", confirmText: "Aceptar" });
+  } finally {
+    hideLoader();
+  }
+}
+window.handleEliminarAdmin = handleEliminarAdmin;
 
 async function handleToggleAdminActivo(btn) {
 const uid = btn.dataset.uid;
