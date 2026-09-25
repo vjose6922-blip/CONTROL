@@ -5,11 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+```
 <title>Panel de Auditoría de Tareas - Usuario Master</title>
 
 <!-- =========================================================
-     REACT
+     DEPENDENCIAS OFICIALES DE UNIVER - UMD
      ========================================================= -->
+
 <script
     crossorigin="anonymous"
     src="https://unpkg.com/react@18.3.1/umd/react.production.min.js">
@@ -20,236 +22,45 @@
     src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js">
 </script>
 
-
-<!-- =========================================================
-     RXJS
-     ========================================================= -->
 <script
     crossorigin="anonymous"
     src="https://unpkg.com/rxjs@7.8.1/dist/bundles/rxjs.umd.min.js">
 </script>
 
-
-<!-- =========================================================
-     DEPENDENCIAS DE UNIVER
-     
-     IMPORTANTE:
-     Todas usan EXACTAMENTE la misma versión.
-     ========================================================= -->
-
 <script
     crossorigin="anonymous"
-    src="https://unpkg.com/@wendellhu/redi@1.1.2/dist/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@wendellhu/redi@1.1.2/dist/umd/react-bindings/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/themes@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/protocol@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/core@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/network@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/rpc@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/design@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/engine-render@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/engine-formula@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/drawing@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/ui@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/docs@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/docs-ui@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-ui@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-formula@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-formula-ui@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-numfmt@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-numfmt-ui@0.25.1/lib/umd/index.js">
+    src="https://unpkg.com/echarts@5.6.0/dist/echarts.min.js">
 </script>
 
 
 <!-- =========================================================
-     FACADE
+     UNIVER PRESETS
      ========================================================= -->
 
 <script
     crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/core@0.25.1/lib/umd/facade.js">
+    src="https://unpkg.com/@univerjs/presets@0.25.1/lib/umd/index.js">
 </script>
 
 <script
     crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/engine-formula@0.25.1/lib/umd/facade.js">
+    src="https://unpkg.com/@univerjs/preset-sheets-core@0.25.1/lib/umd/index.js">
 </script>
 
 <script
     crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/ui@0.25.1/lib/umd/facade.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/docs-ui@0.25.1/lib/umd/facade.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets@0.25.1/lib/umd/facade.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-ui@0.25.1/lib/umd/facade.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-formula@0.25.1/lib/umd/facade.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-numfmt@0.25.1/lib/umd/facade.js">
+    src="https://unpkg.com/@univerjs/preset-sheets-core@0.25.1/lib/umd/locales/en-US.js">
 </script>
 
 
 <!-- =========================================================
-     IDIOMA
-     ========================================================= -->
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/design@0.25.1/lib/umd/locale/en-US.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/ui@0.25.1/lib/umd/locale/en-US.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets@0.25.1/lib/umd/locale/en-US.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-ui@0.25.1/lib/umd/locale/en-US.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/docs-ui@0.25.1/lib/umd/locale/en-US.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-formula-ui@0.25.1/lib/umd/locale/en-US.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    src="https://unpkg.com/@univerjs/sheets-numfmt-ui@0.25.1/lib/umd/locale/en-US.js">
-</script>
-
-
-<!-- =========================================================
-     CSS
+     CSS DE UNIVER SHEETS
      ========================================================= -->
 
 <link
+    crossorigin="anonymous"
     rel="stylesheet"
-    href="https://unpkg.com/@univerjs/design@0.25.1/lib/index.css">
-
-<link
-    rel="stylesheet"
-    href="https://unpkg.com/@univerjs/ui@0.25.1/lib/index.css">
-
-<link
-    rel="stylesheet"
-    href="https://unpkg.com/@univerjs/docs-ui@0.25.1/lib/index.css">
-
-<link
-    rel="stylesheet"
-    href="https://unpkg.com/@univerjs/sheets-ui@0.25.1/lib/index.css">
-
-<link
-    rel="stylesheet"
-    href="https://unpkg.com/@univerjs/sheets-formula-ui@0.25.1/lib/index.css">
-
-<link
-    rel="stylesheet"
-    href="https://unpkg.com/@univerjs/sheets-numfmt-ui@0.25.1/lib/index.css">
+    href="https://unpkg.com/@univerjs/preset-sheets-core@0.25.1/lib/index.css">
 
 
 <!-- =========================================================
@@ -257,6 +68,10 @@
      ========================================================= -->
 
 <style>
+
+    * {
+        box-sizing: border-box;
+    }
 
     html,
     body {
@@ -268,6 +83,7 @@
 
     body {
         padding: 20px;
+
         font-family:
             'Segoe UI',
             Tahoma,
@@ -276,15 +92,8 @@
             sans-serif;
 
         background: #f4f6f9;
+
         color: #2c3e50;
-
-        box-sizing: border-box;
-    }
-
-    *,
-    *::before,
-    *::after {
-        box-sizing: border-box;
     }
 
     h1 {
@@ -300,6 +109,7 @@
 
     p {
         color: #555;
+
         margin-bottom: 15px;
     }
 
@@ -338,7 +148,9 @@
 
         white-space: pre-wrap;
 
-        font-family: Consolas, monospace;
+        font-family:
+            Consolas,
+            monospace;
 
         font-size: 13px;
     }
@@ -359,7 +171,7 @@
 
         box-shadow:
             0 4px 12px
-            rgba(0,0,0,0.08);
+            rgba(0, 0, 0, 0.08);
     }
 
     #debug-log {
@@ -367,14 +179,16 @@
 
         padding: 12px;
 
-        background: #fff;
+        background: white;
 
         border:
             1px solid #ddd;
 
         border-radius: 6px;
 
-        font-family: Consolas, monospace;
+        font-family:
+            Consolas,
+            monospace;
 
         font-size: 12px;
 
@@ -392,13 +206,13 @@
     }
 
 </style>
-
+```
 
 </head>
 
 <body>
 
-
+```
 <h1>
     Panel de Auditoría de Tareas
 </h1>
@@ -409,7 +223,7 @@
 
 
 <div id="status">
-    ⏳ Inicializando Univer...
+    ⏳ Verificando Univer...
 </div>
 
 
@@ -420,52 +234,149 @@
 
 
 <div id="debug-log">
+
     <strong>Diagnóstico:</strong>
+
     <div id="debug-content">
-        Esperando inicialización...
+        Iniciando...
     </div>
+
 </div>
 
 
 <!-- =========================================================
-     APLICACIÓN
+     DATOS DE AUDITORÍA
      ========================================================= -->
 
 <script>
 
-    const errorLog =
-        document.getElementById('error-log');
+    const auditRows = [
+
+        [
+            'ID',
+            'Fecha',
+            'Usuario',
+            'Rol',
+            'Acción',
+            'Detalle',
+            'Estado',
+            'IP Origen'
+        ],
+
+        [
+            1001,
+            '2026-09-24 09:15',
+            'carlos.mendoza',
+            'Admin',
+            'Crear Usuario',
+            'Alta de nuevo moderador: laura.gomez',
+            'Completado',
+            '192.168.1.45'
+        ],
+
+        [
+            1002,
+            '2026-09-24 10:02',
+            'laura.gomez',
+            'Moderador',
+            'Editar Contenido',
+            'Eliminación de post ofensivo #4432',
+            'Completado',
+            '10.0.0.12'
+        ],
+
+        [
+            1003,
+            '2026-09-24 11:45',
+            'ana.torres',
+            'Admin',
+            'Cambio de Permisos',
+            'Modificación de rol para usuario pedro.ruiz',
+            'Pendiente Revisión',
+            '192.168.1.22'
+        ],
+
+        [
+            1004,
+            '2026-09-24 14:30',
+            'javier.lopez',
+            'Moderador',
+            'Revisión de Reporte',
+            'Revisión de reporte de usuario #7890',
+            'Rechazado',
+            '10.0.0.55'
+        ],
+
+        [
+            1005,
+            '2026-09-25 08:00',
+            'carlos.mendoza',
+            'Admin',
+            'Backup de Sistema',
+            'Respaldo completo de base de datos',
+            'Completado',
+            '192.168.1.45'
+        ],
+
+        [
+            1006,
+            '2026-09-25 09:20',
+            'laura.gomez',
+            'Moderador',
+            'Aprobación de Contenido',
+            'Aprobación de artículo pendiente #1024',
+            'En Proceso',
+            '10.0.0.12'
+        ]
+
+    ];
+
+
+    /*
+     * =========================================================
+     * DIAGNÓSTICO
+     * =========================================================
+     */
 
     const status =
         document.getElementById('status');
+
+    const errorLog =
+        document.getElementById('error-log');
 
     const debugContent =
         document.getElementById('debug-content');
 
 
-    function debug(message, ok = false) {
+    function debug(
+        message,
+        ok = false
+    ) {
 
-        const div =
+        const line =
             document.createElement('div');
 
-        div.textContent =
+        line.textContent =
             message;
 
         if (ok) {
-            div.className =
+            line.className =
                 'debug-ok';
         }
 
-        debugContent.appendChild(div);
+        debugContent.appendChild(line);
 
         console.log(
-            '[AUDITORIA]',
+            '[UNIVER V4]',
             message
         );
     }
 
 
-    function showError(message, error) {
+    function showError(
+        message,
+        error
+    ) {
 
         errorLog.style.display =
             'block';
@@ -474,9 +385,11 @@
             'Error crítico:\n\n' +
             message +
             '\n\n' +
-            (error
-                ? error.message
-                : 'Sin detalles adicionales.');
+            (
+                error
+                    ? error.message
+                    : ''
+            );
 
         status.textContent =
             '❌ Univer no pudo iniciar';
@@ -494,490 +407,501 @@
             message,
             error
         );
+
     }
 
 
     /*
      * =========================================================
-     * DATOS DE AUDITORÍA
+     * INICIALIZACIÓN
      * =========================================================
      */
 
-    const auditSnapshot = {
+    function iniciarUniver() {
 
-        id: 'audit-workbook-1',
+        try {
 
-        name: 'Auditoría de Tareas',
+            debug(
+                'Verificando React...'
+            );
 
-        sheetOrder: [
-            'sheet-1'
-        ],
+            if (!window.React) {
 
-        sheets: {
+                throw new Error(
+                    'React no está cargado.'
+                );
 
-            'sheet-1': {
+            }
 
-                id: 'sheet-1',
+            debug(
+                '✓ React cargado',
+                true
+            );
 
-                name: 'Registro de Actividades',
 
-                rowCount: 100,
+            debug(
+                'Verificando ReactDOM...'
+            );
 
-                columnCount: 10,
+            if (!window.ReactDOM) {
 
-                cellData: {
+                throw new Error(
+                    'ReactDOM no está cargado.'
+                );
 
-                    0: {
-                        0: { v: 'ID' },
-                        1: { v: 'Fecha' },
-                        2: { v: 'Usuario' },
-                        3: { v: 'Rol' },
-                        4: { v: 'Acción' },
-                        5: { v: 'Detalle' },
-                        6: { v: 'Estado' },
-                        7: { v: 'IP Origen' }
+            }
+
+            debug(
+                '✓ ReactDOM cargado',
+                true
+            );
+
+
+            debug(
+                'Verificando RxJS...'
+            );
+
+            if (!window.rxjs) {
+
+                throw new Error(
+                    'RxJS no está cargado. Verifica el CDN.'
+                );
+
+            }
+
+            debug(
+                '✓ RxJS cargado',
+                true
+            );
+
+
+            debug(
+                'Verificando ECharts...'
+            );
+
+            if (!window.echarts) {
+
+                throw new Error(
+                    'ECharts no está cargado.'
+                );
+
+            }
+
+            debug(
+                '✓ ECharts cargado',
+                true
+            );
+
+
+            debug(
+                'Verificando UniverPresets...'
+            );
+
+            if (!window.UniverPresets) {
+
+                throw new Error(
+                    'UniverPresets no está cargado.'
+                );
+
+            }
+
+            debug(
+                '✓ UniverPresets cargado',
+                true
+            );
+
+
+            debug(
+                'Verificando UniverCore...'
+            );
+
+            if (!window.UniverCore) {
+
+                throw new Error(
+                    'UniverCore no está cargado.'
+                );
+
+            }
+
+            debug(
+                '✓ UniverCore cargado',
+                true
+            );
+
+
+            debug(
+                'Verificando UniverDesign...'
+            );
+
+            if (!window.UniverDesign) {
+
+                throw new Error(
+                    'UniverDesign no está cargado.'
+                );
+
+            }
+
+            debug(
+                '✓ UniverDesign cargado',
+                true
+            );
+
+
+            debug(
+                'Verificando UniverPresetSheetsCore...'
+            );
+
+            if (!window.UniverPresetSheetsCore) {
+
+                throw new Error(
+                    'UniverPresetSheetsCore no está cargado.'
+                );
+
+            }
+
+            debug(
+                '✓ UniverPresetSheetsCore cargado',
+                true
+            );
+
+
+            /*
+             * =================================================
+             * OBTENER APIs
+             * =================================================
+             */
+
+            const {
+                createUniver
+            } = window.UniverPresets;
+
+
+            const {
+                LocaleType,
+                merge
+            } = window.UniverCore;
+
+
+            const {
+                defaultTheme
+            } = window.UniverDesign;
+
+
+            const {
+                UniverSheetsCorePreset
+            } =
+                window.UniverPresetSheetsCore;
+
+
+            if (
+                typeof createUniver !==
+                'function'
+            ) {
+
+                throw new Error(
+                    'createUniver no es una función.'
+                );
+
+            }
+
+
+            if (
+                typeof UniverSheetsCorePreset !==
+                'function'
+            ) {
+
+                throw new Error(
+                    'UniverSheetsCorePreset no es una función.'
+                );
+
+            }
+
+
+            debug(
+                '✓ APIs de Univer disponibles',
+                true
+            );
+
+
+            /*
+             * =================================================
+             * CREAR UNIVERS
+             * =================================================
+             */
+
+            debug(
+                'Creando instancia de Univer...'
+            );
+
+
+            const {
+                univerAPI
+            } =
+                createUniver({
+
+                    locale:
+                        LocaleType.EN_US,
+
+                    locales: {
+
+                        [LocaleType.EN_US]:
+
+                            merge(
+
+                                {},
+
+                                window.UniverPresetSheetsCoreEnUS
+
+                            )
+
                     },
 
-                    1: {
-                        0: { v: 1001 },
-                        1: { v: '2026-09-24 09:15' },
-                        2: { v: 'carlos.mendoza' },
-                        3: { v: 'Admin' },
-                        4: { v: 'Crear Usuario' },
-                        5: { v: 'Alta de nuevo moderador: laura.gomez' },
-                        6: { v: 'Completado' },
-                        7: { v: '192.168.1.45' }
-                    },
+                    theme:
+                        defaultTheme,
 
-                    2: {
-                        0: { v: 1002 },
-                        1: { v: '2026-09-24 10:02' },
-                        2: { v: 'laura.gomez' },
-                        3: { v: 'Moderador' },
-                        4: { v: 'Editar Contenido' },
-                        5: { v: 'Eliminación de post ofensivo #4432' },
-                        6: { v: 'Completado' },
-                        7: { v: '10.0.0.12' }
-                    },
+                    presets: [
 
-                    3: {
-                        0: { v: 1003 },
-                        1: { v: '2026-09-24 11:45' },
-                        2: { v: 'ana.torres' },
-                        3: { v: 'Admin' },
-                        4: { v: 'Cambio de Permisos' },
-                        5: { v: 'Modificación de rol para usuario pedro.ruiz' },
-                        6: { v: 'Pendiente Revisión' },
-                        7: { v: '192.168.1.22' }
-                    },
+                        UniverSheetsCorePreset({
 
-                    4: {
-                        0: { v: 1004 },
-                        1: { v: '2026-09-24 14:30' },
-                        2: { v: 'javier.lopez' },
-                        3: { v: 'Moderador' },
-                        4: { v: 'Revisión de Reporte' },
-                        5: { v: 'Revisión de reporte de usuario #7890' },
-                        6: { v: 'Rechazado' },
-                        7: { v: '10.0.0.55' }
-                    },
+                            container:
+                                'univer-container'
 
-                    5: {
-                        0: { v: 1005 },
-                        1: { v: '2026-09-25 08:00' },
-                        2: { v: 'carlos.mendoza' },
-                        3: { v: 'Admin' },
-                        4: { v: 'Backup de Sistema' },
-                        5: { v: 'Respaldo completo de base de datos' },
-                        6: { v: 'Completado' },
-                        7: { v: '192.168.1.45' }
-                    },
+                        })
 
-                    6: {
-                        0: { v: 1006 },
-                        1: { v: '2026-09-25 09:20' },
-                        2: { v: 'laura.gomez' },
-                        3: { v: 'Moderador' },
-                        4: { v: 'Aprobación de Contenido' },
-                        5: { v: 'Aprobación de artículo pendiente #1024' },
-                        6: { v: 'En Proceso' },
-                        7: { v: '10.0.0.12' }
+                    ]
+
+                });
+
+
+            if (!univerAPI) {
+
+                throw new Error(
+                    'createUniver no devolvió univerAPI.'
+                );
+
+            }
+
+
+            debug(
+                '✓ Univer creado correctamente',
+                true
+            );
+
+
+            /*
+             * =================================================
+             * CREAR HOJA
+             * =================================================
+             */
+
+            debug(
+                'Creando hoja de auditoría...'
+            );
+
+
+            const workbook =
+                univerAPI.createUniverSheet({
+
+                    name:
+                        'Auditoría de Tareas',
+
+                    sheetOrder: [
+                        'sheet-1'
+                    ],
+
+                    sheets: {
+
+                        'sheet-1': {
+
+                            id:
+                                'sheet-1',
+
+                            name:
+                                'Registro de Actividades',
+
+                            rowCount:
+                                100,
+
+                            columnCount:
+                                10,
+
+                            cellData:
+                                {}
+
+                        }
+
                     }
 
+                });
+
+
+            if (!workbook) {
+
+                throw new Error(
+                    'No fue posible crear el workbook.'
+                );
+
+            }
+
+
+            debug(
+                '✓ Workbook creado',
+                true
+            );
+
+
+            /*
+             * =================================================
+             * INSERTAR DATOS
+             * =================================================
+             *
+             * Usamos la API de rangos para colocar los datos
+             * después de crear la hoja.
+             */
+
+            const sheet =
+                workbook.getActiveSheet();
+
+
+            if (!sheet) {
+
+                throw new Error(
+                    'No se encontró la hoja activa.'
+                );
+
+            }
+
+
+            debug(
+                'Insertando datos de auditoría...'
+            );
+
+
+            for (
+                let row = 0;
+                row < auditRows.length;
+                row++
+            ) {
+
+                for (
+                    let col = 0;
+                    col < auditRows[row].length;
+                    col++
+                ) {
+
+                    const value =
+                        auditRows[row][col];
+
+                    const cell =
+                        sheet.getRange(
+                            row,
+                            col
+                        );
+
+                    cell.setValue(
+                        value
+                    );
+
                 }
 
             }
 
+
+            debug(
+                '✓ Datos insertados',
+                true
+            );
+
+
+            /*
+             * =================================================
+             * AJUSTES VISUALES
+             * =================================================
+             */
+
+            try {
+
+                const headerRange =
+                    sheet.getRange(
+                        0,
+                        0,
+                        1,
+                        8
+                    );
+
+
+                headerRange.setFontWeight(
+                    'bold'
+                );
+
+            } catch (
+                formattingError
+            ) {
+
+                console.warn(
+                    'No se pudo aplicar formato adicional:',
+                    formattingError
+                );
+
+            }
+
+
+            /*
+             * =================================================
+             * FINAL
+             * =================================================
+             */
+
+            status.textContent =
+                '✅ Panel de auditoría cargado correctamente';
+
+            status.style.background =
+                '#d1e7dd';
+
+            status.style.color =
+                '#0f5132';
+
+            status.style.borderColor =
+                '#a3cfbb';
+
+
+            debug(
+                '========================================',
+                true
+            );
+
+            debug(
+                '✓ UNIVER V4 INICIALIZADO CORRECTAMENTE',
+                true
+            );
+
+            debug(
+                '========================================',
+                true
+            );
+
+
+        } catch (
+            error
+        ) {
+
+            showError(
+                'No fue posible inicializar Univer.',
+                error
+            );
+
         }
 
-    };
+    }
 
 
     /*
      * =========================================================
-     * VALIDACIÓN DE DEPENDENCIAS
+     * EJECUTAR DESPUÉS DE CARGAR LOS SCRIPTS
      * =========================================================
      */
 
-    try {
-
-        debug('Verificando dependencias...');
-
-
-        if (!window.React) {
-            throw new Error(
-                'React no está cargado.'
-            );
-        }
-
-        debug(
-            '✓ React cargado',
-            true
-        );
-
-
-        if (!window.ReactDOM) {
-            throw new Error(
-                'ReactDOM no está cargado.'
-            );
-        }
-
-        debug(
-            '✓ ReactDOM cargado',
-            true
-        );
-
-
-        if (!window.Rx) {
-            throw new Error(
-                'RxJS no está cargado.'
-            );
-        }
-
-        debug(
-            '✓ RxJS cargado',
-            true
-        );
-
-
-        if (!window.UniverCore) {
-            throw new Error(
-                'UniverCore no está cargado.'
-            );
-        }
-
-        debug(
-            '✓ UniverCore cargado',
-            true
-        );
-
-
-        if (!window.UniverSheets) {
-            throw new Error(
-                'UniverSheets no está cargado.'
-            );
-        }
-
-        debug(
-            '✓ UniverSheets cargado',
-            true
-        );
-
-
-        if (!window.UniverUi) {
-            throw new Error(
-                'UniverUi no está cargado.'
-            );
-        }
-
-        debug(
-            '✓ UniverUi cargado',
-            true
-        );
-
-
-        if (!window.UniverCoreFacade) {
-            throw new Error(
-                'UniverCoreFacade no está cargado.'
-            );
-        }
-
-        debug(
-            '✓ UniverCoreFacade cargado',
-            true
-        );
-
-
-        /*
-         * =====================================================
-         * CREAR UNIVERS
-         * =====================================================
-         */
-
-        debug(
-            'Creando instancia de Univer...'
-        );
-
-
-        const {
-
-            Univer,
-
-            LocaleType,
-
-            mergeLocales,
-
-            UniverInstanceType
-
-        } = UniverCore;
-
-
-        const {
-            FUniver
-        } = UniverCoreFacade;
-
-
-        const {
-            UniverRenderEnginePlugin
-        } = UniverEngineRender;
-
-
-        const {
-            UniverFormulaEnginePlugin
-        } = UniverEngineFormula;
-
-
-        const {
-            UniverUIPlugin
-        } = UniverUi;
-
-
-        const {
-            UniverSheetsPlugin
-        } = UniverSheets;
-
-
-        const {
-            UniverSheetsUIPlugin
-        } = UniverSheetsUi;
-
-
-        const {
-            UniverDocsPlugin
-        } = UniverDocs;
-
-
-        const {
-            UniverDocsUIPlugin
-        } = UniverDocsUi;
-
-
-        const {
-            UniverSheetsFormulaPlugin
-        } = UniverSheetsFormula;
-
-
-        const {
-            UniverSheetsFormulaUIPlugin
-        } = UniverSheetsFormulaUi;
-
-
-        const {
-            UniverSheetsNumfmtPlugin
-        } = UniverSheetsNumfmt;
-
-
-        const {
-            UniverSheetsNumfmtUIPlugin
-        } = UniverSheetsNumfmtUi;
-
-
-        /*
-         * Crear Univer
-         */
-
-        const univer =
-            new Univer({
-
-                locale:
-                    LocaleType.EN_US,
-
-                locales: {
-
-                    [LocaleType.EN_US]:
-
-                        mergeLocales(
-
-                            UniverDesignEnUS,
-
-                            UniverUiEnUS,
-
-                            UniverSheetsEnUS,
-
-                            UniverSheetsUiEnUS,
-
-                            UniverDocsUiEnUS,
-
-                            UniverSheetsFormulaUiEnUS,
-
-                            UniverSheetsNumfmtUiEnUS
-
-                        )
-
-                }
-
-            });
-
-
-        debug(
-            '✓ Instancia de Univer creada',
-            true
-        );
-
-
-        /*
-         * Registrar plugins
-         */
-
-        univer.registerPlugin(
-            UniverRenderEnginePlugin
-        );
-
-
-        univer.registerPlugin(
-            UniverFormulaEnginePlugin
-        );
-
-
-        univer.registerPlugin(
-            UniverUIPlugin,
-            {
-                container:
-                    'univer-container'
-            }
-        );
-
-
-        univer.registerPlugin(
-            UniverDocsPlugin
-        );
-
-
-        univer.registerPlugin(
-            UniverDocsUIPlugin
-        );
-
-
-        univer.registerPlugin(
-            UniverSheetsPlugin
-        );
-
-
-        univer.registerPlugin(
-            UniverSheetsUIPlugin
-        );
-
-
-        univer.registerPlugin(
-            UniverSheetsFormulaPlugin
-        );
-
-
-        univer.registerPlugin(
-            UniverSheetsFormulaUIPlugin
-        );
-
-
-        univer.registerPlugin(
-            UniverSheetsNumfmtPlugin
-        );
-
-
-        univer.registerPlugin(
-            UniverSheetsNumfmtUIPlugin
-        );
-
-
-        debug(
-            '✓ Plugins de Sheets registrados',
-            true
-        );
-
-
-        /*
-         * Crear workbook
-         */
-
-        debug(
-            'Creando workbook...'
-        );
-
-
-        univer.createUnit(
-            UniverInstanceType.UNIVER_SHEET,
-            auditSnapshot
-        );
-
-
-        const univerAPI =
-            FUniver.newAPI(
-                univer
-            );
-
-
-        if (!univerAPI) {
-
-            throw new Error(
-                'No fue posible crear univerAPI.'
-            );
-
-        }
-
-
-        debug(
-            '✓ univerAPI creado',
-            true
-        );
-
-
-        status.textContent =
-            '✅ Panel de auditoría cargado correctamente';
-
-
-        status.style.background =
-            '#d1e7dd';
-
-        status.style.color =
-            '#0f5132';
-
-        status.style.borderColor =
-            '#a3cfbb';
-
-
-        debug(
-            '========================================',
-            true
-        );
-
-        debug(
-            '✓ UNIVER INICIALIZADO CORRECTAMENTE',
-            true
-        );
-
-        debug(
-            '========================================',
-            true
-        );
-
-
-    } catch (error) {
-
-        showError(
-            'No fue posible inicializar Univer.',
-            error
-        );
-
-    }
+    iniciarUniver();
 
 </script>
 
