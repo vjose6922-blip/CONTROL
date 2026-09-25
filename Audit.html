@@ -52,6 +52,22 @@
 </script>
 
 
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/preset-sheets-filter@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/preset-sheets-filter@0.25.1/lib/umd/locales/en-US.js">
+</script>
+
+<link
+    crossorigin="anonymous"
+    rel="stylesheet"
+    href="https://unpkg.com/@univerjs/preset-sheets-filter@0.25.1/lib/index.css">
+
+
 <!-- =========================================================
      CSS DE UNIVER SHEETS
      ========================================================= -->
@@ -448,7 +464,7 @@
      * =========================================================
      */
 
-    function iniciarUniver() {
+    async function iniciarUniver() {
 
         try {
 
@@ -596,6 +612,24 @@
             );
 
 
+            debug(
+                'Verificando UniverPresetSheetsFilter...'
+            );
+
+            if (!window.UniverPresetSheetsFilter) {
+
+                throw new Error(
+                    'UniverPresetSheetsFilter no está cargado.'
+                );
+
+            }
+
+            debug(
+                '✓ UniverPresetSheetsFilter cargado',
+                true
+            );
+
+
             /*
              * =================================================
              * OBTENER APIs
@@ -622,6 +656,12 @@
                 UniverSheetsCorePreset
             } =
                 window.UniverPresetSheetsCore;
+
+
+            const {
+                UniverSheetsFilterPreset
+            } =
+                window.UniverPresetSheetsFilter;
 
 
             if (
@@ -681,7 +721,9 @@
 
                                 {},
 
-                                window.UniverPresetSheetsCoreEnUS
+                                window.UniverPresetSheetsCoreEnUS,
+
+                                window.UniverPresetSheetsFilterEnUS
 
                             )
 
@@ -695,9 +737,23 @@
                         UniverSheetsCorePreset({
 
                             container:
-                                'univer-container'
+                                'univer-container',
 
-                        })
+                            toolbar:
+                                false,
+
+                            footer:
+                                false,
+
+                            contextMenu:
+                                false,
+
+                            disableAutoFocus:
+                                true
+
+                        }),
+
+                        UniverSheetsFilterPreset()
 
                     ]
 
@@ -872,6 +928,77 @@
                 console.warn(
                     'No se pudo aplicar formato adicional:',
                     formattingError
+                );
+
+            }
+
+
+            /*
+             * =================================================
+             * FILTRO Y MODO SOLO LECTURA + FILTRO
+             * =================================================
+             *
+             * El panel es únicamente para auditar/consultar,
+             * así que activamos el filtro sobre los datos y
+             * bloqueamos la edición de celdas, permitiendo
+             * filtrar y ordenar.
+             */
+
+            try {
+
+                const dataRange =
+                    sheet.getRange(
+                        0,
+                        0,
+                        auditRows.length,
+                        auditRows[0].length
+                    );
+
+                const existingFilter =
+                    sheet.getFilter();
+
+                if (!existingFilter) {
+
+                    await dataRange.createFilter();
+
+                }
+
+                debug(
+                    '✓ Filtro activado sobre los datos',
+                    true
+                );
+
+            } catch (
+                filterError
+            ) {
+
+                console.warn(
+                    'No se pudo activar el filtro:',
+                    filterError
+                );
+
+            }
+
+            try {
+
+                await sheet
+                    .getWorksheetPermission()
+                    .setMode(
+                        'filterOnly'
+                    );
+
+                debug(
+                    '✓ Hoja en modo solo consulta (filtrar/ordenar sí, editar no)',
+                    true
+                );
+
+            } catch (
+                readOnlyError
+            ) {
+
+                console.warn(
+                    'No se pudo activar el modo filterOnly:',
+                    readOnlyError
                 );
 
             }
