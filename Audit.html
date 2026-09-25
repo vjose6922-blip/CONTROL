@@ -4,83 +4,394 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Auditoría de Tareas - Usuario Master</title>
 
 ```
+<title>Panel de Auditoría de Tareas - Usuario Master</title>
+
+<!-- =========================================================
+     REACT
+     ========================================================= -->
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/react@18.3.1/umd/react.production.min.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js">
+</script>
+
+
+<!-- =========================================================
+     RXJS
+     ========================================================= -->
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/rxjs@7.8.1/dist/bundles/rxjs.umd.min.js">
+</script>
+
+
+<!-- =========================================================
+     DEPENDENCIAS DE UNIVER
+     
+     IMPORTANTE:
+     Todas usan EXACTAMENTE la misma versión.
+     ========================================================= -->
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@wendellhu/redi@1.1.2/dist/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@wendellhu/redi@1.1.2/dist/umd/react-bindings/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/themes@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/protocol@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/core@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/network@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/rpc@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/design@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/engine-render@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/engine-formula@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/drawing@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/ui@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/docs@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/docs-ui@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-ui@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-formula@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-formula-ui@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-numfmt@0.25.1/lib/umd/index.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-numfmt-ui@0.25.1/lib/umd/index.js">
+</script>
+
+
+<!-- =========================================================
+     FACADE
+     ========================================================= -->
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/core@0.25.1/lib/umd/facade.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/engine-formula@0.25.1/lib/umd/facade.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/ui@0.25.1/lib/umd/facade.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/docs-ui@0.25.1/lib/umd/facade.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets@0.25.1/lib/umd/facade.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-ui@0.25.1/lib/umd/facade.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-formula@0.25.1/lib/umd/facade.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-numfmt@0.25.1/lib/umd/facade.js">
+</script>
+
+
+<!-- =========================================================
+     IDIOMA
+     ========================================================= -->
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/design@0.25.1/lib/umd/locale/en-US.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/ui@0.25.1/lib/umd/locale/en-US.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets@0.25.1/lib/umd/locale/en-US.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-ui@0.25.1/lib/umd/locale/en-US.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/docs-ui@0.25.1/lib/umd/locale/en-US.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-formula-ui@0.25.1/lib/umd/locale/en-US.js">
+</script>
+
+<script
+    crossorigin="anonymous"
+    src="https://unpkg.com/@univerjs/sheets-numfmt-ui@0.25.1/lib/umd/locale/en-US.js">
+</script>
+
+
+<!-- =========================================================
+     CSS
+     ========================================================= -->
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/@univerjs/design@0.25.1/lib/index.css">
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/@univerjs/ui@0.25.1/lib/index.css">
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/@univerjs/docs-ui@0.25.1/lib/index.css">
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/@univerjs/sheets-ui@0.25.1/lib/index.css">
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/@univerjs/sheets-formula-ui@0.25.1/lib/index.css">
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/@univerjs/sheets-numfmt-ui@0.25.1/lib/index.css">
+
+
+<!-- =========================================================
+     ESTILOS DEL PANEL
+     ========================================================= -->
+
 <style>
-    * {
-        box-sizing: border-box;
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%;
     }
 
     body {
-        margin: 0;
         padding: 20px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family:
+            'Segoe UI',
+            Tahoma,
+            Geneva,
+            Verdana,
+            sans-serif;
+
         background: #f4f6f9;
         color: #2c3e50;
+
+        box-sizing: border-box;
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
     }
 
     h1 {
         margin-top: 0;
-        border-bottom: 2px solid #3498db;
+
+        color: #2c3e50;
+
+        border-bottom:
+            2px solid #3498db;
+
         padding-bottom: 10px;
     }
 
     p {
         color: #555;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
 
     #status {
-        display: block;
         padding: 10px 14px;
+
         margin-bottom: 15px;
+
         border-radius: 6px;
+
         background: #eef5fb;
+
         color: #245b80;
-        border: 1px solid #c9e2f5;
+
+        border:
+            1px solid #c9e2f5;
+
+        font-weight: 600;
     }
 
     #error-log {
         display: none;
-        color: #842029;
-        font-weight: 600;
-        margin-bottom: 15px;
+
         padding: 14px;
-        background: #f8d7da;
-        border: 1px solid #f1aeb5;
+
+        margin-bottom: 15px;
+
         border-radius: 6px;
+
+        background: #f8d7da;
+
+        color: #842029;
+
+        border:
+            1px solid #f1aeb5;
+
         white-space: pre-wrap;
+
+        font-family: Consolas, monospace;
+
+        font-size: 13px;
     }
 
     #univer-container {
         width: 100%;
-        height: 600px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+
+        height: 650px;
+
         background: white;
+
+        border:
+            1px solid #ddd;
+
+        border-radius: 8px;
+
         overflow: hidden;
+
+        box-shadow:
+            0 4px 12px
+            rgba(0,0,0,0.08);
     }
 
-    .debug {
+    #debug-log {
         margin-top: 15px;
-        padding: 10px;
+
+        padding: 12px;
+
         background: #fff;
-        border: 1px solid #ddd;
+
+        border:
+            1px solid #ddd;
+
         border-radius: 6px;
+
         font-family: Consolas, monospace;
+
         font-size: 12px;
+
+        line-height: 1.6;
+
         color: #555;
     }
 
-    .ok {
+    .debug-ok {
         color: #198754;
     }
 
-    .fail {
+    .debug-error {
         color: #dc3545;
     }
+
 </style>
 ```
 
@@ -89,79 +400,102 @@
 <body>
 
 ```
-<h1>Panel de Auditoría de Tareas</h1>
+<h1>
+    Panel de Auditoría de Tareas
+</h1>
 
 <p>
     Usuario Master · Datos de ejemplo de tareas realizadas por Administradores y Moderadores
 </p>
 
+
 <div id="status">
-    ⏳ Cargando Univer...
+    ⏳ Inicializando Univer...
 </div>
+
 
 <div id="error-log"></div>
 
+
 <div id="univer-container"></div>
 
-<div class="debug" id="debug-log">
-    Inicializando...
+
+<div id="debug-log">
+    <strong>Diagnóstico:</strong>
+    <div id="debug-content">
+        Esperando inicialización...
+    </div>
 </div>
 
 
 <!-- =========================================================
-     UNIVER V2
-     Usamos ES Modules en lugar de window.UniverPresets
+     APLICACIÓN
      ========================================================= -->
 
-<script type="module">
+<script>
 
-    const errorLog = document.getElementById('error-log');
-    const status = document.getElementById('status');
-    const debugLog = document.getElementById('debug-log');
+    const errorLog =
+        document.getElementById('error-log');
+
+    const status =
+        document.getElementById('status');
+
+    const debugContent =
+        document.getElementById('debug-content');
 
 
-    function debug(message, type = '') {
-        const line = document.createElement('div');
+    function debug(message, ok = false) {
 
-        if (type) {
-            line.className = type;
+        const div =
+            document.createElement('div');
+
+        div.textContent =
+            message;
+
+        if (ok) {
+            div.className =
+                'debug-ok';
         }
 
-        line.textContent = message;
+        debugContent.appendChild(div);
 
-        debugLog.appendChild(line);
-
-        console.log('[UNIVER]', message);
+        console.log(
+            '[AUDITORIA]',
+            message
+        );
     }
 
 
-    function showError(message, error = null) {
+    function showError(message, error) {
 
-        errorLog.style.display = 'block';
+        errorLog.style.display =
+            'block';
 
         errorLog.textContent =
             'Error crítico:\n\n' +
             message +
-            (error ? '\n\nDetalles:\n' + error.message : '');
+            '\n\n' +
+            (error
+                ? error.message
+                : 'Sin detalles adicionales.');
 
-        status.textContent = '❌ Univer no pudo iniciar';
-        status.style.background = '#f8d7da';
-        status.style.color = '#842029';
-        status.style.borderColor = '#f1aeb5';
+        status.textContent =
+            '❌ Univer no pudo iniciar';
 
-        console.error(message, error);
-    }
+        status.style.background =
+            '#f8d7da';
 
+        status.style.color =
+            '#842029';
 
-    window.addEventListener('error', function(event) {
+        status.style.borderColor =
+            '#f1aeb5';
 
         console.error(
-            'Error global:',
-            event.message,
-            event.error
+            message,
+            error
         );
-
-    });
+    }
 
 
     /*
@@ -282,219 +616,369 @@
 
     /*
      * =========================================================
-     * INICIO
+     * VALIDACIÓN DE DEPENDENCIAS
      * =========================================================
      */
 
-    async function iniciarUniver() {
+    try {
 
-        try {
-
-            debug('Iniciando carga de módulos...');
+        debug('Verificando dependencias...');
 
 
-            /*
-             * Importamos directamente desde jsDelivr.
-             *
-             * IMPORTANTE:
-             * No utilizamos:
-             *
-             * window.UniverPresets
-             *
-             * porque ese global no existe en la distribución
-             * moderna.
-             */
-
-            debug('Cargando @univerjs/presets...');
-
-            const presets = await import(
-                'https://cdn.jsdelivr.net/npm/@univerjs/presets@0.9.0/lib/index.js'
+        if (!window.React) {
+            throw new Error(
+                'React no está cargado.'
             );
+        }
 
-            debug('✓ @univerjs/presets cargado', 'ok');
+        debug(
+            '✓ React cargado',
+            true
+        );
 
 
-            debug('Cargando preset de Sheets...');
-
-            const sheets = await import(
-                'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core@0.9.0/lib/index.js'
+        if (!window.ReactDOM) {
+            throw new Error(
+                'ReactDOM no está cargado.'
             );
+        }
 
-            debug('✓ @univerjs/preset-sheets-core cargado', 'ok');
-
-
-            /*
-             * Cargamos CSS mediante <link>.
-             */
-
-            const css = document.createElement('link');
-
-            css.rel = 'stylesheet';
-
-            css.href =
-                'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core@0.9.0/lib/index.css';
-
-            document.head.appendChild(css);
-
-            debug('✓ CSS de Sheets agregado', 'ok');
+        debug(
+            '✓ ReactDOM cargado',
+            true
+        );
 
 
-            /*
-             * Verificación de exports.
-             */
+        if (!window.Rx) {
+            throw new Error(
+                'RxJS no está cargado.'
+            );
+        }
 
-            if (!presets.createUniver) {
-
-                throw new Error(
-                    'El módulo @univerjs/presets se cargó, pero no contiene createUniver.'
-                );
-
-            }
-
-            if (!presets.LocaleType) {
-
-                throw new Error(
-                    'El módulo @univerjs/presets no contiene LocaleType.'
-                );
-
-            }
-
-            if (!sheets.UniverSheetsCorePreset) {
-
-                throw new Error(
-                    'El módulo de Sheets no contiene UniverSheetsCorePreset.'
-                );
-
-            }
+        debug(
+            '✓ RxJS cargado',
+            true
+        );
 
 
-            debug('✓ createUniver encontrado', 'ok');
+        if (!window.UniverCore) {
+            throw new Error(
+                'UniverCore no está cargado.'
+            );
+        }
 
-            debug('✓ LocaleType encontrado', 'ok');
-
-            debug('✓ UniverSheetsCorePreset encontrado', 'ok');
-
-
-            const {
-                createUniver,
-                LocaleType
-            } = presets;
-
-
-            const {
-                UniverSheetsCorePreset
-            } = sheets;
+        debug(
+            '✓ UniverCore cargado',
+            true
+        );
 
 
-            /*
-             * =====================================================
-             * CREAR UNIVERS
-             * =====================================================
-             */
+        if (!window.UniverSheets) {
+            throw new Error(
+                'UniverSheets no está cargado.'
+            );
+        }
 
-            debug('Creando instancia de Univer...');
+        debug(
+            '✓ UniverSheets cargado',
+            true
+        );
 
 
-            const univerInstance = createUniver({
+        if (!window.UniverUi) {
+            throw new Error(
+                'UniverUi no está cargado.'
+            );
+        }
 
-                locale: LocaleType.EN_US,
+        debug(
+            '✓ UniverUi cargado',
+            true
+        );
 
-                locales: {},
 
-                presets: [
+        if (!window.UniverCoreFacade) {
+            throw new Error(
+                'UniverCoreFacade no está cargado.'
+            );
+        }
 
-                    UniverSheetsCorePreset({
+        debug(
+            '✓ UniverCoreFacade cargado',
+            true
+        );
 
-                        container: 'univer-container'
 
-                    })
+        /*
+         * =====================================================
+         * CREAR UNIVERS
+         * =====================================================
+         */
 
-                ]
+        debug(
+            'Creando instancia de Univer...'
+        );
+
+
+        const {
+
+            Univer,
+
+            LocaleType,
+
+            mergeLocales,
+
+            UniverInstanceType
+
+        } = UniverCore;
+
+
+        const {
+            FUniver
+        } = UniverCoreFacade;
+
+
+        const {
+            UniverRenderEnginePlugin
+        } = UniverEngineRender;
+
+
+        const {
+            UniverFormulaEnginePlugin
+        } = UniverEngineFormula;
+
+
+        const {
+            UniverUIPlugin
+        } = UniverUi;
+
+
+        const {
+            UniverSheetsPlugin
+        } = UniverSheets;
+
+
+        const {
+            UniverSheetsUIPlugin
+        } = UniverSheetsUi;
+
+
+        const {
+            UniverDocsPlugin
+        } = UniverDocs;
+
+
+        const {
+            UniverDocsUIPlugin
+        } = UniverDocsUi;
+
+
+        const {
+            UniverSheetsFormulaPlugin
+        } = UniverSheetsFormula;
+
+
+        const {
+            UniverSheetsFormulaUIPlugin
+        } = UniverSheetsFormulaUi;
+
+
+        const {
+            UniverSheetsNumfmtPlugin
+        } = UniverSheetsNumfmt;
+
+
+        const {
+            UniverSheetsNumfmtUIPlugin
+        } = UniverSheetsNumfmtUi;
+
+
+        /*
+         * Crear Univer
+         */
+
+        const univer =
+            new Univer({
+
+                locale:
+                    LocaleType.EN_US,
+
+                locales: {
+
+                    [LocaleType.EN_US]:
+
+                        mergeLocales(
+
+                            UniverDesignEnUS,
+
+                            UniverUiEnUS,
+
+                            UniverSheetsEnUS,
+
+                            UniverSheetsUiEnUS,
+
+                            UniverDocsUiEnUS,
+
+                            UniverSheetsFormulaUiEnUS,
+
+                            UniverSheetsNumfmtUiEnUS
+
+                        )
+
+                }
 
             });
 
 
-            if (!univerInstance) {
+        debug(
+            '✓ Instancia de Univer creada',
+            true
+        );
 
-                throw new Error(
-                    'createUniver() no devolvió una instancia válida.'
-                );
 
+        /*
+         * Registrar plugins
+         */
+
+        univer.registerPlugin(
+            UniverRenderEnginePlugin
+        );
+
+
+        univer.registerPlugin(
+            UniverFormulaEnginePlugin
+        );
+
+
+        univer.registerPlugin(
+            UniverUIPlugin,
+            {
+                container:
+                    'univer-container'
             }
+        );
 
 
-            const {
-                univerAPI
-            } = univerInstance;
+        univer.registerPlugin(
+            UniverDocsPlugin
+        );
 
 
-            if (!univerAPI) {
-
-                throw new Error(
-                    'La instancia de Univer no contiene univerAPI.'
-                );
-
-            }
+        univer.registerPlugin(
+            UniverDocsUIPlugin
+        );
 
 
-            debug('✓ Univer inicializado', 'ok');
+        univer.registerPlugin(
+            UniverSheetsPlugin
+        );
 
 
-            /*
-             * =====================================================
-             * CARGAR WORKBOOK
-             * =====================================================
-             */
-
-            debug('Cargando workbook de auditoría...');
+        univer.registerPlugin(
+            UniverSheetsUIPlugin
+        );
 
 
-            univerAPI.createWorkbook(
-                auditSnapshot
+        univer.registerPlugin(
+            UniverSheetsFormulaPlugin
+        );
+
+
+        univer.registerPlugin(
+            UniverSheetsFormulaUIPlugin
+        );
+
+
+        univer.registerPlugin(
+            UniverSheetsNumfmtPlugin
+        );
+
+
+        univer.registerPlugin(
+            UniverSheetsNumfmtUIPlugin
+        );
+
+
+        debug(
+            '✓ Plugins de Sheets registrados',
+            true
+        );
+
+
+        /*
+         * Crear workbook
+         */
+
+        debug(
+            'Creando workbook...'
+        );
+
+
+        univer.createUnit(
+            UniverInstanceType.UNIVER_SHEET,
+            auditSnapshot
+        );
+
+
+        const univerAPI =
+            FUniver.newAPI(
+                univer
             );
 
 
-            debug('✓ Workbook cargado correctamente', 'ok');
+        if (!univerAPI) {
 
-
-            status.textContent =
-                '✅ Panel de auditoría cargado correctamente';
-
-            status.style.background = '#d1e7dd';
-            status.style.color = '#0f5132';
-            status.style.borderColor = '#a3cfbb';
-
-
-            console.log(
-                '========================================'
-            );
-
-            console.log(
-                '✅ UNIVER INICIALIZADO CORRECTAMENTE'
-            );
-
-            console.log(
-                '========================================'
-            );
-
-
-        } catch (error) {
-
-            showError(
-                'No fue posible inicializar Univer.',
-                error
+            throw new Error(
+                'No fue posible crear univerAPI.'
             );
 
         }
 
+
+        debug(
+            '✓ univerAPI creado',
+            true
+        );
+
+
+        status.textContent =
+            '✅ Panel de auditoría cargado correctamente';
+
+
+        status.style.background =
+            '#d1e7dd';
+
+        status.style.color =
+            '#0f5132';
+
+        status.style.borderColor =
+            '#a3cfbb';
+
+
+        debug(
+            '========================================',
+            true
+        );
+
+        debug(
+            '✓ UNIVER INICIALIZADO CORRECTAMENTE',
+            true
+        );
+
+        debug(
+            '========================================',
+            true
+        );
+
+
+    } catch (error) {
+
+        showError(
+            'No fue posible inicializar Univer.',
+            error
+        );
+
     }
-
-
-    /*
-     * Ejecutar
-     */
-
-    iniciarUniver();
 
 </script>
 ```
