@@ -7,38 +7,46 @@
     <!-- Estilos de Univer -->
     <link rel="stylesheet" href="https://unpkg.com/@univerjs/umd/lib/univer.css">
     <style>
-        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: #f4f6f9; }
+        body { margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; }
         h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        p { color: #555; margin-bottom: 20px; }
         #univer-container { height: 600px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: white; }
-        #error-log { color: red; font-weight: bold; margin-bottom: 10px; display: none; }
+        #error-log { color: #d9534f; font-weight: bold; margin-bottom: 15px; display: none; padding: 10px; background: #fdf7f7; border-radius: 4px; }
     </style>
 </head>
 <body>
     <h1>Panel de Auditoría de Tareas</h1>
     <p>Usuario Master · Datos de ejemplo de tareas realizadas por Administradores y Moderadores</p>
     
-    <!-- Aquí se mostrarán los errores si algo falla -->
     <div id="error-log"></div>
-    
     <div id="univer-container"></div>
 
-    <!-- Dependencias de Univer (UMD) -->
+    <!-- 
+      DEPENDENCIAS CORRECTAS: 
+      En lugar del bundle 'univer.full.umd.js', cargamos los paquetes de presets y core
+      que sí exponen las variables globales necesarias.
+    -->
     <script src="https://unpkg.com/react/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/rxjs/dist/bundles/rxjs.umd.min.js"></script>
-    <script src="https://unpkg.com/@univerjs/umd/lib/univer.full.umd.js"></script>
+
+    <!-- Paquete de Presets (expone window.UniverPresets) -->
+    <script src="https://cdn.jsdelivr.net/npm/@univerjs/presets@latest/lib/umd/index.js"></script>
+    <!-- Paquete Core (expone window.UniverCore para LocaleType y mergeLocales) -->
+    <script src="https://cdn.jsdelivr.net/npm/@univerjs/core@latest/lib/umd/index.js"></script>
+    <!-- Preset de Hojas de Cálculo (expone window.UniverPresetSheetsCore) -->
+    <script src="https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core@latest/lib/umd/index.js"></script>
 
     <script>
-        // Capturamos cualquier error de JavaScript para mostrarlo en pantalla
         window.onerror = function(message, source, lineno, colno, error) {
             const errorDiv = document.getElementById('error-log');
             errorDiv.style.display = 'block';
-            errorDiv.innerText = `Error: ${message} en línea ${lineno}`;
+            errorDiv.innerText = `Error: ${message} (línea ${lineno})`;
             console.error(error);
         };
 
         try {
-            // 1. Datos de auditoría (Snapshot)
+            // 1. Snapshot con los datos de auditoría
             const auditSnapshot = {
                 id: 'audit-workbook-1',
                 name: 'Auditoría de Tareas',
@@ -62,14 +70,14 @@
                 }
             };
 
-            // 2. Inicialización de Univer
-            // Accedemos a las variables globales que expone el script UMD
-            const { createUniver, LocaleType, mergeLocales } = window.UniverPresets;
+            // 2. Acceso a los globales CORRECTOS
+            const { createUniver } = window.UniverPresets;
+            const { LocaleType, mergeLocales } = window.UniverCore;
             const { UniverSheetsCorePreset } = window.UniverPresetSheetsCore;
 
-            // Inicializamos sin locale específico para evitar errores de referencia
+            // 3. Inicialización
             const { univerAPI } = createUniver({
-                locale: LocaleType.EN_US, // Interfaz en inglés por defecto
+                locale: LocaleType.EN_US, // Interfaz en inglés (el core no trae ES)
                 locales: {},
                 presets: [
                     UniverSheetsCorePreset({
@@ -78,13 +86,13 @@
                 ],
             });
 
-            // 3. Carga de los datos
+            // 4. Carga de datos
             univerAPI.createWorkbook(auditSnapshot);
             console.log('✅ Panel de auditoría cargado correctamente.');
 
         } catch (error) {
             document.getElementById('error-log').style.display = 'block';
-            document.getElementById('error-log').innerText = 'Error crítico al inicializar Univer: ' + error.message;
+            document.getElementById('error-log').innerText = 'Error crítico: ' + error.message;
             console.error(error);
         }
     </script>
