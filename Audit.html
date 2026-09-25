@@ -1,100 +1,503 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Auditoría de Tareas - Usuario Master</title>
-    <!-- Estilos de Univer -->
-    <link rel="stylesheet" href="https://unpkg.com/@univerjs/umd/lib/univer.css">
-    <style>
-        body { margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; }
-        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        p { color: #555; margin-bottom: 20px; }
-        #univer-container { height: 600px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: white; }
-        #error-log { color: #d9534f; font-weight: bold; margin-bottom: 15px; display: none; padding: 10px; background: #fdf7f7; border-radius: 4px; }
-    </style>
+
+```
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f4f6f9;
+        color: #2c3e50;
+    }
+
+    h1 {
+        margin-top: 0;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+    }
+
+    p {
+        color: #555;
+        margin-bottom: 20px;
+    }
+
+    #status {
+        display: block;
+        padding: 10px 14px;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        background: #eef5fb;
+        color: #245b80;
+        border: 1px solid #c9e2f5;
+    }
+
+    #error-log {
+        display: none;
+        color: #842029;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding: 14px;
+        background: #f8d7da;
+        border: 1px solid #f1aeb5;
+        border-radius: 6px;
+        white-space: pre-wrap;
+    }
+
+    #univer-container {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        background: white;
+        overflow: hidden;
+    }
+
+    .debug {
+        margin-top: 15px;
+        padding: 10px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        color: #555;
+    }
+
+    .ok {
+        color: #198754;
+    }
+
+    .fail {
+        color: #dc3545;
+    }
+</style>
+```
+
 </head>
+
 <body>
-    <h1>Panel de Auditoría de Tareas</h1>
-    <p>Usuario Master · Datos de ejemplo de tareas realizadas por Administradores y Moderadores</p>
-    
-    <div id="error-log"></div>
-    <div id="univer-container"></div>
 
-    <!-- 
-      DEPENDENCIAS CORRECTAS: 
-      En lugar del bundle 'univer.full.umd.js', cargamos los paquetes de presets y core
-      que sí exponen las variables globales necesarias.
-    -->
-    <script src="https://unpkg.com/react/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/rxjs/dist/bundles/rxjs.umd.min.js"></script>
+```
+<h1>Panel de Auditoría de Tareas</h1>
 
-    <!-- Paquete de Presets (expone window.UniverPresets) -->
-    <script src="https://cdn.jsdelivr.net/npm/@univerjs/presets@latest/lib/umd/index.js"></script>
-    <!-- Paquete Core (expone window.UniverCore para LocaleType y mergeLocales) -->
-    <script src="https://cdn.jsdelivr.net/npm/@univerjs/core@latest/lib/umd/index.js"></script>
-    <!-- Preset de Hojas de Cálculo (expone window.UniverPresetSheetsCore) -->
-    <script src="https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core@latest/lib/umd/index.js"></script>
+<p>
+    Usuario Master · Datos de ejemplo de tareas realizadas por Administradores y Moderadores
+</p>
 
-    <script>
-        window.onerror = function(message, source, lineno, colno, error) {
-            const errorDiv = document.getElementById('error-log');
-            errorDiv.style.display = 'block';
-            errorDiv.innerText = `Error: ${message} (línea ${lineno})`;
-            console.error(error);
-        };
+<div id="status">
+    ⏳ Cargando Univer...
+</div>
+
+<div id="error-log"></div>
+
+<div id="univer-container"></div>
+
+<div class="debug" id="debug-log">
+    Inicializando...
+</div>
+
+
+<!-- =========================================================
+     UNIVER V2
+     Usamos ES Modules en lugar de window.UniverPresets
+     ========================================================= -->
+
+<script type="module">
+
+    const errorLog = document.getElementById('error-log');
+    const status = document.getElementById('status');
+    const debugLog = document.getElementById('debug-log');
+
+
+    function debug(message, type = '') {
+        const line = document.createElement('div');
+
+        if (type) {
+            line.className = type;
+        }
+
+        line.textContent = message;
+
+        debugLog.appendChild(line);
+
+        console.log('[UNIVER]', message);
+    }
+
+
+    function showError(message, error = null) {
+
+        errorLog.style.display = 'block';
+
+        errorLog.textContent =
+            'Error crítico:\n\n' +
+            message +
+            (error ? '\n\nDetalles:\n' + error.message : '');
+
+        status.textContent = '❌ Univer no pudo iniciar';
+        status.style.background = '#f8d7da';
+        status.style.color = '#842029';
+        status.style.borderColor = '#f1aeb5';
+
+        console.error(message, error);
+    }
+
+
+    window.addEventListener('error', function(event) {
+
+        console.error(
+            'Error global:',
+            event.message,
+            event.error
+        );
+
+    });
+
+
+    /*
+     * =========================================================
+     * DATOS DE AUDITORÍA
+     * =========================================================
+     */
+
+    const auditSnapshot = {
+
+        id: 'audit-workbook-1',
+
+        name: 'Auditoría de Tareas',
+
+        sheetOrder: [
+            'sheet-1'
+        ],
+
+        sheets: {
+
+            'sheet-1': {
+
+                id: 'sheet-1',
+
+                name: 'Registro de Actividades',
+
+                rowCount: 100,
+
+                columnCount: 10,
+
+                cellData: {
+
+                    0: {
+                        0: { v: 'ID' },
+                        1: { v: 'Fecha' },
+                        2: { v: 'Usuario' },
+                        3: { v: 'Rol' },
+                        4: { v: 'Acción' },
+                        5: { v: 'Detalle' },
+                        6: { v: 'Estado' },
+                        7: { v: 'IP Origen' }
+                    },
+
+                    1: {
+                        0: { v: 1001 },
+                        1: { v: '2026-09-24 09:15' },
+                        2: { v: 'carlos.mendoza' },
+                        3: { v: 'Admin' },
+                        4: { v: 'Crear Usuario' },
+                        5: { v: 'Alta de nuevo moderador: laura.gomez' },
+                        6: { v: 'Completado' },
+                        7: { v: '192.168.1.45' }
+                    },
+
+                    2: {
+                        0: { v: 1002 },
+                        1: { v: '2026-09-24 10:02' },
+                        2: { v: 'laura.gomez' },
+                        3: { v: 'Moderador' },
+                        4: { v: 'Editar Contenido' },
+                        5: { v: 'Eliminación de post ofensivo #4432' },
+                        6: { v: 'Completado' },
+                        7: { v: '10.0.0.12' }
+                    },
+
+                    3: {
+                        0: { v: 1003 },
+                        1: { v: '2026-09-24 11:45' },
+                        2: { v: 'ana.torres' },
+                        3: { v: 'Admin' },
+                        4: { v: 'Cambio de Permisos' },
+                        5: { v: 'Modificación de rol para usuario pedro.ruiz' },
+                        6: { v: 'Pendiente Revisión' },
+                        7: { v: '192.168.1.22' }
+                    },
+
+                    4: {
+                        0: { v: 1004 },
+                        1: { v: '2026-09-24 14:30' },
+                        2: { v: 'javier.lopez' },
+                        3: { v: 'Moderador' },
+                        4: { v: 'Revisión de Reporte' },
+                        5: { v: 'Revisión de reporte de usuario #7890' },
+                        6: { v: 'Rechazado' },
+                        7: { v: '10.0.0.55' }
+                    },
+
+                    5: {
+                        0: { v: 1005 },
+                        1: { v: '2026-09-25 08:00' },
+                        2: { v: 'carlos.mendoza' },
+                        3: { v: 'Admin' },
+                        4: { v: 'Backup de Sistema' },
+                        5: { v: 'Respaldo completo de base de datos' },
+                        6: { v: 'Completado' },
+                        7: { v: '192.168.1.45' }
+                    },
+
+                    6: {
+                        0: { v: 1006 },
+                        1: { v: '2026-09-25 09:20' },
+                        2: { v: 'laura.gomez' },
+                        3: { v: 'Moderador' },
+                        4: { v: 'Aprobación de Contenido' },
+                        5: { v: 'Aprobación de artículo pendiente #1024' },
+                        6: { v: 'En Proceso' },
+                        7: { v: '10.0.0.12' }
+                    }
+
+                }
+
+            }
+
+        }
+
+    };
+
+
+    /*
+     * =========================================================
+     * INICIO
+     * =========================================================
+     */
+
+    async function iniciarUniver() {
 
         try {
-            // 1. Snapshot con los datos de auditoría
-            const auditSnapshot = {
-                id: 'audit-workbook-1',
-                name: 'Auditoría de Tareas',
-                sheetOrder: ['sheet-1'],
-                sheets: {
-                    'sheet-1': {
-                        id: 'sheet-1',
-                        name: 'Registro de Actividades',
-                        rowCount: 100,
-                        columnCount: 10,
-                        cellData: {
-                            0: { 0: { v: 'ID' }, 1: { v: 'Fecha' }, 2: { v: 'Usuario' }, 3: { v: 'Rol' }, 4: { v: 'Acción' }, 5: { v: 'Detalle' }, 6: { v: 'Estado' }, 7: { v: 'IP Origen' } },
-                            1: { 0: { v: 1001 }, 1: { v: '2026-09-24 09:15' }, 2: { v: 'carlos.mendoza' }, 3: { v: 'Admin' }, 4: { v: 'Crear Usuario' }, 5: { v: 'Alta de nuevo moderador: laura.gomez' }, 6: { v: 'Completado' }, 7: { v: '192.168.1.45' } },
-                            2: { 0: { v: 1002 }, 1: { v: '2026-09-24 10:02' }, 2: { v: 'laura.gomez' }, 3: { v: 'Moderador' }, 4: { v: 'Editar Contenido' }, 5: { v: 'Eliminación de post ofensivo #4432' }, 6: { v: 'Completado' }, 7: { v: '10.0.0.12' } },
-                            3: { 0: { v: 1003 }, 1: { v: '2026-09-24 11:45' }, 2: { v: 'ana.torres' }, 3: { v: 'Admin' }, 4: { v: 'Cambio de Permisos' }, 5: { v: 'Modificación de rol para usuario pedro.ruiz' }, 6: { v: 'Pendiente Revisión' }, 7: { v: '192.168.1.22' } },
-                            4: { 0: { v: 1004 }, 1: { v: '2026-09-24 14:30' }, 2: { v: 'javier.lopez' }, 3: { v: 'Moderador' }, 4: { v: 'Revisión de Reporte' }, 5: { v: 'Revisión de reporte de usuario #7890' }, 6: { v: 'Rechazado' }, 7: { v: '10.0.0.55' } },
-                            5: { 0: { v: 1005 }, 1: { v: '2026-09-25 08:00' }, 2: { v: 'carlos.mendoza' }, 3: { v: 'Admin' }, 4: { v: 'Backup de Sistema' }, 5: { v: 'Respaldo completo de base de datos' }, 6: { v: 'Completado' }, 7: { v: '192.168.1.45' } },
-                            6: { 0: { v: 1006 }, 1: { v: '2026-09-25 09:20' }, 2: { v: 'laura.gomez' }, 3: { v: 'Moderador' }, 4: { v: 'Aprobación de Contenido' }, 5: { v: 'Aprobación de artículo pendiente #1024' }, 6: { v: 'En Proceso' }, 7: { v: '10.0.0.12' } }
-                        }
-                    }
-                }
-            };
 
-            // 2. Acceso a los globales CORRECTOS
-            const { createUniver } = window.UniverPresets;
-            const { LocaleType, mergeLocales } = window.UniverCore;
-            const { UniverSheetsCorePreset } = window.UniverPresetSheetsCore;
+            debug('Iniciando carga de módulos...');
 
-            // 3. Inicialización
-            const { univerAPI } = createUniver({
-                locale: LocaleType.EN_US, // Interfaz en inglés (el core no trae ES)
+
+            /*
+             * Importamos directamente desde jsDelivr.
+             *
+             * IMPORTANTE:
+             * No utilizamos:
+             *
+             * window.UniverPresets
+             *
+             * porque ese global no existe en la distribución
+             * moderna.
+             */
+
+            debug('Cargando @univerjs/presets...');
+
+            const presets = await import(
+                'https://cdn.jsdelivr.net/npm/@univerjs/presets@0.9.0/lib/index.js'
+            );
+
+            debug('✓ @univerjs/presets cargado', 'ok');
+
+
+            debug('Cargando preset de Sheets...');
+
+            const sheets = await import(
+                'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core@0.9.0/lib/index.js'
+            );
+
+            debug('✓ @univerjs/preset-sheets-core cargado', 'ok');
+
+
+            /*
+             * Cargamos CSS mediante <link>.
+             */
+
+            const css = document.createElement('link');
+
+            css.rel = 'stylesheet';
+
+            css.href =
+                'https://cdn.jsdelivr.net/npm/@univerjs/preset-sheets-core@0.9.0/lib/index.css';
+
+            document.head.appendChild(css);
+
+            debug('✓ CSS de Sheets agregado', 'ok');
+
+
+            /*
+             * Verificación de exports.
+             */
+
+            if (!presets.createUniver) {
+
+                throw new Error(
+                    'El módulo @univerjs/presets se cargó, pero no contiene createUniver.'
+                );
+
+            }
+
+            if (!presets.LocaleType) {
+
+                throw new Error(
+                    'El módulo @univerjs/presets no contiene LocaleType.'
+                );
+
+            }
+
+            if (!sheets.UniverSheetsCorePreset) {
+
+                throw new Error(
+                    'El módulo de Sheets no contiene UniverSheetsCorePreset.'
+                );
+
+            }
+
+
+            debug('✓ createUniver encontrado', 'ok');
+
+            debug('✓ LocaleType encontrado', 'ok');
+
+            debug('✓ UniverSheetsCorePreset encontrado', 'ok');
+
+
+            const {
+                createUniver,
+                LocaleType
+            } = presets;
+
+
+            const {
+                UniverSheetsCorePreset
+            } = sheets;
+
+
+            /*
+             * =====================================================
+             * CREAR UNIVERS
+             * =====================================================
+             */
+
+            debug('Creando instancia de Univer...');
+
+
+            const univerInstance = createUniver({
+
+                locale: LocaleType.EN_US,
+
                 locales: {},
+
                 presets: [
+
                     UniverSheetsCorePreset({
-                        container: 'univer-container',
-                    }),
-                ],
+
+                        container: 'univer-container'
+
+                    })
+
+                ]
+
             });
 
-            // 4. Carga de datos
-            univerAPI.createWorkbook(auditSnapshot);
-            console.log('✅ Panel de auditoría cargado correctamente.');
+
+            if (!univerInstance) {
+
+                throw new Error(
+                    'createUniver() no devolvió una instancia válida.'
+                );
+
+            }
+
+
+            const {
+                univerAPI
+            } = univerInstance;
+
+
+            if (!univerAPI) {
+
+                throw new Error(
+                    'La instancia de Univer no contiene univerAPI.'
+                );
+
+            }
+
+
+            debug('✓ Univer inicializado', 'ok');
+
+
+            /*
+             * =====================================================
+             * CARGAR WORKBOOK
+             * =====================================================
+             */
+
+            debug('Cargando workbook de auditoría...');
+
+
+            univerAPI.createWorkbook(
+                auditSnapshot
+            );
+
+
+            debug('✓ Workbook cargado correctamente', 'ok');
+
+
+            status.textContent =
+                '✅ Panel de auditoría cargado correctamente';
+
+            status.style.background = '#d1e7dd';
+            status.style.color = '#0f5132';
+            status.style.borderColor = '#a3cfbb';
+
+
+            console.log(
+                '========================================'
+            );
+
+            console.log(
+                '✅ UNIVER INICIALIZADO CORRECTAMENTE'
+            );
+
+            console.log(
+                '========================================'
+            );
+
 
         } catch (error) {
-            document.getElementById('error-log').style.display = 'block';
-            document.getElementById('error-log').innerText = 'Error crítico: ' + error.message;
-            console.error(error);
+
+            showError(
+                'No fue posible inicializar Univer.',
+                error
+            );
+
         }
-    </script>
+
+    }
+
+
+    /*
+     * Ejecutar
+     */
+
+    iniciarUniver();
+
+</script>
+```
+
 </body>
 </html>
