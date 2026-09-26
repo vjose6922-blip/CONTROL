@@ -322,6 +322,8 @@ const TIPO_LABELS = {
   marcarReporteBeneficiarioRevisado: "Marcar reporte de beneficiario revisado",
   aprobarBeneficiario: "Aprobar beneficiario", rechazarBeneficiario: "Rechazar beneficiario",
   aprobarSolicitudBeneficiario: "Aprobar solicitud de beneficiario", rechazarSolicitudBeneficiario: "Rechazar solicitud de beneficiario",
+  aprobarProductoComunidad: "Aprobar producto de comunidad", rechazarProductoComunidad: "Rechazar producto de comunidad",
+  marcarReporteRevisado: "Marcar reporte revisado", marcarReporteLiveRevisado: "Marcar reporte de live revisado",
 };
 
 function renderEstadisticasStaff() {
