@@ -98,6 +98,11 @@ body[data-rol="moderador"] #product-form select {
 .empty-state { opacity: .65; font-size: .9em; padding: 8px 0; }
 .stats-staff-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
 .stats-staff-row { border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; }
+.stats-chip-row, .stats-tab-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.stats-chip, .stats-tab { border: 1px solid var(--color-border-subtle); background: var(--color-surface-2); color: var(--color-text-muted); border-radius: var(--radius-pill); padding: 6px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: var(--transition-fast); }
+.stats-chip.active, .stats-tab.active { background: var(--color-primary); color: #1e2128; border-color: var(--color-primary); }
+.chart-box { position: relative; height: 240px; margin-top: 14px; }
+@media (max-width: 480px) { .chart-box { height: 280px; } }
 .stats-staff-name { font-weight: 600; }
 .stats-staff-rol { font-weight: 400; opacity: .65; font-size: .85em; }
 .stats-staff-metrics { display: flex; gap: 14px; flex-wrap: wrap; font-size: .85em; opacity: .85; margin-top: 4px; }
@@ -198,9 +203,18 @@ body[data-rol="moderador"] #product-form select {
  <option value="90">Últimos 90 días</option>
  </select>
  </div>
+ <div class="stats-chip-row" id="stats-rol-chips">
+ <button type="button" class="stats-chip active" onclick="setStatsRolFiltro('todos', this)">Todos</button>
+ <button type="button" class="stats-chip" onclick="setStatsRolFiltro('admin', this)">Admins</button>
+ <button type="button" class="stats-chip" onclick="setStatsRolFiltro('moderador', this)">Moderadores</button>
+ </div>
+ <div class="stats-tab-row">
+ <button type="button" class="stats-tab active" onclick="setStatsMetrica('volumen', this)">Acciones resueltas</button>
+ <button type="button" class="stats-tab" onclick="setStatsMetrica('tiempo', this)">Tiempo de respuesta</button>
+ <button type="button" class="stats-tab" onclick="setStatsMetrica('tipos', this)">Por tipo de acción</button>
+ </div>
+ <div class="chart-box"><canvas id="stats-chart"></canvas></div>
  <div id="stats-staff-list" class="stats-staff-list"></div>
- <div style="margin-top:16px;"><canvas id="stats-chart-volumen" height="180"></canvas></div>
- <div style="margin-top:16px;"><canvas id="stats-chart-tiempo" height="180"></canvas></div>
  </div>
  </div>
  </div>
