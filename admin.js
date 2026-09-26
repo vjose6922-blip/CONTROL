@@ -2190,4 +2190,7 @@ window.resetProductForm  = resetProductForm;
 window.clearImageUploads  = clearImageUploads;
 window.loadAdminProducts  = loadAdminProducts;
 window.initImageUploads  = initImageUploads;
+window.cargarEstadisticasStaff = cargarEstadisticasStaff;
+window.setStatsRolFiltro = setStatsRolFiltro;
+window.setStatsMetrica = setStatsMetrica;
 })();
