@@ -1753,7 +1753,7 @@ function setBadge(id, count) {
 function openInspectorMode() {
   const token = sessionStorage.getItem('admin_token') || '';
   if (!token) { if (window.showTemporaryMessage) window.showTemporaryMessage('Sin sesión de admin', 'error'); return; }
-  const url = 'comunidad.html?inspector=1&token=' + encodeURIComponent(token);
+  const url = 'https://vjose6922-blip.github.io/znr/comunidad.html?inspector=1&token=' + encodeURIComponent(token);
   window.open(url, '_blank');
 }
 

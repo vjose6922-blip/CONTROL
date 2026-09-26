@@ -1897,7 +1897,7 @@ ${r.telefonoUsuario ? ` ·  Reportó: ${escapeHtml(r.telefonoUsuario)}` : ''}
 </div>
 </div>
 <div class="reporte-card-actions">
-<a class="btn-ver-producto" href="comunidad.html?inspector=1#product-${productId}" target="_blank">Ver</a>
+<a class="btn-ver-producto" href="https://vjose6922-blip.github.io/znr/comunidad.html?inspector=1#product-${productId}" target="_blank">Ver</a>
 ${vendorUid ? `<button class="btn-suspend" onclick="AdminComunidad.suspenderVendedor('${vendorUid}', '${vendorNombre}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender</button>` : ''}
 <button class="btn-del-desde-reporte"
 onclick="AdminComunidad.eliminarProductoDesdeReporte('${productId}', '${nombre}', '${reporteId}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg> Eliminar producto

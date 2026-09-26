@@ -664,6 +664,8 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
              style="padding:6px 14px;border-radius:8px;border:none;background:#dc2626;color:#fff;cursor:pointer;font-size:.8rem;font-weight:600;">${Icon('x')} Denegar</button>
            <button onclick="openPlusModal('${v.uid}','${v.nombre.replace(/'/g,"&#39;")}','approved')"
              style="padding:6px 14px;border-radius:8px;border:none;background:#7c3aed;color:#fff;cursor:pointer;font-size:.8rem;font-weight:600;">${Icon('check')} Aprobar</button>
+           <button onclick="recordarInteresPlus('${v.uid}','${v.nombre.replace(/'/g,"&#39;")}', this)"
+             style="padding:6px 14px;border-radius:8px;border:none;background:#0ea5e9;color:#fff;cursor:pointer;font-size:.8rem;font-weight:600;">${Icon('bell')} Recordar</button>
          </div>
        </div>`;
      }).join('');
@@ -673,6 +675,18 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
      if (refreshIcon) refreshIcon.style.animation = '';
      if (refreshBtn) refreshBtn.disabled = false;
    }
+ }
+
+ async function recordarInteresPlus(uid, nombre, btn) {
+   const API = "https://vendedores-api-1038143238323.us-central1.run.app";
+   const token = sessionStorage.getItem('admin_token') || '';
+   const runFn = async () => {
+     const res = await fetch(API, { method:'POST', body: JSON.stringify({ action:'recordarInteresPlus', token, uid }) });
+     const data = await res.json();
+     if (window.showTemporaryMessage) window.showTemporaryMessage(data.ok ? `Recordatorio enviado a ${nombre}` : (data.error || 'Error al enviar'), data.ok ? 'success' : 'error');
+   };
+   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Enviando…');
+   else await runFn();
  }
 
  function openPlusModal(uid, nombre, tipo) {
