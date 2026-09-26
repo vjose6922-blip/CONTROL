@@ -195,13 +195,16 @@ body[data-rol="moderador"] #product-form select {
  </div>
  </div>
  <div id="stats-body" style="display:none;">
- <div class="form-row">
+ <div class="form-row" style="justify-content:space-between; align-items:center;">
+ <div>
  <label for="stats-dias-select">Periodo</label>
  <select id="stats-dias-select" onchange="cargarEstadisticasStaff(this.value)">
  <option value="7">Últimos 7 días</option>
  <option value="30" selected>Últimos 30 días</option>
  <option value="90">Últimos 90 días</option>
  </select>
+ </div>
+ <a href="Audit.html" class="text-button" style="white-space:nowrap;">Ver auditoría detallada →</a>
  </div>
  <div class="stats-chip-row" id="stats-rol-chips">
  <button type="button" class="stats-chip active" onclick="setStatsRolFiltro('todos', this)">Todos</button>

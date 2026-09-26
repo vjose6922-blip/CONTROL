@@ -3,6 +3,20 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://unpkg.com;
+      style-src 'self' 'unsafe-inline' https://unpkg.com;
+      font-src 'self' https://unpkg.com data:;
+      img-src 'self' data: blob: https://unpkg.com;
+      connect-src 'self'
+        https://*.run.app
+        https://admin-api-1038143238323.us-central1.run.app ;
+      frame-ancestors 'none';
+      object-src 'none';
+      base-uri 'self';
+    ">
+    <script src="error-bootstrap.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Panel de Auditoría de Tareas - Usuario Master</title>
 
@@ -259,12 +273,28 @@
 
 <body>
 
+<script>
+    // Solo Master puede ver este panel. Mismo criterio que el resto del
+    // panel admin (admin.js): si no hay sesión, o el rol guardado no es
+    // "master", se regresa a index.html antes de pintar nada.
+    (function () {
+        const rol = sessionStorage.getItem('admin_rol') || 'master';
+        if (!sessionStorage.getItem('admin_token') || rol !== 'master') {
+            location.href = 'index.html';
+        }
+    })();
+</script>
+
+<a href="index.html" style="display:inline-block;margin-bottom:12px;color:#245b80;text-decoration:none;font-weight:600;">
+    ← Volver al panel
+</a>
+
 <h1>
     Panel de Auditoría de Tareas
 </h1>
 
-<p>
-    Usuario Master · Datos de ejemplo de tareas realizadas por Administradores y Moderadores
+<p id="audit-subtitle">
+    Usuario Master · Cargando registro real de actividad...
 </p>
 
 
@@ -296,7 +326,37 @@
 
 <script>
 
-    const auditRows = [
+    // ── Origen de datos ─────────────────────────────────────────────
+    // ADMIN_API_URL_ADMIN ya expone obtenerEstadisticasStaff (datos
+    // agregados, es lo que usa la gráfica de Chart.js en index.html).
+    // Este panel necesita el detalle fila-por-fila de cada acción, que
+    // todavía no se confirmó que exista en Firestore/admin-api. Se
+    // intenta primero "obtenerAuditoriaStaff" (nombre propuesto, hay
+    // que confirmarlo o crearlo en el backend); si no existe o falla,
+    // se cae a los datos de ejemplo de abajo para que el panel siga
+    // siendo usable mientras tanto.
+    const ADMIN_API_URL_AUDIT = "https://admin-api-1038143238323.us-central1.run.app";
+
+    async function obtenerFilasAuditoria(dias) {
+        const token = sessionStorage.getItem("admin_token") || "";
+        const params = new URLSearchParams({ action: "obtenerAuditoriaStaff", dias: dias || 30, token });
+        const res = await fetch(ADMIN_API_URL_AUDIT + "?" + params.toString());
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (!data || !data.ok || !Array.isArray(data.registros)) {
+            throw new Error("Respuesta sin 'registros' (revisar contrato del endpoint)");
+        }
+        // Contrato esperado por fila (ajustar aquí si el backend usa
+        // otros nombres de campo): id, fecha, usuario, rol, accion,
+        // detalle, estado, ip
+        const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Acción', 'Detalle', 'Estado', 'IP Origen'];
+        const filas = data.registros.map((r) => [
+            r.id, r.fecha, r.usuario, r.rol, r.accion, r.detalle, r.estado, r.ip
+        ]);
+        return [encabezado, ...filas];
+    }
+
+    const auditRowsEjemplo = [
 
         [
             'ID',
@@ -376,6 +436,8 @@
         ]
 
     ];
+
+    let auditRows = auditRowsEjemplo;
 
 
     /*
@@ -1239,7 +1301,23 @@
      * =========================================================
      */
 
-    iniciarUniver();
+    async function arrancar() {
+        const subtitle = document.getElementById('audit-subtitle');
+        try {
+            auditRows = await obtenerFilasAuditoria(30);
+            if (subtitle) subtitle.textContent = 'Usuario Master · Registro real de actividad (últimos 30 días)';
+        } catch (err) {
+            console.warn('No se pudo cargar el registro real de auditoría, usando datos de ejemplo:', err);
+            auditRows = auditRowsEjemplo;
+            if (subtitle) {
+                subtitle.textContent = '⚠️ No se encontró el endpoint de auditoría en el backend — mostrando datos de ejemplo';
+                subtitle.style.color = '#b02a37';
+            }
+        }
+        iniciarUniver();
+    }
+
+    arrancar();
 
 </script>
 
