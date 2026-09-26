@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="es">
@@ -999,6 +998,187 @@
                 console.warn(
                     'No se pudo activar el modo filterOnly:',
                     readOnlyError
+                );
+
+            }
+
+
+            /*
+             * =================================================
+             * SUPRESIÓN DEL TECLADO VIRTUAL EN MÓVIL
+             * =================================================
+             *
+             * El motor de Univer usa un input/textarea oculto
+             * para capturar el foco de celda (navegación con
+             * flechas, copiar, etc.). En celular, cualquier
+             * input que reciba foco abre el teclado del sistema
+             * aunque no se pueda escribir en él. Aquí evitamos
+             * eso marcando esos campos con inputmode="none" en
+             * cuanto aparecen o reciben foco.
+             */
+
+            try {
+
+                const univerContainerEl =
+                    document.getElementById(
+                        'univer-container'
+                    );
+
+                const silenciarCampo = (
+                    campo
+                ) => {
+
+                    if (
+                        !campo ||
+                        campo.dataset.kbSilenced
+                    ) {
+
+                        return;
+
+                    }
+
+                    campo.setAttribute(
+                        'inputmode',
+                        'none'
+                    );
+
+                    campo.dataset.kbSilenced =
+                        'true';
+
+                };
+
+                if (univerContainerEl) {
+
+                    univerContainerEl
+                        .querySelectorAll(
+                            'input, textarea'
+                        )
+                        .forEach(
+                            silenciarCampo
+                        );
+
+                    const kbObserver =
+                        new MutationObserver(
+                            (
+                                mutations
+                            ) => {
+
+                                mutations.forEach(
+                                    (
+                                        mutation
+                                    ) => {
+
+                                        mutation.addedNodes.forEach(
+                                            (
+                                                node
+                                            ) => {
+
+                                                if (
+                                                    node.nodeType !==
+                                                    1
+                                                ) {
+
+                                                    return;
+
+                                                }
+
+                                                if (
+                                                    node.matches &&
+                                                    node.matches(
+                                                        'input, textarea'
+                                                    )
+                                                ) {
+
+                                                    silenciarCampo(
+                                                        node
+                                                    );
+
+                                                }
+
+                                                if (
+                                                    node.querySelectorAll
+                                                ) {
+
+                                                    node
+                                                        .querySelectorAll(
+                                                            'input, textarea'
+                                                        )
+                                                        .forEach(
+                                                            silenciarCampo
+                                                        );
+
+                                                }
+
+                                            }
+                                        );
+
+                                    }
+                                );
+
+                            }
+                        );
+
+                    kbObserver.observe(
+                        univerContainerEl,
+                        {
+                            childList: true,
+                            subtree: true
+                        }
+                    );
+
+                    univerContainerEl.addEventListener(
+                        'focus',
+                        (
+                            event
+                        ) => {
+
+                            const target =
+                                event.target;
+
+                            if (
+                                target &&
+                                (target.tagName ===
+                                    'INPUT' ||
+                                    target.tagName ===
+                                    'TEXTAREA')
+                            ) {
+
+                                silenciarCampo(
+                                    target
+                                );
+
+                                /*
+                                 * Respaldo agresivo: se
+                                 * sacrifica la navegación
+                                 * con flechas de teclado
+                                 * físico a cambio de la
+                                 * garantía de que el
+                                 * teclado táctil nunca
+                                 * aparezca.
+                                 */
+
+                                target.blur();
+
+                            }
+
+                        },
+                        true
+                    );
+
+                }
+
+                debug(
+                    '✓ Supresión de teclado virtual activada',
+                    true
+                );
+
+            } catch (
+                kbError
+            ) {
+
+                console.warn(
+                    'No se pudo activar la supresión de teclado virtual:',
+                    kbError
                 );
 
             }
