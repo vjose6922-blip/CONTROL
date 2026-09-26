@@ -349,6 +349,8 @@
         marcarReporteBeneficiarioRevisado: "Marcar reporte de beneficiario revisado",
         aprobarBeneficiario: "Aprobar beneficiario", rechazarBeneficiario: "Rechazar beneficiario",
         aprobarSolicitudBeneficiario: "Aprobar solicitud de beneficiario", rechazarSolicitudBeneficiario: "Rechazar solicitud de beneficiario",
+        aprobarProductoComunidad: "Aprobar producto de comunidad", rechazarProductoComunidad: "Rechazar producto de comunidad",
+        marcarReporteRevisado: "Marcar reporte revisado", marcarReporteLiveRevisado: "Marcar reporte de live revisado",
     };
 
     async function obtenerFilasAuditoria(dias) {
@@ -362,23 +364,25 @@
         }
         // staff_actividad no guarda IP ni un texto de "detalle" libre, así
         // que esas dos columnas del prototipo original no se incluyen.
-        const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Acción', 'Estado'];
+        // Sí guarda ciudad y refId (verificado en las 4 APIs que escriben
+        // ahí), así que esas dos sí se muestran.
+        const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado'];
         const filas = data.registros.map((r) => [
-            r.id, r.fecha, r.usuario, r.rol, TIPO_LABELS[r.accion] || r.accion, r.estado
+            r.id, r.fecha, r.usuario, r.rol, r.ciudad, TIPO_LABELS[r.accion] || r.accion, r.refId, r.estado
         ]);
         return [encabezado, ...filas];
     }
 
     const auditRowsEjemplo = [
 
-        ['ID', 'Fecha', 'Usuario', 'Rol', 'Acción', 'Estado'],
+        ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado'],
 
-        [1001, '2026-09-24 09:15', 'carlos.mendoza', 'Admin', 'Crear Usuario', 'Completado'],
-        [1002, '2026-09-24 10:02', 'laura.gomez', 'Moderador', 'Editar Contenido', 'Completado'],
-        [1003, '2026-09-24 11:45', 'ana.torres', 'Admin', 'Cambio de Permisos', 'Pendiente Revisión'],
-        [1004, '2026-09-24 14:30', 'javier.lopez', 'Moderador', 'Revisión de Reporte', 'Rechazado'],
-        [1005, '2026-09-25 08:00', 'carlos.mendoza', 'Admin', 'Backup de Sistema', 'Completado'],
-        [1006, '2026-09-25 09:20', 'laura.gomez', 'Moderador', 'Aprobación de Contenido', 'En Proceso']
+        [1001, '2026-09-24 09:15', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Aprobar vendedor', 'vend_8831', 'Completado'],
+        [1002, '2026-09-24 10:02', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Marcar reporte revisado', 'rep_2210', 'Completado'],
+        [1003, '2026-09-24 11:45', 'ana.torres', 'Admin', 'Reynosa', 'Aprobar beneficiario', 'ben_0456', 'Completado'],
+        [1004, '2026-09-24 14:30', 'javier.lopez', 'Moderador', 'Nuevo Laredo', 'Marcar reporte de live revisado', 'live_7781', 'Completado'],
+        [1005, '2026-09-25 08:00', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Suspender vendedor', 'vend_5502', 'Completado'],
+        [1006, '2026-09-25 09:20', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Aprobar producto de comunidad', 'prod_1190', 'Completado']
 
     ];
 
