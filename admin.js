@@ -272,32 +272,85 @@ return d.innerHTML;
 // staff_actividad que van llenando las demás APIs cada vez que alguien
 // resuelve algo en Notificaciones o en una herramienta. `dias` es la
 // ventana de tiempo que se está mirando (30 por defecto).
-let _statsChartVolumen = null;
-let _statsChartTiempo = null;
+let _statsChart = null;
+let _statsData = [];
+let _statsRolFiltro = "todos";
+let _statsMetrica = "volumen";
 
 async function cargarEstadisticasStaff(dias) {
   const cont = document.getElementById("stats-staff-list");
   if (cont) cont.innerHTML = '<p class="empty-state">Cargando...</p>';
   try {
-    const data = await apiRequest("GET", { action: "obtenerEstadisticasStaff", dias: dias || 30 });
+    const diasSel = dias || document.getElementById("stats-dias-select")?.value || 30;
+    const data = await apiRequest("GET", { action: "obtenerEstadisticasStaff", dias: diasSel });
     if (!data || !data.ok) {
       if (cont) cont.innerHTML = '<p class="empty-state">No se pudieron cargar las estadísticas.</p>';
       return;
     }
-    renderEstadisticasStaff(data.staff || []);
+    _statsData = data.staff || [];
+    renderEstadisticasStaff();
   } catch (err) {
     console.error(err);
     if (cont) cont.innerHTML = '<p class="empty-state">No se pudieron cargar las estadísticas.</p>';
   }
 }
 
-function renderEstadisticasStaff(staff) {
+// Chips de rol y tabs de métrica filtran/recalculan sobre _statsData (ya
+// descargada) en vez de volver a pedirle al backend — instantáneo y sin
+// requests extra al cambiar de vista.
+function setStatsRolFiltro(rol, btn) {
+  _statsRolFiltro = rol;
+  document.querySelectorAll("#stats-rol-chips .stats-chip").forEach((b) => b.classList.toggle("active", b === btn));
+  renderEstadisticasStaff();
+}
+
+function setStatsMetrica(metrica, btn) {
+  _statsMetrica = metrica;
+  document.querySelectorAll(".stats-tab-row .stats-tab").forEach((b) => b.classList.toggle("active", b === btn));
+  renderEstadisticasStaff();
+}
+
+// Nombres legibles para el campo `tipo` de staff_actividad (nombres de
+// función tal cual, en admin-api). Lo que no esté aquí se muestra tal cual.
+const TIPO_LABELS = {
+  aprobarVendedor: "Aprobar vendedor", rechazarVendedor: "Rechazar vendedor",
+  resetPasswordVendedor: "Restablecer contraseña", aprobarCambioTelefono: "Aprobar cambio de teléfono",
+  rechazarCambioTelefono: "Rechazar cambio de teléfono", marcarVendedorConfiable: "Marcar vendedor confiable",
+  marcarVendedorPlan: "Cambiar plan de vendedor", ajustarDiasPlanPlus: "Ajustar días Plan Plus",
+  suspenderVendedor: "Suspender vendedor", reactivarVendedor: "Reactivar vendedor",
+  responderSolicitudPlus: "Responder solicitud Plus", recordarInteresPlus: "Recordar interés en Plus",
+};
+
+function renderEstadisticasStaff() {
   const cont = document.getElementById("stats-staff-list");
+  const esTiempo = _statsMetrica === "tiempo";
+  const esTipos = _statsMetrica === "tipos";
+  let staff = _statsRolFiltro === "todos" ? _statsData : _statsData.filter((p) => p.rol === _statsRolFiltro);
+
+  if (esTipos) {
+    const totales = {};
+    staff.forEach((p) => Object.entries(p.porTipo || {}).forEach(([t, n]) => { totales[t] = (totales[t] || 0) + n; }));
+    const tipos = Object.entries(totales).sort((a, b) => b[1] - a[1]);
+    if (cont) {
+      cont.innerHTML = !tipos.length
+        ? '<p class="empty-state">Sin datos para este filtro.</p>'
+        : tipos.map(([t, n]) => `
+          <div class="stats-staff-row">
+            <div class="stats-staff-name">${escHtmlAdmin(TIPO_LABELS[t] || t)}</div>
+            <div class="stats-staff-metrics"><span>${n} vez${n === 1 ? "" : "es"}</span></div>
+          </div>
+        `).join("");
+    }
+    return dibujarStatsChart(tipos.map(([t]) => TIPO_LABELS[t] || t), tipos.map(([, n]) => n), "Veces resuelta", "#4ade80");
+  }
+
+  if (esTiempo) staff = staff.filter((p) => p.tiempoRespuestaPromedioMin != null);
+  staff = [...staff].sort((a, b) => (esTiempo ? a.tiempoRespuestaPromedioMin - b.tiempoRespuestaPromedioMin : b.total - a.total));
+
   if (cont) {
-    if (!staff.length) {
-      cont.innerHTML = '<p class="empty-state">Todavía no hay actividad registrada en este periodo.</p>';
-    } else {
-      cont.innerHTML = staff.map((p) => `
+    cont.innerHTML = !staff.length
+      ? '<p class="empty-state">Sin datos para este filtro.</p>'
+      : staff.map((p) => `
         <div class="stats-staff-row">
           <div class="stats-staff-name">${escHtmlAdmin(p.nombre)} <span class="stats-staff-rol">${escHtmlAdmin(p.rol)} · ${escHtmlAdmin(p.ciudad)}</span></div>
           <div class="stats-staff-metrics">
@@ -306,37 +359,38 @@ function renderEstadisticasStaff(staff) {
           </div>
         </div>
       `).join("");
-    }
   }
 
+  dibujarStatsChart(staff.map((p) => p.nombre), staff.map((p) => (esTiempo ? p.tiempoRespuestaPromedioMin : p.total)),
+    esTiempo ? "Tiempo de respuesta promedio (min)" : "Acciones resueltas", esTiempo ? "#ff9f4f" : "#a78bfa");
+}
+
+function dibujarStatsChart(labels, data, label, color) {
   if (!window.Chart) return; // Chart.js no cargó (offline, bloqueado, etc.) — la lista de arriba sigue funcionando igual.
+  const ctx = document.getElementById("stats-chart");
+  if (!ctx) return;
+  if (_statsChart) _statsChart.destroy();
 
-  const ctxVolumen = document.getElementById("stats-chart-volumen");
-  if (ctxVolumen) {
-    if (_statsChartVolumen) _statsChartVolumen.destroy();
-    _statsChartVolumen = new Chart(ctxVolumen, {
-      type: "bar",
-      data: {
-        labels: staff.map((p) => p.nombre),
-        datasets: [{ label: "Acciones resueltas", data: staff.map((p) => p.total), backgroundColor: "#4f7cff" }],
-      },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
-    });
-  }
+  // Alto dinámico según cuántas barras hay: con pocas se ve compacto, con
+  // muchas cada una sigue teniendo espacio (evita que Chart.js las aplaste
+  // en un contenedor de altura fija).
+  const chartBox = ctx.closest(".chart-box");
+  if (chartBox) chartBox.style.height = Math.max(220, labels.length * 46) + "px";
 
-  const conTiempo = staff.filter((p) => p.tiempoRespuestaPromedioMin != null);
-  const ctxTiempo = document.getElementById("stats-chart-tiempo");
-  if (ctxTiempo) {
-    if (_statsChartTiempo) _statsChartTiempo.destroy();
-    _statsChartTiempo = new Chart(ctxTiempo, {
-      type: "bar",
-      data: {
-        labels: conTiempo.map((p) => p.nombre),
-        datasets: [{ label: "Tiempo de respuesta promedio (min)", data: conTiempo.map((p) => p.tiempoRespuestaPromedioMin), backgroundColor: "#ff9f4f" }],
+  _statsChart = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets: [{ label, data, backgroundColor: color, borderRadius: 6, maxBarThickness: 34 }] },
+    options: {
+      indexAxis: "y", // barras horizontales: los nombres se leen completos incluso en pantalla angosta
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, ticks: { precision: 0 } },
+        y: { ticks: { autoSkip: false } },
       },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
-    });
-  }
+    },
+  });
 }
 
 async function cargarListaAdmins() {
