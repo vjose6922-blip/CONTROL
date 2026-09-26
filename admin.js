@@ -319,6 +319,9 @@ const TIPO_LABELS = {
   marcarVendedorPlan: "Cambiar plan de vendedor", ajustarDiasPlanPlus: "Ajustar días Plan Plus",
   suspenderVendedor: "Suspender vendedor", reactivarVendedor: "Reactivar vendedor",
   responderSolicitudPlus: "Responder solicitud Plus", recordarInteresPlus: "Recordar interés en Plus",
+  marcarReporteBeneficiarioRevisado: "Marcar reporte de beneficiario revisado",
+  aprobarBeneficiario: "Aprobar beneficiario", rechazarBeneficiario: "Rechazar beneficiario",
+  aprobarSolicitudBeneficiario: "Aprobar solicitud de beneficiario", rechazarSolicitudBeneficiario: "Rechazar solicitud de beneficiario",
 };
 
 function renderEstadisticasStaff() {
