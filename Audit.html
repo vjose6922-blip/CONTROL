@@ -337,6 +337,17 @@
     // siendo usable mientras tanto.
     const ADMIN_API_URL_AUDIT = "https://admin-api-1038143238323.us-central1.run.app";
 
+    // Mismos nombres legibles que usa admin.js para el campo `tipo` de
+    // staff_actividad. Lo que no esté aquí se muestra tal cual llega.
+    const TIPO_LABELS = {
+        aprobarVendedor: "Aprobar vendedor", rechazarVendedor: "Rechazar vendedor",
+        resetPasswordVendedor: "Restablecer contraseña", aprobarCambioTelefono: "Aprobar cambio de teléfono",
+        rechazarCambioTelefono: "Rechazar cambio de teléfono", marcarVendedorConfiable: "Marcar vendedor confiable",
+        marcarVendedorPlan: "Cambiar plan de vendedor", ajustarDiasPlanPlus: "Ajustar días Plan Plus",
+        suspenderVendedor: "Suspender vendedor", reactivarVendedor: "Reactivar vendedor",
+        responderSolicitudPlus: "Responder solicitud Plus", recordarInteresPlus: "Recordar interés en Plus",
+    };
+
     async function obtenerFilasAuditoria(dias) {
         const token = sessionStorage.getItem("admin_token") || "";
         const params = new URLSearchParams({ action: "obtenerAuditoriaStaff", dias: dias || 30, token });
@@ -346,94 +357,25 @@
         if (!data || !data.ok || !Array.isArray(data.registros)) {
             throw new Error("Respuesta sin 'registros' (revisar contrato del endpoint)");
         }
-        // Contrato esperado por fila (ajustar aquí si el backend usa
-        // otros nombres de campo): id, fecha, usuario, rol, accion,
-        // detalle, estado, ip
-        const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Acción', 'Detalle', 'Estado', 'IP Origen'];
+        // staff_actividad no guarda IP ni un texto de "detalle" libre, así
+        // que esas dos columnas del prototipo original no se incluyen.
+        const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Acción', 'Estado'];
         const filas = data.registros.map((r) => [
-            r.id, r.fecha, r.usuario, r.rol, r.accion, r.detalle, r.estado, r.ip
+            r.id, r.fecha, r.usuario, r.rol, TIPO_LABELS[r.accion] || r.accion, r.estado
         ]);
         return [encabezado, ...filas];
     }
 
     const auditRowsEjemplo = [
 
-        [
-            'ID',
-            'Fecha',
-            'Usuario',
-            'Rol',
-            'Acción',
-            'Detalle',
-            'Estado',
-            'IP Origen'
-        ],
+        ['ID', 'Fecha', 'Usuario', 'Rol', 'Acción', 'Estado'],
 
-        [
-            1001,
-            '2026-09-24 09:15',
-            'carlos.mendoza',
-            'Admin',
-            'Crear Usuario',
-            'Alta de nuevo moderador: laura.gomez',
-            'Completado',
-            '192.168.1.45'
-        ],
-
-        [
-            1002,
-            '2026-09-24 10:02',
-            'laura.gomez',
-            'Moderador',
-            'Editar Contenido',
-            'Eliminación de post ofensivo #4432',
-            'Completado',
-            '10.0.0.12'
-        ],
-
-        [
-            1003,
-            '2026-09-24 11:45',
-            'ana.torres',
-            'Admin',
-            'Cambio de Permisos',
-            'Modificación de rol para usuario pedro.ruiz',
-            'Pendiente Revisión',
-            '192.168.1.22'
-        ],
-
-        [
-            1004,
-            '2026-09-24 14:30',
-            'javier.lopez',
-            'Moderador',
-            'Revisión de Reporte',
-            'Revisión de reporte de usuario #7890',
-            'Rechazado',
-            '10.0.0.55'
-        ],
-
-        [
-            1005,
-            '2026-09-25 08:00',
-            'carlos.mendoza',
-            'Admin',
-            'Backup de Sistema',
-            'Respaldo completo de base de datos',
-            'Completado',
-            '192.168.1.45'
-        ],
-
-        [
-            1006,
-            '2026-09-25 09:20',
-            'laura.gomez',
-            'Moderador',
-            'Aprobación de Contenido',
-            'Aprobación de artículo pendiente #1024',
-            'En Proceso',
-            '10.0.0.12'
-        ]
+        [1001, '2026-09-24 09:15', 'carlos.mendoza', 'Admin', 'Crear Usuario', 'Completado'],
+        [1002, '2026-09-24 10:02', 'laura.gomez', 'Moderador', 'Editar Contenido', 'Completado'],
+        [1003, '2026-09-24 11:45', 'ana.torres', 'Admin', 'Cambio de Permisos', 'Pendiente Revisión'],
+        [1004, '2026-09-24 14:30', 'javier.lopez', 'Moderador', 'Revisión de Reporte', 'Rechazado'],
+        [1005, '2026-09-25 08:00', 'carlos.mendoza', 'Admin', 'Backup de Sistema', 'Completado'],
+        [1006, '2026-09-25 09:20', 'laura.gomez', 'Moderador', 'Aprobación de Contenido', 'En Proceso']
 
     ];
 
@@ -974,7 +916,7 @@
                         0,
                         0,
                         1,
-                        8
+                        auditRows[0].length
                     );
 
 
