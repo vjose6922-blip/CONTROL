@@ -103,6 +103,106 @@ console.error("API ERROR:", err);
 throw err;
 }
 }
+// ── Sesión persistente en este dispositivo + desbloqueo con huella ──────
+// sessionStorage se borra solo al cerrar la pestaña/navegador — por eso
+// la sesión se "perdía". La reflejamos también en localStorage (que sí
+// sobrevive) y, al abrir la app de nuevo, la restauramos a sessionStorage
+// antes de decidir qué pantalla mostrar. El resto del código (todo lo que
+// lee sessionStorage.getItem("admin_token"), etc.) no cambia.
+//
+// La huella es solo un candado LOCAL sobre esa sesión guardada — no
+// reemplaza la validación real contra el servidor (verificarAdmin /
+// verificarSesionAdmin), que sigue corriendo igual después. Por eso no
+// hace falta backend de WebAuthn: si navigator.credentials.get() resuelve,
+// el sistema operativo ya validó la huella/Face ID por su cuenta.
+const LS_SESSION_KEYS = ["admin_session", "admin_token", "admin_rol", "admin_ciudad", "admin_nombre"];
+
+function _guardarSesionEnDispositivo() {
+  LS_SESSION_KEYS.forEach((k) => {
+    const v = sessionStorage.getItem(k);
+    if (v !== null) localStorage.setItem(k, v);
+    else localStorage.removeItem(k);
+  });
+}
+
+function _borrarSesionDelDispositivo() {
+  LS_SESSION_KEYS.forEach((k) => localStorage.removeItem(k));
+  localStorage.removeItem("biometric_enabled");
+  localStorage.removeItem("biometric_credential_id");
+}
+
+async function _biometricoDisponible() {
+  return !!(
+    window.PublicKeyCredential &&
+    typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === "function" &&
+    (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+  );
+}
+
+function _bufferABase64(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+function _base64ABuffer(b64) {
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
+}
+
+async function _ofrecerActivarBiometrico(nombreCuenta) {
+  if (localStorage.getItem("biometric_enabled") === "true") return;
+  if (!(await _biometricoDisponible())) return;
+  const quiere = await new Promise((resolve) => {
+    showCustomConfirm({
+      title: " Desbloqueo con huella",
+      message: `¿Quieres activar el desbloqueo con huella o Face ID en este dispositivo para ${nombreCuenta || "esta cuenta"}? Así no tienes que volver a escribir tu contraseña aquí.`,
+      icon: "",
+      confirmText: "Sí, activar",
+      cancelText: "No, gracias",
+      onConfirm: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+  if (!quiere) return;
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const userId = crypto.getRandomValues(new Uint8Array(16));
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: "ZNR Admin" },
+        user: { id: userId, name: nombreCuenta || "admin-znr", displayName: nombreCuenta || "Admin ZNR" },
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+        authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+        timeout: 60000,
+      },
+    });
+    if (!credential) return;
+    localStorage.setItem("biometric_credential_id", _bufferABase64(credential.rawId));
+    localStorage.setItem("biometric_enabled", "true");
+  } catch (err) {
+    console.warn("No se pudo activar la huella:", err);
+  }
+}
+
+async function _pedirDesbloqueoBiometrico() {
+  const credId = localStorage.getItem("biometric_credential_id");
+  if (!credId) return false;
+  try {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: [{ type: "public-key", id: _base64ABuffer(credId) }],
+        userVerification: "required",
+        timeout: 60000,
+      },
+    });
+    return !!assertion;
+  } catch (err) {
+    console.warn("Desbloqueo con huella cancelado o falló:", err);
+    return false;
+  }
+}
+
+
 async function handleAdminLogin(e) {
 e.preventDefault();
 const password = document.getElementById("admin-password").value;
@@ -125,6 +225,7 @@ sessionStorage.setItem("admin_session", "true");
 sessionStorage.setItem("admin_rol", "master");
 sessionStorage.setItem("admin_ciudad", "*");
 sessionStorage.removeItem("admin_nombre");
+_guardarSesionEnDispositivo();
 document.getElementById("admin-login-view").hidden = true;
 document.getElementById("admin-panel-view").hidden = false;
 initImageUploads();
@@ -132,6 +233,7 @@ loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
 aplicarVisibilidadPorRol();
+_ofrecerActivarBiometrico("Master");
 } catch (err) {
 console.error(err);
 await showCustomAlert({
@@ -172,6 +274,7 @@ sessionStorage.setItem("admin_session", "true");
 sessionStorage.setItem("admin_rol", data.rol || "admin");
 sessionStorage.setItem("admin_ciudad", data.ciudad || "");
 sessionStorage.setItem("admin_nombre", data.nombre || "");
+_guardarSesionEnDispositivo();
 document.getElementById("admin-login-view").hidden = true;
 document.getElementById("admin-panel-view").hidden = false;
 initImageUploads();
@@ -179,6 +282,7 @@ loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
 aplicarVisibilidadPorRol();
+_ofrecerActivarBiometrico(data.nombre || "tu cuenta");
 } catch (err) {
 console.error(err);
 await showCustomAlert({
@@ -1451,15 +1555,45 @@ const loginForm = document.getElementById("admin-login-form");
 if (loginForm) loginForm.addEventListener("submit", handleAdminLogin);
 const loginFormCuenta = document.getElementById("admin-login-form-cuenta");
 if (loginFormCuenta) loginFormCuenta.addEventListener("submit", handleAdminLoginCuenta);
-const toggleLoginCuenta = document.getElementById("toggle-login-cuenta");
-if (toggleLoginCuenta && loginForm && loginFormCuenta) {
-toggleLoginCuenta.addEventListener("click", () => {
-const mostrandoCuenta = !loginFormCuenta.hidden;
-loginFormCuenta.hidden = mostrandoCuenta;
-loginForm.hidden = !mostrandoCuenta;
-toggleLoginCuenta.textContent = mostrandoCuenta
-? "¿Eres admin o moderador de una ciudad? Inicia sesión con tu cuenta"
-: "¿Eres el Master? Inicia sesión con contraseña y token";
+const switchCuenta = document.getElementById("login-switch-cuenta");
+const switchMaster = document.getElementById("login-switch-master");
+const loginTitle = document.getElementById("login-view-title");
+if (switchCuenta && switchMaster && loginForm && loginFormCuenta) {
+function _mostrarLogin(rolElegido) {
+const esMaster = rolElegido === "master";
+loginForm.hidden = !esMaster;
+loginFormCuenta.hidden = esMaster;
+switchMaster.style.background = esMaster ? "rgba(255,255,255,.14)" : "transparent";
+switchMaster.style.color = esMaster ? "#fff" : "rgba(255,255,255,.6)";
+switchCuenta.style.background = esMaster ? "transparent" : "rgba(255,255,255,.14)";
+switchCuenta.style.color = esMaster ? "rgba(255,255,255,.6)" : "#fff";
+if (loginTitle) loginTitle.textContent = esMaster ? "Master" : "Admin / Moderador";
+}
+switchCuenta.addEventListener("click", () => _mostrarLogin("cuenta"));
+switchMaster.addEventListener("click", () => _mostrarLogin("master"));
+}
+const bioUnlockBtn = document.getElementById("biometric-unlock-btn");
+const bioUsePasswordBtn = document.getElementById("biometric-use-password-btn");
+if (bioUnlockBtn) {
+bioUnlockBtn.addEventListener("click", async () => {
+bioUnlockBtn.disabled = true;
+bioUnlockBtn.textContent = "Verificando…";
+const ok = await _pedirDesbloqueoBiometrico();
+if (ok) {
+document.getElementById("biometric-unlock-card").hidden = true;
+_continuarConSesionGuardada();
+} else {
+bioUnlockBtn.disabled = false;
+bioUnlockBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-lock"/></svg> Desbloquear con huella';
+}
+});
+}
+if (bioUsePasswordBtn) {
+bioUsePasswordBtn.addEventListener("click", () => {
+_borrarSesionDelDispositivo();
+document.getElementById("biometric-unlock-card").hidden = true;
+const loginFormsCard = document.getElementById("login-forms-card");
+if (loginFormsCard) loginFormsCard.hidden = false;
 });
 }
 const crearAdminForm = document.getElementById("crear-admin-form");
@@ -1468,6 +1602,16 @@ const cambiarPasswordForm = document.getElementById("cambiar-password-form");
 if (cambiarPasswordForm) cambiarPasswordForm.addEventListener("submit", handleCambiarPasswordSubmit);
 const datosBancariosForm = document.getElementById("datos-bancarios-form");
 if (datosBancariosForm) datosBancariosForm.addEventListener("submit", handleDatosBancariosSubmit);
+const btnDesactivarHuella = document.getElementById("btn-desactivar-huella");
+if (btnDesactivarHuella) {
+if (localStorage.getItem("biometric_enabled") === "true") btnDesactivarHuella.style.display = "";
+btnDesactivarHuella.addEventListener("click", () => {
+localStorage.removeItem("biometric_enabled");
+localStorage.removeItem("biometric_credential_id");
+btnDesactivarHuella.style.display = "none";
+showTemporaryMessage(" Huella desactivada en este dispositivo", "success");
+});
+}
 const nuevoAdminPais = document.getElementById("nuevo-admin-pais");
 const nuevoAdminCiudad = document.getElementById("nuevo-admin-ciudad");
 if (nuevoAdminPais && nuevoAdminCiudad && typeof enlazarPaisCiudad === "function") {
@@ -1549,6 +1693,15 @@ adminCurrentPage = 1;
 renderAdminProductsWithFilters();
 });
 }
+// Si esta pestaña no tiene sesión pero el dispositivo sí tiene una
+// guardada (localStorage), la restauramos antes de decidir qué mostrar.
+// Así la sesión sobrevive a cerrar la página/el navegador.
+if (!sessionStorage.getItem("admin_session") && localStorage.getItem("admin_session") === "true") {
+LS_SESSION_KEYS.forEach((k) => {
+const v = localStorage.getItem(k);
+if (v !== null) sessionStorage.setItem(k, v);
+});
+}
 const hasSession = sessionStorage.getItem("admin_session");
 const savedToken = sessionStorage.getItem("admin_token") || "";
 const savedRol = sessionStorage.getItem("admin_rol") || "master";
@@ -1559,11 +1712,10 @@ sessionStorage.removeItem("admin_token");
 sessionStorage.removeItem("admin_rol");
 sessionStorage.removeItem("admin_ciudad");
 sessionStorage.removeItem("admin_nombre");
-localStorage.removeItem("admin_token");
+_borrarSesionDelDispositivo();
 adminSession = null;
 }
-if (hasSession === "true" && savedToken && document.getElementById("admin-panel-view")) {
-(async () => {
+async function _continuarConSesionGuardada() {
 try {
 let sesionValida = false;
 if (savedRol === "master") {
@@ -1610,7 +1762,18 @@ initAdminViewToggle();
 aplicarVisibilidadPorRol();
 window.dispatchEvent(new CustomEvent('adminReady'));
 }
-})();
+}
+if (hasSession === "true" && savedToken && document.getElementById("admin-panel-view")) {
+if (localStorage.getItem("biometric_enabled") === "true") {
+// Hay huella activada en este dispositivo: pedimos el desbloqueo
+// ANTES de restaurar la sesión, en vez de entrar directo.
+const loginFormsCard = document.getElementById("login-forms-card");
+const bioCard = document.getElementById("biometric-unlock-card");
+if (loginFormsCard) loginFormsCard.hidden = true;
+if (bioCard) bioCard.hidden = false;
+} else {
+_continuarConSesionGuardada();
+}
 } else if (hasSession === "true" && !savedToken) {
 _forceAdminLogout();
 }
@@ -1624,7 +1787,7 @@ sessionStorage.removeItem("admin_token");
 sessionStorage.removeItem("admin_rol");
 sessionStorage.removeItem("admin_ciudad");
 sessionStorage.removeItem("admin_nombre");
-localStorage.removeItem("admin_token");
+_borrarSesionDelDispositivo();
 const loginView = document.getElementById("admin-login-view");
 const panelView = document.getElementById("admin-panel-view");
 if (loginView) loginView.hidden = false;

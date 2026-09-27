@@ -135,24 +135,16 @@ body[data-rol="moderador"] #product-form select {
  </div>
  </header>
  <main class="admin-main" id="admin-login-view">
- <div class="admin-card" style="max-width: 400px; margin: 40px auto;">
+ <div class="admin-card" id="login-forms-card" style="max-width: 400px; margin: 40px auto;">
  <div class="admin-card-header" style="text-align: center;">
- <h2>Administrador</h2>
+ <h2 id="login-view-title">Admin / Moderador</h2>
  <p style="color: rgba(255,255,255,0.8); margin-top: 8px;">Ingresa tus credenciales para continuar</p>
  </div>
- <form id="admin-login-form" class="form-vertical">
- <div class="form-row">
- <label>Contraseña</label>
- <input type="password" id="admin-password" required placeholder="Ingresa tu contraseña" />
+ <div id="login-role-switch" style="display:flex;border-radius:12px;overflow:hidden;border:1.5px solid rgba(255,255,255,.18);margin-bottom:18px;">
+ <button type="button" id="login-switch-cuenta" class="login-switch-btn" data-role="cuenta" style="flex:1;padding:9px 6px;border:none;background:rgba(255,255,255,.14);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer;">Admin / Moderador</button>
+ <button type="button" id="login-switch-master" class="login-switch-btn" data-role="master" style="flex:1;padding:9px 6px;border:none;background:transparent;color:rgba(255,255,255,.6);font-weight:700;font-size:.82rem;cursor:pointer;">Master</button>
  </div>
- <div class="form-row">
- <label>Token</label>
- <input type="password" id="admin-token" required placeholder="Ingresa tu token" />
- </div>
- <button type="submit" class="primary-button full-width" style="margin-top: 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-logout"/></svg> Ingresar</button>
- </form>
- <button type="button" id="toggle-login-cuenta" class="text-button full-width" style="margin-top: 14px;">¿Eres admin o moderador de una ciudad? Inicia sesión con tu cuenta</button>
- <form id="admin-login-form-cuenta" class="form-vertical" hidden style="margin-top: 14px;">
+ <form id="admin-login-form-cuenta" class="form-vertical">
  <div class="form-row">
  <label>Teléfono</label>
  <input type="tel" id="cuenta-telefono" required placeholder="10 dígitos" />
@@ -163,6 +155,24 @@ body[data-rol="moderador"] #product-form select {
  </div>
  <button type="submit" class="primary-button full-width" style="margin-top: 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-logout"/></svg> Ingresar</button>
  </form>
+ <form id="admin-login-form" class="form-vertical" hidden>
+ <div class="form-row">
+ <label>Contraseña</label>
+ <input type="password" id="admin-password" required placeholder="Ingresa tu contraseña" />
+ </div>
+ <div class="form-row">
+ <label>Token</label>
+ <input type="password" id="admin-token" required placeholder="Ingresa tu token" />
+ </div>
+ <button type="submit" class="primary-button full-width" style="margin-top: 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-logout"/></svg> Ingresar</button>
+ </form>
+ </div>
+ <div class="admin-card" id="biometric-unlock-card" hidden style="max-width: 400px; margin: 40px auto; text-align:center;">
+ <span style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:rgba(99,102,241,.15);margin-bottom:14px;"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" aria-hidden="true" fill="none" stroke="#818cf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 11a2 2 0 0 0-2 2c0 1.5-.5 3-2 4"/><path d="M6 8.5A6 6 0 0 1 18 12v2c0 .5 0 1.5.5 3"/><path d="M9 21c.5-1 1-2 1-4v-3a2 2 0 1 1 4 0v1"/><path d="M15 6.5a9 9 0 0 1 3 6.5c0 1 0 3 .5 4"/><path d="M12 3a9 9 0 0 0-8 4.9"/></svg></span>
+ <h2 style="margin:0 0 8px;">Sesión guardada en este dispositivo</h2>
+ <p style="color: rgba(255,255,255,0.8); margin: 0 0 18px;">Desbloquea con tu huella para continuar</p>
+ <button type="button" id="biometric-unlock-btn" class="primary-button full-width"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-lock"/></svg> Desbloquear con huella</button>
+ <button type="button" id="biometric-use-password-btn" class="text-button full-width" style="margin-top: 14px;">Usar mi contraseña en su lugar</button>
  </div>
  </main>
  <main class="admin-main" id="admin-panel-view" hidden>
@@ -252,6 +262,7 @@ body[data-rol="moderador"] #product-form select {
  </div>
  <button type="submit" class="primary-button full-width" style="margin-top: 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-lock"/></svg> Cambiar contraseña</button>
  </form>
+ <button type="button" id="btn-desactivar-huella" class="text-button full-width" style="margin-top: 14px; display:none;">Desactivar huella en este dispositivo</button>
  </div>
  </div>
  <div class="admin-card grid-tile" id="admin-datos-bancarios-section">
