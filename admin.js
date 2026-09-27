@@ -696,12 +696,11 @@ if (!data || !data.ok) {
 await showCustomAlert({ title: " No se pudo crear", message: (data && data.error) || "Intenta de nuevo.", icon: "", confirmText: "Aceptar" });
 return;
 }
-await showCustomAlert({
-title: " Cuenta creada",
-message: `Comparte esta contraseña temporal con ${nombre} (teléfono ${data.telefono}): ${data.codigo}`,
-icon: "",
-confirmText: "Listo"
-});
+const msg = `*Cuenta creada*\n\nHola ${nombre}, tu acceso a Z&R:\n\nTeléfono: ${data.telefono}\nContraseña temporal: *${data.codigo}*\n\nCámbiala después de iniciar sesión.`;
+document.getElementById("nuevo-admin-credenciales").style.display = "block";
+document.getElementById("nuevo-admin-credenciales").innerHTML = `<b>${nombre}</b><br>Tel: ${data.telefono}<br>Contraseña: <b>${data.codigo}</b>`;
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+window.location.href = isMobile ? `whatsapp://send?phone=52${data.telefono}&text=${encodeURIComponent(msg)}` : `https://wa.me/52${data.telefono}?text=${encodeURIComponent(msg)}`;
 document.getElementById("crear-admin-form").reset();
 cargarListaAdmins();
 } catch (err) {
@@ -1561,8 +1560,8 @@ const loginTitle = document.getElementById("login-view-title");
 if (switchCuenta && switchMaster && loginForm && loginFormCuenta) {
 function _mostrarLogin(rolElegido) {
 const esMaster = rolElegido === "master";
-loginForm.hidden = !esMaster;
-loginFormCuenta.hidden = esMaster;
+loginForm.style.display = esMaster ? "" : "none";
+loginFormCuenta.style.display = esMaster ? "none" : "";
 switchMaster.style.background = esMaster ? "rgba(255,255,255,.14)" : "transparent";
 switchMaster.style.color = esMaster ? "#fff" : "rgba(255,255,255,.6)";
 switchCuenta.style.background = esMaster ? "transparent" : "rgba(255,255,255,.14)";
@@ -1571,6 +1570,7 @@ if (loginTitle) loginTitle.textContent = esMaster ? "Master" : "Admin / Moderado
 }
 switchCuenta.addEventListener("click", () => _mostrarLogin("cuenta"));
 switchMaster.addEventListener("click", () => _mostrarLogin("master"));
+_mostrarLogin("cuenta");
 }
 const bioUnlockBtn = document.getElementById("biometric-unlock-btn");
 const bioUsePasswordBtn = document.getElementById("biometric-use-password-btn");
