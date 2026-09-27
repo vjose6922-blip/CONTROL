@@ -212,7 +212,7 @@
   async function resetPasswordVendedor(uid, btn) {
     if (typeof showCustomConfirm !== 'function') { await _doResetPassword(uid, btn); return; }
     showCustomConfirm({
-      title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-lock"/></svg> Nueva contraseña',
+      title: 'Nueva contraseña',
       message: '¿Generar una contraseña temporal nueva para este vendedor? La anterior dejará de funcionar.',
       icon: '', confirmText: 'Generar', cancelText: 'Cancelar',
       onConfirm: async () => { await _doResetPassword(uid, btn); }
@@ -222,31 +222,18 @@
   async function _doResetPassword(uid, btn) {
     const runFn = async () => {
     try {
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      let waWindow = null;
-      if (!isMobile) {
-        waWindow = window.open('', '_blank');
-        if (waWindow) waWindow.document.write('<p style="font-family:sans-serif;padding:20px">⏳ Generando contraseña, un momento...</p>');
-      }
       const data = await _gasPost({ action: 'resetPasswordVendedor', uid, token: _getToken() });
-      if (!data.ok) { if (waWindow) waWindow.close(); throw new Error(data.error); }
+      if (!data.ok) throw new Error(data.error);
       if (data.codigo && data.telefono) {
         const row    = document.getElementById(`vrow-${uid}`);
         const nombre = row ? row.querySelector('.info strong')?.textContent?.trim() || 'Vendedor' : 'Vendedor';
-        const mensaje =
-          ` *Recuperación de contraseña* \n\n` +
-          `Hola ${nombre}, tu nueva contraseña temporal para Z&R Comunidad es:\n\n` +
-          `*${data.codigo}*\n\n` +
-          `Puedes cambiarla después de iniciar sesión.\n\n` +
-          ` Accede aquí: vjose6922-blip.github.io/znr/vendedor.html`;
-        if (isMobile) {
-          if (waWindow) waWindow.close();
-          window.location.href = `whatsapp://send?phone=52${data.telefono}&text=${encodeURIComponent(mensaje)}`;
-        } else {
-          if (waWindow) waWindow.location.href = `https://wa.me/52${data.telefono}?text=${encodeURIComponent(mensaje)}`;
-        }
+        await showCustomAlert({
+          title: 'Contraseña generada',
+          message: `Comparte esta contraseña temporal con ${nombre} (teléfono ${data.telefono}): ${data.codigo}`,
+          confirmText: 'Listo'
+        });
       }
-      _msg(' Contraseña generada y enviada', 'success');
+      _msg(' Contraseña generada', 'success');
       loadVendors();
     } catch (err) {
       _msg(' ' + err.message, 'error');
