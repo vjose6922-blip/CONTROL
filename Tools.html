@@ -84,6 +84,7 @@
       <button type="button" class="admin-mini-card" data-tool="sinciudad"><span class="amc-label">Vendedores sin ciudad</span></button>
       <button type="button" class="admin-mini-card" data-tool="backfillcomunidad"><span class="amc-label">Asignar ciudad retroactiva (Comunidad)</span></button>
       <button type="button" class="admin-mini-card" data-tool="backfillznr"><span class="amc-label">Asignar ciudad retroactiva (Z&amp;R)</span></button>
+      <button type="button" class="admin-mini-card" data-tool="planplusadmins"><span class="amc-label">Plan Plus retroactivo (admins/moderadores)</span></button>
     </div>
   </section>
   <button type="button" id="tools-back" hidden style="margin-bottom:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:inherit;cursor:pointer;font-size:13px;padding:8px 16px;border-radius:20px;">&larr; Volver a herramientas</button>
@@ -117,7 +118,8 @@ const ACTION_TOOLS = {
   reentrenar: () => window.reentrenarModeloIA(),
   algolia: () => window.resincronizarComunidadAlgoliaBtn(),
   backfillcomunidad: () => window.backfillCiudadComunidadBtn(),
-  backfillznr: () => window.asignarCiudadMasivaZNRBtn()
+  backfillznr: () => window.asignarCiudadMasivaZNRBtn(),
+  planplusadmins: () => window.sincronizarPlanPlusAdminsBtn()
 };
 
 function closeAllTools() {

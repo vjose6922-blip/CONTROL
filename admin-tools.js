@@ -1255,6 +1255,8 @@ async function openPlanPlusResumenModal() {
       if (!res.ok) throw new Error(res.error || 'Error del servidor');
       const proximos = res.proximosVencimientos || [];
 
+      const admins = res.adminsCiudad || [];
+
       bodyEl.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;">
           <div style="grid-column:span 2;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:14px;padding:16px;text-align:center;">
@@ -1276,6 +1278,34 @@ async function openPlanPlusResumenModal() {
           </div>
         </div>
 
+        ${esMaster && admins.length ? `
+        <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Pagar a ${admins.length > 1 ? 'los admins de ' + esc(res.ciudad) : 'el admin de ' + esc(res.ciudad)}</p>
+        ${admins.length > 1 ? `<p style="font-size:.72rem;color:#eab308;margin:0 0 12px;">Hay más de un admin activo en esta ciudad — el monto de arriba es el total de la ciudad, repártanlo entre ustedes.</p>` : ''}
+        ${admins.map(a => `
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-weight:700;font-size:.88rem;">${esc(a.nombre)}${a.activo ? '' : ' <span style="color:#ef4444;font-weight:600;font-size:.7rem;">(desactivado)</span>'}</span>
+            </div>
+            ${a.clabe ? `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;">
+              <span style="font-size:.78rem;color:#ccc;">CLABE: <b style="font-family:monospace;letter-spacing:.03em;">${esc(a.clabe)}</b></span>
+              <button type="button" data-copy="${esc(a.clabe)}" style="background:rgba(99,102,241,.18);border:none;color:#a5b4fc;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copiar</button>
+            </div>` : ''}
+            ${a.tarjeta ? `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;">
+              <span style="font-size:.78rem;color:#ccc;">Tarjeta: <b style="font-family:monospace;letter-spacing:.03em;">${esc(a.tarjeta)}</b></span>
+              <button type="button" data-copy="${esc(a.tarjeta)}" style="background:rgba(99,102,241,.18);border:none;color:#a5b4fc;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copiar</button>
+            </div>` : ''}
+            ${!a.clabe && !a.tarjeta ? '<p style="font-size:.76rem;color:#888;margin:4px 0;">Todavía no capturó CLABE ni tarjeta.</p>' : ''}
+            <button type="button" ${a.pagado ? 'disabled' : `data-marcar-pago="${a.uid}"`}
+              style="width:100%;margin-top:10px;border-radius:10px;padding:9px;font-size:.8rem;font-weight:700;cursor:${a.pagado ? 'default' : 'pointer'};border:none;
+              background:${a.pagado ? 'rgba(34,197,94,.15)' : '#eab308'};color:${a.pagado ? '#22c55e' : '#1a1a1a'};">
+              ${a.pagado ? '✓ Ya pagado ' + a.periodo + (a.montoPagado ? ' (' + fmtMoney(a.montoPagado) + ')' : '') : 'Marcar pagado ' + a.periodo}
+            </button>
+          </div>
+        `).join('')}
+        ` : ''}
+
         ${proximos.length ? `
         <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Próximos vencimientos</p>
         ${proximos.map(v => {
@@ -1291,6 +1321,40 @@ async function openPlanPlusResumenModal() {
       bodyEl.innerHTML = '<p style="color:#ef4444;text-align:center;">Error al cargar el resumen: ' + (e.message || '') + '</p>';
     }
   }
+
+  // Delegación de eventos: copiar CLABE/tarjeta y marcar pago, sin
+  // re-atar listeners cada vez que cargar() vuelve a pintar el body.
+  bodyEl.addEventListener('click', async (e) => {
+    const copyBtn = e.target.closest('[data-copy]');
+    if (copyBtn) {
+      try {
+        await navigator.clipboard.writeText(copyBtn.dataset.copy);
+        const original = copyBtn.textContent;
+        copyBtn.textContent = '¡Copiado!';
+        setTimeout(() => { copyBtn.textContent = original; }, 1200);
+      } catch { /* clipboard no disponible, se ignora silenciosamente */ }
+      return;
+    }
+    const pagoBtn = e.target.closest('[data-marcar-pago]');
+    if (pagoBtn) {
+      if (!confirm('¿Confirmas que ya le transferiste este pago? No se puede desmarcar.')) return;
+      pagoBtn.disabled = true;
+      pagoBtn.textContent = 'Guardando…';
+      try {
+        const r = await fetch(api, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'marcarPagoAdminMes', token, uid: pagoBtn.dataset.marcarPago }),
+        }).then(x => x.json());
+        if (!r.ok) throw new Error(r.error || 'Error del servidor');
+        const ciudadActual = document.getElementById('ppr-ciudad-select')?.value || '';
+        await cargar(ciudadActual);
+      } catch (e2) {
+        alert('No se pudo marcar el pago: ' + (e2.message || ''));
+        pagoBtn.disabled = false;
+        pagoBtn.textContent = 'Marcar pagado';
+      }
+    }
+  });
 
   if (esMaster) {
     document.getElementById('ppr-ciudad-select').addEventListener('change', (e) => cargar(e.target.value));
@@ -1655,6 +1719,25 @@ async function asignarCiudadMasivaZNRBtn() {
   }
 }
 window.asignarCiudadMasivaZNRBtn = asignarCiudadMasivaZNRBtn;
+
+// ── Plan Plus retroactivo para admins/moderadores ya existentes (creados
+// antes de que existiera este perk) ─────────────────────────────────────
+async function sincronizarPlanPlusAdminsBtn() {
+  if (!confirm('Esto revisa TODOS los admins/moderadores activos y, al que no tenga cuenta de vendedor con Plan Plus, se la crea o se la activa. ¿Continuar?')) return;
+  const token = sessionStorage.getItem('admin_token') || '';
+  try {
+    const api = "https://vendedores-api-1038143238323.us-central1.run.app";
+    const res = await fetch(api, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'sincronizarPlanPlusAdminsExistentes', token }),
+    }).then(r => r.json());
+    if (!res.ok) throw new Error(res.error || 'Error del servidor');
+    alert(`Listo — ${res.total} cuentas revisadas: ${res.creados} nuevas, ${res.actualizados} actualizadas, ${res.sinDatos} sin teléfono.`);
+  } catch (e) {
+    alert('Error: ' + (e.message || ''));
+  }
+}
+window.sincronizarPlanPlusAdminsBtn = sincronizarPlanPlusAdminsBtn;
 
 // ── Vendedores sin ciudad (migración de cuentas viejas) ─────────────────────
 async function openVendedoresSinCiudadModal() {

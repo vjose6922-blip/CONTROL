@@ -36,6 +36,7 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   iniciarTransicionAdmin: VENDEDORES_API_URL_ADMIN,
   promoverModerador: VENDEDORES_API_URL_ADMIN,
   eliminarAdmin: VENDEDORES_API_URL_ADMIN,
+  guardarDatosBancariosAdmin: VENDEDORES_API_URL_ADMIN,
   obtenerEstadisticasStaff: ADMIN_API_URL_ADMIN,
   login: AUTH_API_URL_ADMIN,
   verificarAdmin: AUTH_API_URL_ADMIN,
@@ -332,6 +333,8 @@ const TIPO_LABELS = {
   eliminarProductosDeAdmin: "Eliminar productos ZNR de un admin", actualizarProductoZNR: "Actualizar producto ZNR",
   eliminarProductoZNR: "Eliminar producto ZNR", deleteProductoComunidadAdmin: "Eliminar producto de comunidad (admin)",
   marcarProductoConfiable: "Marcar producto confiable", eliminarBeneficiario: "Eliminar beneficiario",
+  guardarDatosBancariosAdmin: "Actualizar datos bancarios", marcarPagoAdminMes: "Marcar pago mensual a admin",
+  sincronizarPlanPlusAdminsExistentes: "Sincronizar Plan Plus retroactivo (admins)",
 };
 
 function renderEstadisticasStaff() {
@@ -636,6 +639,36 @@ async function handleCambiarPasswordSubmit(e) {
   } catch (err) {
     console.error(err);
     await showCustomAlert({ title: " Error", message: "Error al cambiar la contraseña.", icon: "", confirmText: "Aceptar" });
+  } finally {
+    hideLoader();
+  }
+}
+
+// Autoservicio de datos bancarios (CLABE/tarjeta) para que el Master les
+// pague su porcentaje mensual. Igual que la contraseña, el Master
+// heredado no tiene doc en `admins` y el backend lo rechaza por diseño.
+async function handleDatosBancariosSubmit(e) {
+  e.preventDefault();
+  const titular = document.getElementById("datos-bancarios-titular").value;
+  const clabe = document.getElementById("datos-bancarios-clabe").value;
+  const tarjeta = document.getElementById("datos-bancarios-tarjeta").value;
+
+  if (!clabe.trim() && !tarjeta.trim()) {
+    await showCustomAlert({ title: " Falta un dato", message: "Da al menos una CLABE o número de tarjeta.", icon: "", confirmText: "Aceptar" });
+    return;
+  }
+
+  showLoader("Guardando datos bancarios...");
+  try {
+    const data = await apiRequest("POST", { action: "guardarDatosBancariosAdmin", titular, clabe, tarjeta });
+    if (!data || !data.ok) {
+      await showCustomAlert({ title: " No se pudo guardar", message: (data && data.error) || "Intenta de nuevo.", icon: "", confirmText: "Aceptar" });
+      return;
+    }
+    await showCustomAlert({ title: " Listo", message: "Tus datos bancarios se guardaron correctamente.", icon: "", confirmText: "Listo" });
+  } catch (err) {
+    console.error(err);
+    await showCustomAlert({ title: " Error", message: "Error al guardar tus datos bancarios.", icon: "", confirmText: "Aceptar" });
   } finally {
     hideLoader();
   }
@@ -1433,6 +1466,8 @@ const crearAdminForm = document.getElementById("crear-admin-form");
 if (crearAdminForm) crearAdminForm.addEventListener("submit", handleCrearAdminSubmit);
 const cambiarPasswordForm = document.getElementById("cambiar-password-form");
 if (cambiarPasswordForm) cambiarPasswordForm.addEventListener("submit", handleCambiarPasswordSubmit);
+const datosBancariosForm = document.getElementById("datos-bancarios-form");
+if (datosBancariosForm) datosBancariosForm.addEventListener("submit", handleDatosBancariosSubmit);
 const nuevoAdminPais = document.getElementById("nuevo-admin-pais");
 const nuevoAdminCiudad = document.getElementById("nuevo-admin-ciudad");
 if (nuevoAdminPais && nuevoAdminCiudad && typeof enlazarPaisCiudad === "function") {

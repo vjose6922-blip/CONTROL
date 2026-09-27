@@ -254,6 +254,34 @@ body[data-rol="moderador"] #product-form select {
  </form>
  </div>
  </div>
+ <div class="admin-card grid-tile" id="admin-datos-bancarios-section">
+ <div class="admin-card-header tile-header" onclick="openGridTile('admin-datos-bancarios-section','datos-bancarios-body')">
+ <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-star"/></svg></span>
+ <h2 class="tile-title">Datos bancarios</h2>
+ <span class="tile-subtitle">Para que te paguen tu porcentaje mensual</span>
+ <div class="tile-actions">
+ <button type="button" class="tile-close-btn" aria-label="Cerrar" onclick="event.stopPropagation(); closeGridTile('admin-datos-bancarios-section','datos-bancarios-body')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
+ </div>
+ </div>
+ <div id="datos-bancarios-body" style="display:none;">
+ <form id="datos-bancarios-form" class="form-vertical">
+ <p style="font-size:.8rem;color:#888;margin:0 0 10px;">Da al menos una: CLABE (transferencia) o número de tarjeta.</p>
+ <div class="form-row">
+ <label>Titular de la cuenta</label>
+ <input type="text" id="datos-bancarios-titular" placeholder="Nombre igual al de tu banco" />
+ </div>
+ <div class="form-row">
+ <label>CLABE interbancaria</label>
+ <input type="text" id="datos-bancarios-clabe" inputmode="numeric" maxlength="18" placeholder="18 dígitos" />
+ </div>
+ <div class="form-row">
+ <label>Número de tarjeta</label>
+ <input type="text" id="datos-bancarios-tarjeta" inputmode="numeric" maxlength="19" placeholder="13 a 19 dígitos" />
+ </div>
+ <button type="submit" class="primary-button full-width" style="margin-top: 10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-star"/></svg> Guardar datos bancarios</button>
+ </form>
+ </div>
+ </div>
  </div>
  </section>
  <section class="admin-section" id="admin-notif-section" data-role="notif">
