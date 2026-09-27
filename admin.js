@@ -697,10 +697,9 @@ await showCustomAlert({ title: " No se pudo crear", message: (data && data.error
 return;
 }
 const msg = `*Cuenta creada*\n\nHola ${nombre}, tu acceso a Z&R:\n\nTeléfono: ${data.telefono}\nContraseña temporal: *${data.codigo}*\n\nCámbiala después de iniciar sesión.`;
+const waLink = `https://wa.me/52${data.telefono}?text=${encodeURIComponent(msg)}`;
 document.getElementById("nuevo-admin-credenciales").style.display = "block";
-document.getElementById("nuevo-admin-credenciales").innerHTML = `<b>${nombre}</b><br>Tel: ${data.telefono}<br>Contraseña: <b>${data.codigo}</b>`;
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-window.location.href = isMobile ? `whatsapp://send?phone=52${data.telefono}&text=${encodeURIComponent(msg)}` : `https://wa.me/52${data.telefono}?text=${encodeURIComponent(msg)}`;
+document.getElementById("nuevo-admin-credenciales").innerHTML = `<b>${nombre}</b><br>Tel: ${data.telefono}<br>Contraseña: <b>${data.codigo}</b><br><a href="${waLink}" target="_blank" rel="noopener">Enviar por WhatsApp</a>`;
 document.getElementById("crear-admin-form").reset();
 cargarListaAdmins();
 } catch (err) {
