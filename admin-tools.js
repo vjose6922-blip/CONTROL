@@ -1214,7 +1214,10 @@ async function openPlanPlusResumenModal() {
   const old = document.getElementById('modal-plan-plus-resumen');
   if (old) old.remove();
   const token = sessionStorage.getItem('admin_token') || '';
+  const rol   = sessionStorage.getItem('admin_rol') || 'master';
   const api   = "https://vendedores-api-1038143238323.us-central1.run.app";
+  const esMaster = rol === 'master';
+  const ciudades = (window.ZNR_CIUDADES || []).map(c => c.ciudad).sort();
 
   const modal = document.createElement('div');
   modal.id = 'modal-plan-plus-resumen';
@@ -1224,6 +1227,14 @@ async function openPlanPlusResumenModal() {
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('star')} Resumen Plan Plus</h2>
       <button id="btn-close-plan-plus-resumen" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
     </div>
+    ${esMaster ? `
+    <div style="padding:14px 20px 0;">
+      <label style="font-size:.72rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px;">Ciudad</label>
+      <select id="ppr-ciudad-select" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--modal-border);background:var(--modal-bg);color:var(--modal-text);">
+        <option value="">Todas (global)</option>
+        ${ciudades.map(c => `<option value="${c}">${c}</option>`).join('')}
+      </select>
+    </div>` : ''}
     <div id="ppr-body" style="padding:18px 20px;">Cargando…</div>
   </div>`;
   document.body.appendChild(modal);
@@ -1231,45 +1242,60 @@ async function openPlanPlusResumenModal() {
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
   const bodyEl = document.getElementById('ppr-body');
-  try {
-    if (!token) throw new Error('Sin sesión de admin');
-    const res = await fetch(api + '?' + new URLSearchParams({ action: 'obtenerResumenPlanPlus', token })).then(r => r.json());
-    if (!res.ok) throw new Error(res.error || 'Error del servidor');
+  const esc      = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmtMoney = v => '$' + Number(v || 0).toLocaleString('es-MX');
 
-    const esc      = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const fmtMoney = v => '$' + Number(v || 0).toLocaleString('es-MX');
-    const proximos = res.proximosVencimientos || [];
+  async function cargar(ciudad) {
+    bodyEl.innerHTML = 'Cargando…';
+    try {
+      if (!token) throw new Error('Sin sesión de admin');
+      const params = { action: 'obtenerResumenPlanPlus', token };
+      if (ciudad) params.ciudad = ciudad;
+      const res = await fetch(api + '?' + new URLSearchParams(params)).then(r => r.json());
+      if (!res.ok) throw new Error(res.error || 'Error del servidor');
+      const proximos = res.proximosVencimientos || [];
 
-    bodyEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;">
-        <div style="grid-column:span 2;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:14px;padding:16px;text-align:center;">
-          <div style="font-size:2rem;font-weight:900;color:#22c55e;">${fmtMoney(res.mrr)}</div>
-          <div style="font-size:.75rem;color:#aaa;margin-top:2px;">MRR estimado (${res.vendedoresActivos} × ${fmtMoney(res.precioMensual)}/mes)</div>
+      bodyEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;">
+          <div style="grid-column:span 2;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:2rem;font-weight:900;color:#22c55e;">${fmtMoney(res.mrr)}</div>
+            <div style="font-size:.75rem;color:#aaa;margin-top:2px;">MRR real${res.ciudad ? ' — ' + esc(res.ciudad) : ' (global)'} (${res.vendedoresActivos} × ${fmtMoney(res.precioMensual)}/mes)</div>
+          </div>
+          ${esMaster && res.ciudad ? `
+          <div style="grid-column:span 2;background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.28);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:1.7rem;font-weight:900;color:#eab308;">${fmtMoney(res.montoAdmin)}</div>
+            <div style="font-size:.75rem;color:#aaa;margin-top:2px;">Pago sugerido para el admin de ${esc(res.ciudad)} (${Math.round(res.porcentajeAdmin * 100)}% del MRR real — no incluye Plan Plus gratis por ser staff, y este monto no se paga solo)</div>
+          </div>` : ''}
+          <div style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:900;color:#818cf8;">${res.vendedoresActivos}</div>
+            <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Vendedores Plus activos</div>
+          </div>
+          <div style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);border-radius:14px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:900;color:#f97316;">${res.vencenEn7dias}</div>
+            <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Vencen en 7 días</div>
+          </div>
         </div>
-        <div style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:14px;text-align:center;">
-          <div style="font-size:1.6rem;font-weight:900;color:#818cf8;">${res.vendedoresActivos}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Vendedores Plus activos</div>
-        </div>
-        <div style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);border-radius:14px;padding:14px;text-align:center;">
-          <div style="font-size:1.6rem;font-weight:900;color:#f97316;">${res.vencenEn7dias}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Vencen en 7 días</div>
-        </div>
-      </div>
 
-      ${proximos.length ? `
-      <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Próximos vencimientos</p>
-      ${proximos.map(v => {
-        const urgente = v.diasRestantes <= 7;
-        return `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="font-size:.82rem;color:#eee;">${esc(v.nombre)}</span>
-          <span style="background:${urgente ? '#ef4444' : 'rgba(255,255,255,.1)'};color:#fff;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">${v.diasRestantes} día${v.diasRestantes === 1 ? '' : 's'}</span>
-        </div>`;
-      }).join('')}` : '<p style="color:#aaa;text-align:center;padding:16px 0;">Nadie vence en los próximos 30 días.</p>'}
-    `;
-  } catch (e) {
-    bodyEl.innerHTML = '<p style="color:#ef4444;text-align:center;">Error al cargar el resumen: ' + (e.message || '') + '</p>';
+        ${proximos.length ? `
+        <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Próximos vencimientos</p>
+        ${proximos.map(v => {
+          const urgente = v.diasRestantes <= 7;
+          return `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+            <span style="font-size:.82rem;color:#eee;">${esc(v.nombre)}</span>
+            <span style="background:${urgente ? '#ef4444' : 'rgba(255,255,255,.1)'};color:#fff;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">${v.diasRestantes} día${v.diasRestantes === 1 ? '' : 's'}</span>
+          </div>`;
+        }).join('')}` : '<p style="color:#aaa;text-align:center;padding:16px 0;">Nadie vence en los próximos 30 días.</p>'}
+      `;
+    } catch (e) {
+      bodyEl.innerHTML = '<p style="color:#ef4444;text-align:center;">Error al cargar el resumen: ' + (e.message || '') + '</p>';
+    }
   }
+
+  if (esMaster) {
+    document.getElementById('ppr-ciudad-select').addEventListener('change', (e) => cargar(e.target.value));
+  }
+  await cargar('');
 }
 
 
