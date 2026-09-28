@@ -1723,7 +1723,7 @@ window.asignarCiudadMasivaZNRBtn = asignarCiudadMasivaZNRBtn;
 // ── Plan Plus retroactivo para admins/moderadores ya existentes (creados
 // antes de que existiera este perk) ─────────────────────────────────────
 async function sincronizarPlanPlusAdminsBtn() {
-  if (!confirm('Esto revisa TODOS los admins/moderadores activos y, al que no tenga cuenta de vendedor con Plan Plus, se la crea o se la activa. ¿Continuar?')) return;
+  if (!confirm('Esto revisa TODOS los admins/moderadores activos y le genera una contraseña NUEVA a cada uno, sincronizada con su cuenta de vendedor. Las contraseñas anteriores dejan de funcionar. ¿Continuar?')) return;
   const token = sessionStorage.getItem('admin_token') || '';
   try {
     const api = "https://vendedores-api-1038143238323.us-central1.run.app";
@@ -1732,7 +1732,7 @@ async function sincronizarPlanPlusAdminsBtn() {
       body: JSON.stringify({ action: 'sincronizarPlanPlusAdminsExistentes', token }),
     }).then(r => r.json());
     if (!res.ok) throw new Error(res.error || 'Error del servidor');
-    alert(`Listo — ${res.total} cuentas revisadas: ${res.creados} nuevas, ${res.actualizados} actualizadas, ${res.sinDatos} sin teléfono.`);
+    alert(`Listo — ${res.total} cuentas revisadas (${res.sinDatos} sin teléfono):\n\n${(res.resultados || []).join('\n')}`);
   } catch (e) {
     alert('Error: ' + (e.message || ''));
   }
