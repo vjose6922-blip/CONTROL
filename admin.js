@@ -703,21 +703,23 @@ window.handlePromoverModerador = handlePromoverModerador;
 async function handleEliminarAdmin(btn) {
   const uid = btn.dataset.uid;
   const nombre = _nombrePorUid(uid);
-  const confirmado = await new Promise((resolve) => {
+  const razon = await new Promise((resolve) => {
     showCustomConfirm({
       title: "Eliminar cuenta",
       message: `Esto borra la cuenta de ${nombre} Y TODOS sus productos ZNR de inmediato. Asegúrate de que el nuevo admin ya subió los suyos antes de continuar. Esta acción no se puede deshacer. ¿Eliminar de todos modos?`,
       icon: "",
       confirmText: "Sí, eliminar todo",
       cancelText: "Cancelar",
-      onConfirm: () => resolve(true),
-      onCancel: () => resolve(false),
+      askReason: true,
+      reasonPlaceholder: "Motivo de la eliminación (opcional)",
+      onConfirm: (r) => resolve(r === undefined ? "" : r),
+      onCancel: () => resolve(null),
     });
   });
-  if (!confirmado) return;
+  if (razon === null) return;
   showLoader("Eliminando cuenta y productos...");
   try {
-    const data = await apiRequest("POST", { action: "eliminarAdmin", uid });
+    const data = await apiRequest("POST", { action: "eliminarAdmin", uid, razon });
     if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
     cargarListaAdmins();
   } catch (err) {
@@ -732,9 +734,40 @@ window.handleEliminarAdmin = handleEliminarAdmin;
 async function handleToggleAdminActivo(btn) {
 const uid = btn.dataset.uid;
 const activo = btn.dataset.activo === "1";
-showLoader(activo ? "Desactivando..." : "Reactivando...");
+if (!activo) {
+  // Reactivar: sin fricción, como estaba.
+  showLoader("Reactivando...");
+  try {
+    const data = await apiRequest("POST", { action: "reactivarAdmin", uid });
+    if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
+    cargarListaAdmins();
+  } catch (err) {
+    console.error(err);
+    await showCustomAlert({ title: " Error", message: "No se pudo actualizar la cuenta.", icon: "", confirmText: "Aceptar" });
+  } finally {
+    hideLoader();
+  }
+  return;
+}
+// Desactivar: sí pedimos motivo, queda en la auditoría.
+const nombre = _nombrePorUid(uid);
+const razon = await new Promise((resolve) => {
+  showCustomConfirm({
+    title: "Desactivar cuenta",
+    message: `${nombre} no podrá acceder al panel hasta que la reactives. ¿Continuar?`,
+    icon: "",
+    confirmText: "Sí, desactivar",
+    cancelText: "Cancelar",
+    askReason: true,
+    reasonPlaceholder: "Motivo de la desactivación (opcional)",
+    onConfirm: (r) => resolve(r === undefined ? "" : r),
+    onCancel: () => resolve(null),
+  });
+});
+if (razon === null) return;
+showLoader("Desactivando...");
 try {
-const data = await apiRequest("POST", { action: activo ? "desactivarAdmin" : "reactivarAdmin", uid });
+const data = await apiRequest("POST", { action: "desactivarAdmin", uid, razon });
 if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
 cargarListaAdmins();
 } catch (err) {
@@ -1345,14 +1378,16 @@ message: "¿Estás seguro de que deseas eliminar este producto? Esta acción no 
 icon: "",
 confirmText: "Sí, eliminar",
 cancelText: "Cancelar",
-onConfirm: () => resolve(true),
-onCancel: () => resolve(false)
+askReason: true,
+reasonPlaceholder: "Motivo de la eliminación (opcional)",
+onConfirm: (razon) => resolve(razon === undefined ? "" : razon),
+onCancel: () => resolve(null)
 });
 });
-if (!confirmDelete) return;
+if (confirmDelete === null) return;
 showLoader("Eliminando producto...");
 try {
-await apiRequest("POST", { action: "delete", id });
+await apiRequest("POST", { action: "delete", id, razon: confirmDelete });
 await loadAdminProducts();
 } catch (err) {
 console.error(err);
@@ -2270,9 +2305,11 @@ message: `¿Eliminar "${nombreProducto}" y marcar todos sus reportes como revisa
 icon: '',
 confirmText: 'Eliminar',
 cancelText: 'Cancelar',
-onConfirm: async () => {
+askReason: true,
+reasonPlaceholder: 'Motivo de la eliminación (opcional)',
+onConfirm: async (razon) => {
 try {
-const data = await gasPost({ action: 'deleteComunidad', id: String(productId), token: getToken() });
+const data = await gasPost({ action: 'deleteComunidad', id: String(productId), token: getToken(), razon: razon || '' });
 if (!data.ok) throw new Error(data.error);
 if (typeof showTemporaryMessage === 'function') showTemporaryMessage(' Producto eliminado', 'success');
 loadReportes();
@@ -2307,9 +2344,11 @@ message: `¿Deseas suspender a "${nombre}"? Podrás reactivarlo en cualquier mom
 icon: '',
 confirmText: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender',
 cancelText: 'Cancelar',
-onConfirm: async () => {
+askReason: true,
+reasonPlaceholder: 'Motivo de la suspensión (opcional)',
+onConfirm: async (razon) => {
 try {
-const data = await gasPost({ action: 'rechazarVendedor', uid, token: getToken() });
+const data = await gasPost({ action: 'rechazarVendedor', uid, token: getToken(), razon: razon || '' });
 if (!data.ok) throw new Error(data.error);
 if (typeof showTemporaryMessage === 'function') showTemporaryMessage('Vendedor suspendido', 'success');
 loadVendors();

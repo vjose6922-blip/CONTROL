@@ -261,9 +261,11 @@
       title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender vendedor',
       message: `¿Deseas suspender a "${nombre}"? Podrás reactivarlo en cualquier momento.`,
       icon: '', confirmText: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender', cancelText: 'Cancelar',
-      onConfirm: async () => {
+      askReason: true,
+      reasonPlaceholder: 'Motivo de la suspensión (opcional)',
+      onConfirm: async (razon) => {
         try {
-          const data = await _gasPost({ action: 'suspenderVendedor', uid, token: _getToken() });
+          const data = await _gasPost({ action: 'suspenderVendedor', uid, token: _getToken(), razon: razon || '' });
           if (!data.ok) throw new Error(data.error);
           _msg('Vendedor suspendido', 'success');
           loadVendors();
@@ -493,9 +495,11 @@
       title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg> Eliminar producto',
       message: `¿Eliminar "${nombreProducto}" y marcar todos sus reportes como revisados?`,
       icon: '', confirmText: 'Eliminar', cancelText: 'Cancelar',
-      onConfirm: async () => {
+      askReason: true,
+      reasonPlaceholder: 'Motivo de la eliminación (opcional)',
+      onConfirm: async (razon) => {
         try {
-          const data = await _gasPost({ action: 'deleteComunidad', id: String(productId), token: _getToken() });
+          const data = await _gasPost({ action: 'deleteComunidad', id: String(productId), token: _getToken(), razon: razon || '' });
           if (!data.ok) throw new Error(data.error);
           _msg(' Producto eliminado', 'success');
           loadReportes();

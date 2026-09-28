@@ -387,12 +387,13 @@
             throw new Error("Respuesta sin 'registros' (revisar contrato del endpoint)");
         }
         // staff_actividad no guarda IP ni un texto de "detalle" libre, así
-        // que esas dos columnas del prototipo original no se incluyen.
-        // Sí guarda ciudad y refId (verificado en las 4 APIs que escriben
-        // ahí), así que esas dos sí se muestran.
-        const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado'];
+        // que esa columna del prototipo original no se incluye.
+        // Sí guarda ciudad, refId y (desde el backend actualizado) razón
+        // — esta última opcional: el staff la escribe si quiere al hacer
+        // la acción en admin.js, así que puede venir vacía.
+        const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado', 'Razón'];
         const filas = data.registros.map((r) => [
-            r.id, r.fecha, r.usuario, r.rol, r.ciudad, TIPO_LABELS[r.accion] || r.accion, r.refId, r.estado
+            r.id, r.fecha, r.usuario, r.rol, r.ciudad, TIPO_LABELS[r.accion] || r.accion, r.refId, r.estado, r.razon || ''
         ]);
         pendientesDetalle = Array.isArray(data.pendientesDetalle) ? data.pendientesDetalle : [];
         pintarResumenPendientes(data.resumenPendientes || {});
@@ -427,14 +428,14 @@
 
     const auditRowsEjemplo = [
 
-        ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado'],
+        ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado', 'Razón'],
 
-        [1001, '2026-09-24 09:15', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Aprobar vendedor', 'vend_8831', 'Completado'],
-        [1002, '2026-09-24 10:02', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Marcar reporte revisado', 'rep_2210', 'Completado'],
-        [1003, '2026-09-24 11:45', 'ana.torres', 'Admin', 'Reynosa', 'Aprobar beneficiario', 'ben_0456', 'Completado'],
-        [1004, '2026-09-24 14:30', 'javier.lopez', 'Moderador', 'Nuevo Laredo', 'Marcar reporte de live revisado', 'live_7781', 'Completado'],
-        [1005, '2026-09-25 08:00', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Suspender vendedor', 'vend_5502', 'Completado'],
-        [1006, '2026-09-25 09:20', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Aprobar producto de comunidad', 'prod_1190', 'Completado']
+        [1001, '2026-09-24 09:15', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Aprobar vendedor', 'vend_8831', 'Completado', ''],
+        [1002, '2026-09-24 10:02', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Marcar reporte revisado', 'rep_2210', 'Completado', ''],
+        [1003, '2026-09-24 11:45', 'ana.torres', 'Admin', 'Reynosa', 'Aprobar beneficiario', 'ben_0456', 'Completado', ''],
+        [1004, '2026-09-24 14:30', 'javier.lopez', 'Moderador', 'Nuevo Laredo', 'Marcar reporte de live revisado', 'live_7781', 'Completado', ''],
+        [1005, '2026-09-25 08:00', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Suspender vendedor', 'vend_5502', 'Completado', 'Múltiples reportes de compradores por producto no entregado'],
+        [1006, '2026-09-25 09:20', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Aprobar producto de comunidad', 'prod_1190', 'Completado', '']
 
     ];
 

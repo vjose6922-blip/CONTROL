@@ -2252,10 +2252,26 @@ window.ajustarDiasPlus = async function(uid, nombre, diasActuales) {
 
 window.eliminarCuentaVendedorAdmin = async function(uid, nombre) {
   const token = sessionStorage.getItem('admin_token') || '';
+  const api   = "https://vendedores-api-1038143238323.us-central1.run.app";
   if (!token) { if (window.showTemporaryMessage) window.showTemporaryMessage('Token no encontrado. Re-inicia sesión.', 'error'); return; }
 
-  if (!confirm(`Esto borrará TODO de "${nombre}": productos, sesiones en vivo, entregas y su cuenta. Es irreversible. ¿Continuar?`)) return;
-  if (!confirm(`Última confirmación: se eliminará por completo a "${nombre}" y no podrás recuperar sus datos. ¿Eliminar definitivamente?`)) return;
+  if (!(await confirm(`Esto borrará TODO de "${nombre}": productos, sesiones en vivo, entregas y su cuenta. Es irreversible. ¿Continuar?`))) return;
+
+  const razon = await new Promise((resolve) => {
+    if (typeof showCustomConfirm !== 'function') { confirm(`Última confirmación: se eliminará por completo a "${nombre}" y no podrás recuperar sus datos. ¿Eliminar definitivamente?`).then((ok) => resolve(ok ? '' : null)); return; }
+    showCustomConfirm({
+      title: 'Última confirmación',
+      message: `Se eliminará por completo a "${nombre}" y no podrás recuperar sus datos. ¿Eliminar definitivamente?`,
+      icon: '',
+      confirmText: 'Sí, eliminar definitivamente',
+      cancelText: 'Cancelar',
+      askReason: true,
+      reasonPlaceholder: 'Motivo de la eliminación (opcional)',
+      onConfirm: (r) => resolve(r === undefined ? '' : r),
+      onCancel: () => resolve(null),
+    });
+  });
+  if (razon === null) return;
 
   try {
     if (window.showLoader) window.showLoader('Eliminando cuenta...');
@@ -2263,6 +2279,7 @@ window.eliminarCuentaVendedorAdmin = async function(uid, nombre) {
     params.append('action', 'eliminarCuentaVendedor');
     params.append('uid', uid);
     params.append('token', token);
+    params.append('razon', razon);
 
     const res = await fetch(api, {
       method: 'POST',
