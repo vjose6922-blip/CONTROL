@@ -306,6 +306,9 @@
 <div id="error-log"></div>
 
 
+<div id="pendientes-resumen" style="padding:10px 14px;margin-bottom:15px;border-radius:6px;background:#f7f7f5;border:1px solid #e0e0dc;font-size:13px;"></div>
+
+
 <div id="univer-container"></div>
 
 
@@ -380,7 +383,21 @@
         const filas = data.registros.map((r) => [
             r.id, r.fecha, r.usuario, r.rol, r.ciudad, TIPO_LABELS[r.accion] || r.accion, r.refId, r.estado
         ]);
+        pintarResumenPendientes(data.resumenPendientes || {});
         return [encabezado, ...filas];
+    }
+
+    // Backlog "a hoy" por ciudad (independiente de la ventana de días del
+    // registro de abajo) — lo que de verdad importa revisar en una
+    // auditoría semanal/quincenal es qué tan grande está la fila ahora,
+    // no cuántas se abrieron dentro del rango elegido.
+    function pintarResumenPendientes(resumen) {
+        const cont = document.getElementById('pendientes-resumen');
+        if (!cont) return;
+        const ciudades = Object.entries(resumen).sort((a, b) => b[1] - a[1]);
+        if (!ciudades.length) { cont.innerHTML = '<strong>Pendientes por ciudad (a hoy):</strong> ninguno 🎉'; return; }
+        cont.innerHTML = '<strong>Pendientes por ciudad (a hoy):</strong> ' +
+            ciudades.map(([c, n]) => `<span style="display:inline-block;margin:4px 8px 0 0;padding:3px 10px;border-radius:14px;background:${n > 5 ? '#f8d7da' : '#eef5fb'};color:${n > 5 ? '#842029' : '#245b80'};font-weight:600;">${c}: ${n}</span>`).join('');
     }
 
     const auditRowsEjemplo = [
