@@ -36,6 +36,7 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   iniciarTransicionAdmin: VENDEDORES_API_URL_ADMIN,
   promoverModerador: VENDEDORES_API_URL_ADMIN,
   eliminarAdmin: VENDEDORES_API_URL_ADMIN,
+  resetPasswordAdmin: VENDEDORES_API_URL_ADMIN,
   guardarDatosBancariosAdmin: VENDEDORES_API_URL_ADMIN,
   obtenerEstadisticasStaff: ADMIN_API_URL_ADMIN,
   login: AUTH_API_URL_ADMIN,
@@ -543,6 +544,7 @@ cont.innerHTML = admins.map((a) => `
     <button type="button" class="text-button" data-uid="${escHtmlAdmin(a.uid)}" data-activo="${a.activo ? "1" : "0"}" onclick="handleToggleAdminActivo(this)">${a.activo ? "Desactivar" : "Reactivar"}</button>
     ${rolSesion === "master" && a.rol === "admin" && a.estado !== "en_transicion" ? `<button type="button" class="text-button" data-uid="${escHtmlAdmin(a.uid)}" onclick="handleIniciarTransicion(this)">Iniciar transición</button>` : ""}
     ${rolSesion === "master" && a.rol === "moderador" ? `<button type="button" class="text-button" data-uid="${escHtmlAdmin(a.uid)}" onclick="handlePromoverModerador(this)">Promover a admin</button>` : ""}
+    <button type="button" class="text-button" data-uid="${escHtmlAdmin(a.uid)}" onclick="handleResetPasswordAdmin(this)">Restablecer contraseña</button>
     ${rolSesion === "master" ? `<button type="button" class="text-button" style="color:#e53935;" data-uid="${escHtmlAdmin(a.uid)}" onclick="handleEliminarAdmin(this)">Eliminar cuenta</button>` : ""}
   </div>
 </div>
@@ -589,6 +591,36 @@ async function handleIniciarTransicion(btn) {
   }
 }
 window.handleIniciarTransicion = handleIniciarTransicion;
+
+async function handleResetPasswordAdmin(btn) {
+  const uid = btn.dataset.uid;
+  const nombre = _nombrePorUid(uid);
+  const confirmado = await new Promise((resolve) => {
+    showCustomConfirm({
+      title: "Restablecer contraseña",
+      message: `Se generará una contraseña nueva para ${nombre}, válida tanto para su cuenta de admin/moderador como para su cuenta de vendedor. La anterior dejará de funcionar. ¿Continuar?`,
+      icon: "", confirmText: "Sí, restablecer", cancelText: "Cancelar",
+      onConfirm: () => resolve(true), onCancel: () => resolve(false),
+    });
+  });
+  if (!confirmado) return;
+  showLoader("Generando contraseña...");
+  try {
+    const data = await apiRequest("POST", { action: "resetPasswordAdmin", uid });
+    if (!data || !data.ok) throw new Error((data && data.error) || "Error desconocido");
+    await showCustomAlert({
+      title: "Contraseña generada",
+      message: `Comparte esta contraseña con ${data.nombre} (teléfono ${data.telefono}) — sirve para su cuenta de admin/moderador y para su cuenta de vendedor: ${data.codigo}`,
+      confirmText: "Listo",
+    });
+  } catch (err) {
+    console.error(err);
+    await showCustomAlert({ title: " Error", message: "No se pudo restablecer la contraseña.", icon: "", confirmText: "Aceptar" });
+  } finally {
+    hideLoader();
+  }
+}
+window.handleResetPasswordAdmin = handleResetPasswordAdmin;
 
 // Paso 2: sube de rol al moderador candidato (mismo uid, mismo teléfono y
 // contraseña — no es una cuenta nueva). Desde ese momento puede crear y ver
