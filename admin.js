@@ -2478,4 +2478,5 @@ window.initImageUploads  = initImageUploads;
 window.cargarEstadisticasStaff = cargarEstadisticasStaff;
 window.setStatsRolFiltro = setStatsRolFiltro;
 window.setStatsMetrica = setStatsMetrica;
+window.setStatsCiudadFiltro    = setStatsCiudadFiltro;  
 })();
