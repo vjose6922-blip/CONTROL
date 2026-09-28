@@ -381,6 +381,7 @@ return d.innerHTML;
 let _statsChart = null;
 let _statsData = [];
 let _statsRolFiltro = "todos";
+let _statsCiudadFiltro = "todas";
 let _statsMetrica = "volumen";
 
 async function cargarEstadisticasStaff(dias) {
@@ -394,6 +395,7 @@ async function cargarEstadisticasStaff(dias) {
       return;
     }
     _statsData = data.staff || [];
+    poblarStatsCiudades();
     renderEstadisticasStaff();
   } catch (err) {
     console.error(err);
@@ -401,12 +403,30 @@ async function cargarEstadisticasStaff(dias) {
   }
 }
 
-// Chips de rol y tabs de métrica filtran/recalculan sobre _statsData (ya
-// descargada) en vez de volver a pedirle al backend — instantáneo y sin
-// requests extra al cambiar de vista.
+// Rearma el <select> de ciudades con las que de verdad aparecen en la
+// respuesta (el Master no cuenta: no pertenece a ninguna ciudad). Solo se
+// llama al recargar datos, no en cada render, para no perder la selección.
+function poblarStatsCiudades() {
+  const sel = document.getElementById("stats-ciudad-select");
+  if (!sel) return;
+  const ciudades = [...new Set(_statsData.filter((p) => p.rol !== "master").map((p) => p.ciudad))].sort();
+  sel.innerHTML = '<option value="todas">Todas las ciudades</option>' +
+    ciudades.map((c) => `<option value="${escHtmlAdmin(c)}">${escHtmlAdmin(c)}</option>`).join("");
+  sel.value = ciudades.includes(_statsCiudadFiltro) ? _statsCiudadFiltro : "todas";
+  _statsCiudadFiltro = sel.value;
+}
+
+// Chips de rol, select de ciudad y tabs de métrica filtran/recalculan sobre
+// _statsData (ya descargada) en vez de volver a pedirle al backend —
+// instantáneo y sin requests extra al cambiar de vista.
 function setStatsRolFiltro(rol, btn) {
   _statsRolFiltro = rol;
   document.querySelectorAll("#stats-rol-chips .stats-chip").forEach((b) => b.classList.toggle("active", b === btn));
+  renderEstadisticasStaff();
+}
+
+function setStatsCiudadFiltro(ciudad) {
+  _statsCiudadFiltro = ciudad;
   renderEstadisticasStaff();
 }
 
@@ -446,7 +466,16 @@ function renderEstadisticasStaff() {
   const cont = document.getElementById("stats-staff-list");
   const esTiempo = _statsMetrica === "tiempo";
   const esTipos = _statsMetrica === "tipos";
-  let staff = _statsRolFiltro === "todos" ? _statsData : _statsData.filter((p) => p.rol === _statsRolFiltro);
+
+  // El Master es respaldo/histórico, no personal de una ciudad: siempre
+  // tendría el volumen más alto y aplastaría la escala del ranking, así que
+  // se muestra aparte como referencia y no entra a competir por ciudad.
+  const master = _statsData.find((p) => p.rol === "master");
+  renderStatsMasterNote(master);
+
+  let staff = _statsData.filter((p) => p.rol !== "master");
+  if (_statsRolFiltro !== "todos") staff = staff.filter((p) => p.rol === _statsRolFiltro);
+  if (_statsCiudadFiltro !== "todas") staff = staff.filter((p) => p.ciudad === _statsCiudadFiltro);
 
   if (esTipos) {
     const totales = {};
@@ -477,6 +506,7 @@ function renderEstadisticasStaff() {
           <div class="stats-staff-metrics">
             <span>${p.total} acción${p.total === 1 ? "" : "es"} resuelta${p.total === 1 ? "" : "s"}</span>
             <span>${p.tiempoRespuestaPromedioMin != null ? "~" + p.tiempoRespuestaPromedioMin + " min de respuesta" : "Sin solicitudes con tiempo medible"}</span>
+            ${p.pendientes != null ? `<span class="${p.pendientes > 0 ? "stats-staff-pendientes-alerta" : ""}">${p.pendientes} pendiente${p.pendientes === 1 ? "" : "s"}</span>` : ""}
           </div>
         </div>
       `).join("");
@@ -484,6 +514,19 @@ function renderEstadisticasStaff() {
 
   dibujarStatsChart(staff.map((p) => p.nombre), staff.map((p) => (esTiempo ? p.tiempoRespuestaPromedioMin : p.total)),
     esTiempo ? "Tiempo de respuesta promedio (min)" : "Acciones resueltas", esTiempo ? "#ff9f4f" : "#a78bfa");
+}
+
+// Nota de referencia del Master, siempre visible y ajena al filtro de
+// ciudad/rol (no compite por ciudad). Si `pendientes` no viene del backend
+// todavía, simplemente no se muestra esa parte — no rompe nada.
+function renderStatsMasterNote(master) {
+  const el = document.getElementById("stats-master-note");
+  if (!el) return;
+  if (!master) { el.textContent = ""; return; }
+  const partes = [`${master.total} acción${master.total === 1 ? "" : "es"}`];
+  if (master.tiempoRespuestaPromedioMin != null) partes.push(`~${master.tiempoRespuestaPromedioMin} min`);
+  if (master.pendientes != null) partes.push(`${master.pendientes} pendiente${master.pendientes === 1 ? "" : "s"}`);
+  el.textContent = `${master.nombre}: ${partes.join(" · ")} (referencia, no compite por ciudad)`;
 }
 
 function dibujarStatsChart(labels, data, label, color) {
