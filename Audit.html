@@ -366,6 +366,17 @@
         sincronizarPlanPlusAdminsExistentes: "Sincronizar Plan Plus retroactivo (admins)",
     };
 
+    // Etiquetas legibles para el tipo de cola pendiente (distinto de
+    // TIPO_LABELS, que es para acciones ya resueltas).
+    const PENDIENTE_LABELS = {
+        vendedorNuevo: "Alta de vendedor", cambioTelefono: "Cambio de teléfono",
+        resetPassword: "Reset de contraseña", solicitudPlus: "Solicitud Plan Plus",
+        productoComunidad: "Producto de comunidad", reporteProducto: "Reporte de producto",
+        reporteLive: "Reporte de live", beneficiarioNuevo: "Alta de beneficiario",
+        reporteBeneficiario: "Reporte de beneficiario", solicitudBeneficiario: "Solicitud de beneficiario",
+    };
+    let pendientesDetalle = [];
+
     async function obtenerFilasAuditoria(dias) {
         const token = sessionStorage.getItem("admin_token") || "";
         const params = new URLSearchParams({ action: "obtenerAuditoriaStaff", dias: dias || 30, token });
@@ -383,6 +394,7 @@
         const filas = data.registros.map((r) => [
             r.id, r.fecha, r.usuario, r.rol, r.ciudad, TIPO_LABELS[r.accion] || r.accion, r.refId, r.estado
         ]);
+        pendientesDetalle = Array.isArray(data.pendientesDetalle) ? data.pendientesDetalle : [];
         pintarResumenPendientes(data.resumenPendientes || {});
         return [encabezado, ...filas];
     }
@@ -390,14 +402,27 @@
     // Backlog "a hoy" por ciudad (independiente de la ventana de días del
     // registro de abajo) — lo que de verdad importa revisar en una
     // auditoría semanal/quincenal es qué tan grande está la fila ahora,
-    // no cuántas se abrieron dentro del rango elegido.
+    // no cuántas se abrieron dentro del rango elegido. staff_actividad
+    // NUNCA tiene filas "pendiente" (solo registra lo ya resuelto), así
+    // que este conteo viene de una fuente aparte — clic en una ciudad
+    // muestra cuáles son, sin tener que buscarlas en la tabla de abajo.
     function pintarResumenPendientes(resumen) {
         const cont = document.getElementById('pendientes-resumen');
         if (!cont) return;
         const ciudades = Object.entries(resumen).sort((a, b) => b[1] - a[1]);
         if (!ciudades.length) { cont.innerHTML = '<strong>Pendientes por ciudad (a hoy):</strong> ninguno 🎉'; return; }
         cont.innerHTML = '<strong>Pendientes por ciudad (a hoy):</strong> ' +
-            ciudades.map(([c, n]) => `<span style="display:inline-block;margin:4px 8px 0 0;padding:3px 10px;border-radius:14px;background:${n > 5 ? '#f8d7da' : '#eef5fb'};color:${n > 5 ? '#842029' : '#245b80'};font-weight:600;">${c}: ${n}</span>`).join('');
+            ciudades.map(([c, n]) => `<span class="chip-pendiente" data-ciudad="${c}" style="cursor:pointer;display:inline-block;margin:4px 8px 0 0;padding:3px 10px;border-radius:14px;background:${n > 5 ? '#f8d7da' : '#eef5fb'};color:${n > 5 ? '#842029' : '#245b80'};font-weight:600;">${c}: ${n}</span>`).join('') +
+            '<div id="pendientes-detalle" style="margin-top:8px;"></div>';
+        cont.querySelectorAll('.chip-pendiente').forEach((chip) => chip.addEventListener('click', () => mostrarDetallePendientes(chip.dataset.ciudad)));
+    }
+
+    function mostrarDetallePendientes(ciudad) {
+        const det = document.getElementById('pendientes-detalle');
+        if (!det) return;
+        const items = pendientesDetalle.filter((p) => p.ciudad === ciudad);
+        det.innerHTML = !items.length ? '' : `<strong>${ciudad}:</strong><ul style="margin:6px 0 0;padding-left:20px;">` +
+            items.map((p) => `<li>${PENDIENTE_LABELS[p.tipo] || p.tipo} — ${p.refId}</li>`).join('') + '</ul>';
     }
 
     const auditRowsEjemplo = [
