@@ -36,7 +36,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, off } from "https://www.
 
   // ---------------------------- UI ----------------------------
   const bell = Object.assign(document.createElement("button"), { id: "chat-soporte-bell", textContent: "💬" });
-  bell.style.cssText = "position:fixed;left:16px;bottom:18px;z-index:9999;display:none;width:52px;height:52px;border-radius:999px;border:none;background:var(--color-accent-solid,#ff4f81);color:#fff;font-size:22px;box-shadow:var(--shadow-soft,0 8px 24px rgba(0,0,0,.45));cursor:pointer;";
+  bell.style.cssText = "position:fixed;left:16px;bottom:18px;z-index:9999;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:999px;border:none;background:var(--color-accent-solid,#ff4f81);color:#fff;font-size:20px;box-shadow:var(--shadow-soft,0 8px 24px rgba(0,0,0,.45));cursor:pointer;";
   const panel = Object.assign(document.createElement("div"), { id: "chat-soporte-panel" });
   panel.style.cssText = "position:fixed;left:16px;bottom:80px;z-index:9999;width:320px;max-width:calc(100vw - 32px);max-height:70vh;background:var(--color-surface,#252831);border:1px solid var(--color-border-subtle,rgba(255,255,255,.07));border-radius:var(--radius-lg,18px);box-shadow:var(--shadow-soft,0 8px 24px rgba(0,0,0,.45));display:none;flex-direction:column;overflow:hidden;color:var(--color-text-primary,#dde1e8);";
   document.body.append(bell, panel);
@@ -150,9 +150,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, off } from "https://www.
         const val = s.val();
         if (!val) { delete chats[id]; } else { chats[id] = val; }
         const abiertos = Object.values(chats).filter((c) => c.estado === "abierto").length;
-        bell.style.display = abiertos ? "flex" : "none";
-        bell.style.alignItems = "center";
-        bell.style.justifyContent = "center";
+        bell.textContent = abiertos ? `💬 ${abiertos}` : "💬";
         if (panel.style.display === "flex" && !chatAbierto) renderLista();
       });
     });
