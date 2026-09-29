@@ -14,7 +14,7 @@
  <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="
  default-src 'self';
- script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com blob:;
+ script-src 'self' 'unsafe-inline' https://*.firebaseio.com https://www.gstatic.com https://apis.google.com blob:;
  style-src 'self' 'unsafe-inline';
  img-src 'self' data: blob: https://lh3.googleusercontent.com https://drive.google.com https://placehold.co https://via.placeholder.com https://firebasestorage.googleapis.com https://*.firebasestorage.app https://storage.googleapis.com ;
  connect-src 'self' 
@@ -33,13 +33,13 @@
    https://identitytoolkit.googleapis.com 
    https://securetoken.googleapis.com 
    https://znr-live.firebaseapp.com 
-   https://znr-live-default-rtdb.firebaseio.com 
+   https://znr-live-default-rtdb.firebaseio.com https://*.firebaseio.com wss://*.firebaseio.com wss://znr-live-default-rtdb.firebaseio.com 
    https://nominatim.openstreetmap.org https://admin-api-1038143238323.us-central1.run.app https://auth-api-1038143238323.us-central1.run.app https://ventas-api-1038143238323.us-central1.run.app ;
  font-src 'self';
  frame-ancestors 'none';
  object-src 'none';
  base-uri 'self';
- frame-src 'self' https://znr-live.firebaseapp.com;
+ frame-src 'self' https://znr-live.firebaseapp.com https://*.firebaseio.com;
 ">
  <script src="error-bootstrap.js"></script>
 
