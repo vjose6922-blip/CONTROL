@@ -68,7 +68,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
     const r = await api("listarContactosChat");
     if (!r.ok || !r.personas.length) { alert(r.error || "No hay a quién escribirle todavía."); return; }
     const opciones = r.personas.map((p, i) => `${i + 1}) ${p.nombre} (${p.rol})`).join("\n");
-    const idx = Number(prompt(`¿Con quién? Escribe el número:\n${opciones}`)) - 1;
+    const idx = Number(await prompt(`¿Con quién? Escribe el número:\n${opciones}`)) - 1;
     const elegido = r.personas[idx];
     if (!elegido) return;
     const c = await api("crearChatSoporte", { destinatarioUid: elegido.uid });
@@ -132,7 +132,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
     const r = await api("listarContactosChat");
     if (!r.ok || !r.personas.length) { alert(r.error || "No hay nadie más para agregar."); return; }
     const opciones = r.personas.map((p, i) => `${i + 1}) ${p.nombre} (${p.rol})`).join("\n");
-    const idx = Number(prompt(`¿A quién agregas?\n${opciones}`)) - 1;
+    const idx = Number(await prompt(`¿A quién agregas?\n${opciones}`)) - 1;
     const elegido = r.personas[idx];
     if (!elegido) return;
     const res = await api("agregarParticipanteChat", { chatId: id, uidNuevo: elegido.uid });
@@ -140,7 +140,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
   }
 
   async function finalizar(id) {
-    if (!confirm("¿Finalizar este chat? Se eliminará en 7 días.")) return;
+    if (!(await confirm("¿Finalizar este chat? Se eliminará en 7 días."))) return;
     const res = await api("finalizarChatSoporte", { chatId: id });
     if (!res.ok) alert(res.error);
   }
