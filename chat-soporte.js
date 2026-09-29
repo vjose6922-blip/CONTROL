@@ -73,9 +73,14 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
     if (!elegido) return;
     const c = await api("crearChatSoporte", { destinatarioUid: elegido.uid });
     if (!c.ok) { alert(c.error); return; }
-    // el listener de chats_soporte_index puede tardar en notificar el chat recién creado — lo leemos directo para no esperarlo
-    chats[c.chatId] = (await get(ref(db, `chats_soporte/${c.chatId}`))).val();
-    renderChat(c.chatId);
+    try {
+      // el listener de chats_soporte_index puede tardar en notificar el chat recién creado — lo leemos directo para no esperarlo
+      const snap = await get(ref(db, `chats_soporte/${c.chatId}`));
+      chats[c.chatId] = snap.val();
+      renderChat(c.chatId);
+    } catch (e) {
+      alert("El chat se creó pero no se pudo abrir: " + (e && e.message ? e.message : e));
+    }
   }
 
   function renderChat(id) {
