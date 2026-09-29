@@ -52,6 +52,20 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
     window.solicitarPermisoNotificacionesSiFalta("admin", MI.uid); // bucket personal, aparte del general "admin_admin"
   }
 
+  // Vigilante de conexión a RTDB: si en 10s no conecta, la barra lo dice (posible firewall/red corporativa)
+  let rtdbConectado = false;
+  onValue(ref(db, ".info/connected"), (s) => {
+    rtdbConectado = s.val() === true;
+    console.log("[chat-soporte] RTDB conectado:", rtdbConectado);
+    if (rtdbConectado && statusEl.textContent.indexOf("RTDB sin conexión") !== -1) estado("");
+  });
+  setTimeout(() => {
+    if (!rtdbConectado) {
+      reportar("conexionRTDB", new Error("Sin conexión a znr-live-default-rtdb.firebaseio.com tras 10s"));
+      estado("RTDB sin conexión (¿firewall/red bloquea firebaseio.com?). El chat no podrá enviar ni recibir mensajes.", "error");
+    }
+  }, 10000);
+
   // ---------------------------- UI ----------------------------
   const bell = Object.assign(document.createElement("button"), { id: "chat-soporte-bell", textContent: "💬" });
   bell.style.cssText = "position:fixed;left:16px;bottom:18px;z-index:9999;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:999px;border:none;background:var(--color-accent-solid,#ff4f81);color:#fff;font-size:20px;box-shadow:var(--shadow-soft,0 8px 24px rgba(0,0,0,.45));cursor:pointer;";
@@ -76,7 +90,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
   function abrirPanel() { panel.style.display = "flex"; }
   bell.onclick = () => { if (panel.style.display === "flex") { panel.style.display = "none"; } else { abrirPanel(); renderLista(); } };
 
-  const VERSION = "v3-diag";
+  const VERSION = "v4-diag";
   const chats = {}; // chatId -> valor de chats_soporte/{id}
   let chatAbierto = null; // chatId con listener de mensajes activo
 
@@ -121,15 +135,20 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
         participantes: { [MI.uid]: { nombre: MI.nombre, rol: MI.rol }, [elegido.uid]: { nombre: elegido.nombre, rol: elegido.rol } },
         estado: "abierto",
       };
-      try {
-        const snap = await get(ref(db, `chats_soporte/${c.chatId}`));
-        if (snap.val()) chats[c.chatId] = snap.val();
-      } catch (e) {
-        reportar("leerChatCreado", e);
-        estado("Chat creado, pero RTDB no dejó leerlo (¿reglas?): " + (e && e.message ? e.message : e), "error");
-      }
+      // Se abre el chat YA. La lectura a RTDB va en segundo plano con límite de tiempo:
+      // si RTDB no responde (conexión/firewall/reglas) nos enteramos por la barra, sin trabar nada.
       renderChat(c.chatId);
-      estado("Chat abierto", "ok");
+      estado("Chat abierto — conectando con RTDB…", "info");
+      Promise.race([
+        get(ref(db, `chats_soporte/${c.chatId}`)),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("RTDB no respondió en 8s")), 8000)),
+      ]).then((snap) => {
+        if (snap.val()) chats[c.chatId] = snap.val();
+        estado("Chat listo", "ok");
+      }).catch((e) => {
+        reportar("leerChatCreado", e);
+        estado("El chat existe, pero RTDB falló: " + (e && e.message ? e.message : e), "error");
+      });
     } catch (e) {
       reportar("iniciarChat", e);
       abrirPanel();
