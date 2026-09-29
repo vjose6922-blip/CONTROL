@@ -6,7 +6,7 @@
 // para nada más.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-import { getDatabase, ref, push, onValue, onChildAdded, off } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
 (async function () {
   if (!sessionStorage.getItem("admin_token")) return;
@@ -73,6 +73,8 @@ import { getDatabase, ref, push, onValue, onChildAdded, off } from "https://www.
     if (!elegido) return;
     const c = await api("crearChatSoporte", { destinatarioUid: elegido.uid });
     if (!c.ok) { alert(c.error); return; }
+    // el listener de chats_soporte_index puede tardar en notificar el chat recién creado — lo leemos directo para no esperarlo
+    chats[c.chatId] = (await get(ref(db, `chats_soporte/${c.chatId}`))).val();
     renderChat(c.chatId);
   }
 
@@ -80,6 +82,7 @@ import { getDatabase, ref, push, onValue, onChildAdded, off } from "https://www.
     cerrarMensajes();
     chatAbierto = id;
     const c = chats[id];
+    if (!c) { alert("No se pudo abrir el chat, intenta de nuevo."); renderLista(); return; }
     const rangoMio = { moderador: 1, admin: 2, master: 3 }[MI.rol];
     const rangoMax = Math.max(...Object.values(c.participantes).map((p) => ({ moderador: 1, admin: 2, master: 3 }[p.rol])));
     panel.innerHTML = `
