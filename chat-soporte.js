@@ -22,13 +22,19 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
 
   async function api(action, extra) {
     const body = Object.assign({ action, token: sessionStorage.getItem("admin_token") }, extra || {});
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 25000);
+    const t0 = Date.now();
     try {
-      const res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body).toString() });
-      return await res.json();
+      const res = await fetch(API, { method: "POST", signal: ctrl.signal, headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body).toString() });
+      const j = await res.json();
+      console.log("[chat-soporte] " + action + " → " + (Date.now() - t0) + "ms", j);
+      return j;
     } catch (e) {
       reportar(action, e);
-      return { ok: false, error: "Sin respuesta del servidor (" + action + "): " + (e && e.message ? e.message : e) };
-    }
+      const motivo = e && e.name === "AbortError" ? "el servidor no respondió en 25s" : (e && e.message ? e.message : e);
+      return { ok: false, error: `${action}: ${motivo}` };
+    } finally { clearTimeout(timer); }
   }
 
   // Todo error del chat queda en el monitor (ZRMonitor) para verlo en Error Log / devconsole
@@ -65,12 +71,12 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
     const col = { ok: "#22c55e", error: "#f87171", info: "#60a5fa" }[tipo || "info"];
     statusEl.textContent = (tipo === "error" ? "⚠ " : tipo === "ok" ? "✓ " : "… ") + msg;
     statusEl.style.cssText = "display:block;padding:8px 14px;font-size:12px;line-height:1.35;color:" + col + ";background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.07);";
-    if (tipo !== "error") statusTimer = setTimeout(() => { statusEl.style.display = "none"; }, 4000);
+    if (tipo === "ok") statusTimer = setTimeout(() => { statusEl.style.display = "none"; }, 4000);
   }
   function abrirPanel() { panel.style.display = "flex"; }
   bell.onclick = () => { if (panel.style.display === "flex") { panel.style.display = "none"; } else { abrirPanel(); renderLista(); } };
 
-  const VERSION = "v2-await";
+  const VERSION = "v3-diag";
   const chats = {}; // chatId -> valor de chats_soporte/{id}
   let chatAbierto = null; // chatId con listener de mensajes activo
 
@@ -123,6 +129,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
         estado("Chat creado, pero RTDB no dejó leerlo (¿reglas?): " + (e && e.message ? e.message : e), "error");
       }
       renderChat(c.chatId);
+      estado("Chat abierto", "ok");
     } catch (e) {
       reportar("iniciarChat", e);
       abrirPanel();
