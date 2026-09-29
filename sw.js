@@ -1,5 +1,5 @@
-const CACHE_NAME    = 'zr-admin-cache-v3';
-const DYNAMIC_CACHE = 'zr-admin-dynamic-v3';
+const CACHE_NAME    = 'zr-admin-cache-v4';
+const DYNAMIC_CACHE = 'zr-admin-dynamic-v4';
 
 const STATIC_ASSETS = [
   './',
@@ -19,6 +19,7 @@ const STATIC_ASSETS = [
   'error-bootstrap.js',
   'znr-devconsole.js',
   'fcm-init.js',
+  'chat-soporte.js',
   'icons.js',
   'manifest.json',
   'logo.svg',
