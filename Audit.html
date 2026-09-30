@@ -306,9 +306,6 @@
 <div id="error-log"></div>
 
 
-<div id="pendientes-resumen" style="padding:10px 14px;margin-bottom:15px;border-radius:6px;background:#f7f7f5;border:1px solid #e0e0dc;font-size:13px;"></div>
-
-
 <div id="univer-container"></div>
 
 
@@ -377,8 +374,6 @@
         reporteLive: "Reporte de live", beneficiarioNuevo: "Alta de beneficiario",
         reporteBeneficiario: "Reporte de beneficiario", solicitudBeneficiario: "Solicitud de beneficiario",
     };
-    let pendientesDetalle = [];
-
     async function obtenerFilasAuditoria(dias) {
         const token = sessionStorage.getItem("admin_token") || "";
         const params = new URLSearchParams({ action: "obtenerAuditoriaStaff", dias: dias || 30, token });
@@ -393,39 +388,21 @@
         // Sí guarda ciudad, refId y (desde el backend actualizado) razón
         // — esta última opcional: el staff la escribe si quiere al hacer
         // la acción en admin.js, así que puede venir vacía.
-        const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado', 'Razón'];
-        const filas = data.registros.map((r) => [
+        const resueltas = data.registros.map((r) => [
             r.id, r.fecha, r.usuario, r.rol, r.ciudad, TIPO_LABELS[r.accion] || r.accion, r.refId, r.estado, r.razon || ''
         ]);
-        pendientesDetalle = Array.isArray(data.pendientesDetalle) ? data.pendientesDetalle : [];
-        pintarResumenPendientes(data.resumenPendientes || {});
+        // Lo pendiente (colas que aún nadie resuelve) no vive en
+        // staff_actividad, así que sale de `pendientesDetalle` — sin
+        // Usuario/Rol asignado todavía (nadie lo ha tomado) y con Estado
+        // "Pendiente", para que se pueda filtrar junto con lo Completado
+        // en la misma columna en vez de verlo aparte en un resumen.
+        const pendientesDetalle = Array.isArray(data.pendientesDetalle) ? data.pendientesDetalle : [];
+        const pendientes = pendientesDetalle.map((p) => [
+            'pend_' + p.tipo + '_' + p.refId, p.fecha || '', '', '', p.ciudad, PENDIENTE_LABELS[p.tipo] || p.tipo, p.refId, 'Pendiente', ''
+        ]);
+        const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado', 'Razón'];
+        const filas = [...pendientes, ...resueltas].sort((a, b) => (b[1] || '').localeCompare(a[1] || ''));
         return [encabezado, ...filas];
-    }
-
-    // Backlog "a hoy" por ciudad (independiente de la ventana de días del
-    // registro de abajo) — lo que de verdad importa revisar en una
-    // auditoría semanal/quincenal es qué tan grande está la fila ahora,
-    // no cuántas se abrieron dentro del rango elegido. staff_actividad
-    // NUNCA tiene filas "pendiente" (solo registra lo ya resuelto), así
-    // que este conteo viene de una fuente aparte — clic en una ciudad
-    // muestra cuáles son, sin tener que buscarlas en la tabla de abajo.
-    function pintarResumenPendientes(resumen) {
-        const cont = document.getElementById('pendientes-resumen');
-        if (!cont) return;
-        const ciudades = Object.entries(resumen).sort((a, b) => b[1] - a[1]);
-        if (!ciudades.length) { cont.innerHTML = '<strong>Pendientes por ciudad (a hoy):</strong> ninguno 🎉'; return; }
-        cont.innerHTML = '<strong>Pendientes por ciudad (a hoy):</strong> ' +
-            ciudades.map(([c, n]) => `<span class="chip-pendiente" data-ciudad="${c}" style="cursor:pointer;display:inline-block;margin:4px 8px 0 0;padding:3px 10px;border-radius:14px;background:${n > 5 ? '#f8d7da' : '#eef5fb'};color:${n > 5 ? '#842029' : '#245b80'};font-weight:600;">${c}: ${n}</span>`).join('') +
-            '<div id="pendientes-detalle" style="margin-top:8px;"></div>';
-        cont.querySelectorAll('.chip-pendiente').forEach((chip) => chip.addEventListener('click', () => mostrarDetallePendientes(chip.dataset.ciudad)));
-    }
-
-    function mostrarDetallePendientes(ciudad) {
-        const det = document.getElementById('pendientes-detalle');
-        if (!det) return;
-        const items = pendientesDetalle.filter((p) => p.ciudad === ciudad);
-        det.innerHTML = !items.length ? '' : `<strong>${ciudad}:</strong><ul style="margin:6px 0 0;padding-left:20px;">` +
-            items.map((p) => `<li>${PENDIENTE_LABELS[p.tipo] || p.tipo} — ${p.refId}</li>`).join('') + '</ul>';
     }
 
     const auditRowsEjemplo = [
@@ -437,7 +414,9 @@
         [1003, '2026-09-24 11:45', 'ana.torres', 'Admin', 'Reynosa', 'Aprobar beneficiario', 'ben_0456', 'Completado', ''],
         [1004, '2026-09-24 14:30', 'javier.lopez', 'Moderador', 'Nuevo Laredo', 'Marcar reporte de live revisado', 'live_7781', 'Completado', ''],
         [1005, '2026-09-25 08:00', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Suspender vendedor', 'vend_5502', 'Completado', 'Múltiples reportes de compradores por producto no entregado'],
-        [1006, '2026-09-25 09:20', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Aprobar producto de comunidad', 'prod_1190', 'Completado', '']
+        [1006, '2026-09-25 09:20', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Aprobar producto de comunidad', 'prod_1190', 'Completado', ''],
+        ['pend_vendedorNuevo_v_1785838471889', '2026-09-26 07:40', '', '', 'Nuevo Laredo', 'Alta de vendedor', 'v_1785838471889', 'Pendiente', ''],
+        ['pend_reporteProducto_rep_1790760462893_nvfobb', '2026-09-27 12:05', '', '', 'Nuevo Laredo', 'Reporte de producto', 'rep_1790760462893_nvfobb', 'Pendiente', '']
 
     ];
 
