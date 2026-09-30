@@ -465,6 +465,8 @@ const TIPO_LABELS = {
   marcarProductoConfiable: "Marcar producto confiable", eliminarBeneficiario: "Eliminar beneficiario",
   guardarDatosBancariosAdmin: "Actualizar datos bancarios", marcarPagoAdminMes: "Marcar pago mensual a admin",
   sincronizarPlanPlusAdminsExistentes: "Sincronizar Plan Plus retroactivo (admins)",
+  confirmGroupPurchase: "Confirmar compra grupal (tienda)", cancelGroupPurchase: "Cancelar compra grupal (tienda)",
+  removeOutOfStockNotifications: "Quitar productos sin stock (tienda)",
 };
 
 function renderEstadisticasStaff() {

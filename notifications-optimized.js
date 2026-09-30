@@ -522,24 +522,26 @@ autoRefreshInterval = null;
 }
 }
 async function removeOutOfStockNotifications(requestId) {
-const confirmed = await new Promise(resolve => {
+const razon = await new Promise(resolve => {
 showCustomConfirm({
 title: "Eliminar sin stock",
 message: "¿Eliminar los productos sin stock de esta solicitud?",
 icon: "",
 confirmText: "Sí, eliminar",
 cancelText: "Cancelar",
-onConfirm: () => resolve(true),
-onCancel: () => resolve(false)
+askReason: true,
+reasonPlaceholder: "Motivo (opcional)",
+onConfirm: (r) => resolve(r === undefined ? "" : r),
+onCancel: () => resolve(null)
 });
 });
-if (!confirmed) return;
+if (razon === null) return;
 if (typeof showLoader === 'function') showLoader("Eliminando...");
 try {
 const response = await fetch(TIENDA_ZNR_API_URL_NOTIF, {
 method: "POST",
 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-body: new URLSearchParams({ action: "removeOutOfStockNotifications", requestId: requestId, token: sessionStorage.getItem("admin_token") || "" }).toString()
+body: new URLSearchParams({ action: "removeOutOfStockNotifications", requestId: requestId, token: sessionStorage.getItem("admin_token") || "", razon: razon }).toString()
 });
 const data = await response.json();
 if (data.ok) {
@@ -582,25 +584,27 @@ async function fetchConReintento(url, opciones, maxIntentos = 2) {
 
 
 async function confirmGroupPurchase(requestId) {
-  const confirmed = await new Promise(resolve => {
+  const razon = await new Promise(resolve => {
     showCustomConfirm({
       title: "Confirmar compra",
       message: "¿Confirmar TODOS los productos con stock disponible de esta solicitud?",
       icon: "",
       confirmText: "Sí, confirmar",
       cancelText: "Cancelar",
-      onConfirm: () => resolve(true),
-      onCancel: () => resolve(false)
+      askReason: true,
+      reasonPlaceholder: "Motivo (opcional)",
+      onConfirm: (r) => resolve(r === undefined ? "" : r),
+      onCancel: () => resolve(null)
     });
   });
-  if (!confirmed) return;
+  if (razon === null) return;
 
   if (typeof showLoader === 'function') showLoader("Procesando solicitud completa...");
   try {
     const data = await fetchConReintento(TIENDA_ZNR_API_URL_NOTIF, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ action: "confirmGroupPurchase", requestId: requestId, token: sessionStorage.getItem("admin_token") || "" }).toString()
+      body: new URLSearchParams({ action: "confirmGroupPurchase", requestId: requestId, token: sessionStorage.getItem("admin_token") || "", razon: razon }).toString()
     });
 
     if (!data.ok) throw new Error(data.error || "Error al confirmar");
@@ -655,24 +659,26 @@ async function confirmGroupPurchase(requestId) {
   }
 }
 async function cancelGroupPurchase(requestId) {
-const confirmed = await new Promise(resolve => {
+const razon = await new Promise(resolve => {
 showCustomConfirm({
 title: "Cancelar solicitud",
 message: "¿Cancelar TODA la solicitud de compra? Esta acción no se puede deshacer.",
 icon: "",
 confirmText: "Sí, cancelar",
 cancelText: "No, volver",
-onConfirm: () => resolve(true),
-onCancel: () => resolve(false)
+askReason: true,
+reasonPlaceholder: "Motivo de la cancelación (opcional)",
+onConfirm: (r) => resolve(r === undefined ? "" : r),
+onCancel: () => resolve(null)
 });
 });
-if (!confirmed) return;
+if (razon === null) return;
 if (typeof showLoader === 'function') showLoader("Cancelando...");
 try {
 const response = await fetch(TIENDA_ZNR_API_URL_NOTIF, {
 method: "POST",
 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-body: new URLSearchParams({ action: "cancelGroupPurchase", requestId: requestId, token: sessionStorage.getItem("admin_token") || "" }).toString()
+body: new URLSearchParams({ action: "cancelGroupPurchase", requestId: requestId, token: sessionStorage.getItem("admin_token") || "", razon: razon }).toString()
 });
 const data = await response.json();
 if (data.ok) {
