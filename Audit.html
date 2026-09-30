@@ -396,9 +396,13 @@
         // Usuario/Rol asignado todavía (nadie lo ha tomado) y con Estado
         // "Pendiente", para que se pueda filtrar junto con lo Completado
         // en la misma columna en vez de verlo aparte en un resumen.
+        // Para los tipos que son un reporte (reporteProducto/reporteLive/
+        // reporteBeneficiario), `detalle` trae el motivo que escribió quien
+        // reportó — se muestra en la misma columna Razón que usan las
+        // acciones ya resueltas, aunque acá no la escribió el staff.
         const pendientesDetalle = Array.isArray(data.pendientesDetalle) ? data.pendientesDetalle : [];
         const pendientes = pendientesDetalle.map((p) => [
-            'pend_' + p.tipo + '_' + p.refId, p.fecha || '', '', '', p.ciudad, PENDIENTE_LABELS[p.tipo] || p.tipo, p.refId, 'Pendiente', ''
+            'pend_' + p.tipo + '_' + p.refId, p.fecha || '', '', '', p.ciudad, PENDIENTE_LABELS[p.tipo] || p.tipo, p.refId, 'Pendiente', p.detalle || ''
         ]);
         const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado', 'Razón'];
         const filas = [...pendientes, ...resueltas].sort((a, b) => (b[1] || '').localeCompare(a[1] || ''));
@@ -416,7 +420,7 @@
         [1005, '2026-09-25 08:00', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Suspender vendedor', 'vend_5502', 'Completado', 'Múltiples reportes de compradores por producto no entregado'],
         [1006, '2026-09-25 09:20', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Aprobar producto de comunidad', 'prod_1190', 'Completado', ''],
         ['pend_vendedorNuevo_v_1785838471889', '2026-09-26 07:40', '', '', 'Nuevo Laredo', 'Alta de vendedor', 'v_1785838471889', 'Pendiente', ''],
-        ['pend_reporteProducto_rep_1790760462893_nvfobb', '2026-09-27 12:05', '', '', 'Nuevo Laredo', 'Reporte de producto', 'rep_1790760462893_nvfobb', 'Pendiente', '']
+        ['pend_reporteProducto_rep_1790760462893_nvfobb', '2026-09-27 12:05', '', '', 'Nuevo Laredo', 'Reporte de producto', 'rep_1790760462893_nvfobb', 'Pendiente', 'Otro: No tiene imagen de referencia']
 
     ];
 
