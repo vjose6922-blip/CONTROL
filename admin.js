@@ -2279,12 +2279,12 @@ ${r.telefonoUsuario ? ` ·  Reportó: ${escapeHtml(r.telefonoUsuario)}` : ''}
 </div>
 <div class="reporte-card-actions">
 <a class="btn-ver-producto" href="https://vjose6922-blip.github.io/znr/comunidad.html?inspector=1#product-${productId}" target="_blank">Ver</a>
-${vendorUid ? `<button class="btn-suspend" onclick="AdminComunidad.suspenderVendedor('${vendorUid}', '${vendorNombre}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender</button>` : ''}
+${vendorUid ? `<button class="btn-suspend" onclick="AdminComunidad.suspenderVendedor('${vendorUid}', '${vendorNombre}', '${escapeHtml(String(r.motivo || ''))}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender</button>` : ''}
 <button class="btn-del-desde-reporte"
-onclick="AdminComunidad.eliminarProductoDesdeReporte('${productId}', '${nombre}', '${reporteId}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg> Eliminar producto
+onclick="AdminComunidad.eliminarProductoDesdeReporte('${productId}', '${nombre}', '${reporteId}', '${escapeHtml(String(r.motivo || ''))}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg> Eliminar producto
 </button>
 <button class="btn-marcar-revisado"
-onclick="AdminComunidad.marcarReporteRevisado('${reporteId}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Revisado
+onclick="AdminComunidad.marcarReporteRevisado('${reporteId}', '${escapeHtml(String(r.motivo || ''))}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Revisado
 </button>
 </div>
 </div>`;
@@ -2304,7 +2304,7 @@ badge.style.display = 'none';
 }
 if (typeof window._updateNotifTabBadge === 'function') window._updateNotifTabBadge('reportes', count);
 }
-async function eliminarProductoDesdeReporte(productId, nombreProducto, reporteId) {
+async function eliminarProductoDesdeReporte(productId, nombreProducto, reporteId, motivoReporte) {
 if (typeof showCustomConfirm !== 'function') return;
 showCustomConfirm({
 title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg> Eliminar producto',
@@ -2316,7 +2316,8 @@ askReason: true,
 reasonPlaceholder: 'Motivo de la eliminación (opcional)',
 onConfirm: async (razon) => {
 try {
-const data = await gasPost({ action: 'deleteComunidad', id: String(productId), token: getToken(), razon: razon || '' });
+const razonFinal = combinarRazonReporte(motivoReporte, razon);
+const data = await gasPost({ action: 'deleteComunidad', id: String(productId), token: getToken(), razon: razonFinal });
 if (!data.ok) throw new Error(data.error);
 if (typeof showTemporaryMessage === 'function') showTemporaryMessage(' Producto eliminado', 'success');
 loadReportes();
@@ -2326,9 +2327,20 @@ if (typeof showTemporaryMessage === 'function') showTemporaryMessage(' ' + err.m
 }
 });
 }
-async function marcarReporteRevisado(reporteId) {
+async function marcarReporteRevisado(reporteId, motivoReporte) {
+if (typeof showCustomConfirm !== 'function') return;
+showCustomConfirm({
+title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Marcar revisado',
+message: '¿Marcar este reporte como revisado? El producto se queda como está.',
+icon: '',
+confirmText: 'Sí, marcar revisado',
+cancelText: 'Cancelar',
+askReason: true,
+reasonPlaceholder: 'Por qué no aplica (opcional) — ej. reporte falso',
+onConfirm: async (razon) => {
 try {
-const data = await gasPost({ action: 'marcarReporteRevisado', reporteId: String(reporteId), token: getToken() });
+const razonFinal = combinarRazonReporte(motivoReporte, razon);
+const data = await gasPost({ action: 'marcarReporteRevisado', reporteId: String(reporteId), token: getToken(), razon: razonFinal });
 if (!data.ok) throw new Error(data.error);
 if (typeof showTemporaryMessage === 'function') showTemporaryMessage(' Reporte archivado', 'success');
 const row = document.getElementById(`rrow-${reporteId}`);
@@ -2343,7 +2355,9 @@ if (typeof window.refreshAllAdminBadges === 'function') window.refreshAllAdminBa
 if (typeof showTemporaryMessage === 'function') showTemporaryMessage(' ' + err.message, 'error');
 }
 }
-async function suspenderVendedor(uid, nombre) {
+});
+}
+async function suspenderVendedor(uid, nombre, motivoReporte) {
 if (typeof showCustomConfirm !== 'function') return;
 showCustomConfirm({
 title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender vendedor',
@@ -2355,7 +2369,8 @@ askReason: true,
 reasonPlaceholder: 'Motivo de la suspensión (opcional)',
 onConfirm: async (razon) => {
 try {
-const data = await gasPost({ action: 'rechazarVendedor', uid, token: getToken(), razon: razon || '' });
+const razonFinal = combinarRazonReporte(motivoReporte, razon);
+const data = await gasPost({ action: 'rechazarVendedor', uid, token: getToken(), razon: razonFinal });
 if (!data.ok) throw new Error(data.error);
 if (typeof showTemporaryMessage === 'function') showTemporaryMessage('Vendedor suspendido', 'success');
 loadVendors();

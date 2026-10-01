@@ -449,6 +449,16 @@ return String(str)
 .replace(/`/g, '&#96;')
 .replace(/\n/g, '&#10;')
 }
+// Cuando una acción (suspender/eliminar/marcar revisado) nace de un reporte,
+// el motivo que escribió quien reportó nunca debe perderse al guardar la
+// "razón" de auditoría — si el staff escribe su propio comentario, se
+// agrega aparte, no lo reemplaza.
+function combinarRazonReporte(motivoReporte, razonStaff) {
+  const partes = [];
+  if (motivoReporte) partes.push('Reporte: ' + motivoReporte);
+  if (razonStaff) partes.push(razonStaff);
+  return partes.join(' — ');
+}
 function escapeAttr(str) {
 if (!str) return '';
 return String(str)

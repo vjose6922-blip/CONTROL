@@ -1058,7 +1058,7 @@ window.loadReportesBeneficiarios = async function(force) {
           <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${esc(r.motivo)}</div>
           <div style="display:flex;gap:8px;margin-top:10px;">
             <button onclick="verBeneficiarioDesdeReporte('${esc(r.beneficiario_id)}')" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e0e7ff;color:#3730a3;font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver beneficiario</button>
-            <button onclick="adminMarcarReporteBeneficiarioRevisado('${esc(r.id)}', this)" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Marcar revisado</button>
+            <button data-motivo="${esc(r.motivo || '')}" onclick="adminMarcarReporteBeneficiarioRevisado('${esc(r.id)}', this)" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Marcar revisado</button>
           </div>
         </div>
       </div>`).join('');
@@ -1079,10 +1079,24 @@ window.verBeneficiarioDesdeReporte = async function(id) {
 };
 
 window.adminMarcarReporteBeneficiarioRevisado = async function(id, btn) {
+  const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
+  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+    showCustomConfirm({
+      title: 'Marcar revisado',
+      message: '¿Marcar este reporte como revisado? El beneficiario se queda como está.',
+      icon: '', confirmText: 'Sí, marcar revisado', cancelText: 'Cancelar',
+      askReason: true,
+      reasonPlaceholder: 'Por qué no aplica (opcional) — ej. reporte falso',
+      onConfirm: (r) => resolve(r === undefined ? '' : r),
+      onCancel: () => resolve(null)
+    });
+  }) : (confirm('¿Marcar este reporte como revisado?') ? '' : null);
+  if (razon === null) return;
   const runFn = async () => {
     try {
       const token = sessionStorage.getItem('admin_token') || '';
-      const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'marcarReporteBeneficiarioRevisado', id, token }).toString() });
+      const razonFinal = _combinarRazonReporte(motivoReporte, razon);
+      const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'marcarReporteBeneficiarioRevisado', id, token, razon: razonFinal }).toString() });
       const data  = await res.json();
       if (!data.ok) { alert('Error: ' + data.error); return; }
       loadReportesBeneficiarios(true);
@@ -1130,8 +1144,8 @@ window.loadReportesLive = async function() {
         </div>
         <div class="actions">
           ${r.facebookLink ? `<a class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;text-decoration:none;" href="${esc(r.facebookLink)}" target="_blank" rel="noopener"  >${Icon('play',{size:13})} Ver video</a>` : ''}
-          <button class="btn-suspend" onclick="adminSuspenderVendedorDesdeReporte('${esc(r.vendedorUid)}','${esc(r.reporteId)}', this)">${Icon('ban',{size:13})} Suspender cuenta</button>
-          <button class="btn-marcar-revisado" onclick="adminMarcarReporteLiveRevisado('${esc(r.reporteId)}', this)">${_icCheck} Marcar revisado</button>
+          <button class="btn-suspend" data-motivo="${esc(r.motivo || '')}" onclick="adminSuspenderVendedorDesdeReporte('${esc(r.vendedorUid)}','${esc(r.reporteId)}', this)">${Icon('ban',{size:13})} Suspender cuenta</button>
+          <button class="btn-marcar-revisado" data-motivo="${esc(r.motivo || '')}" onclick="adminMarcarReporteLiveRevisado('${esc(r.reporteId)}', this)">${_icCheck} Marcar revisado</button>
         </div>
       </div>`).join('');
   } catch(err) {
@@ -1139,12 +1153,43 @@ window.loadReportesLive = async function() {
   }
 };
 
+// El motivo que escribió quien reportó nunca debe perderse al archivar o
+// resolver el reporte: si el staff también escribe su propio comentario,
+// se agrega aparte, no lo reemplaza.
+function _combinarRazonReporte(motivoReporte, razonStaff) {
+  const partes = [];
+  if (motivoReporte) partes.push('Reporte: ' + motivoReporte);
+  if (razonStaff) partes.push(razonStaff);
+  return partes.join(' — ');
+}
+
+// Llamada real al endpoint, sin diálogo — la usa tanto el botón "Marcar
+// revisado" (que sí pregunta) como la suspensión desde reporte (que ya
+// preguntó por su propio motivo y archiva el reporte de una vez).
+async function _marcarReporteLiveRevisadoActual(reporteId, razon) {
+  const token = sessionStorage.getItem('admin_token') || '';
+  const res   = await fetch(LIVE_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'marcarReporteLiveRevisado', reporteId, token, razon: razon || '' }).toString() });
+  return res.json();
+}
+
 window.adminMarcarReporteLiveRevisado = async function(reporteId, btn) {
+  const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
+  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+    showCustomConfirm({
+      title: 'Marcar revisado',
+      message: '¿Marcar este reporte como revisado? La transmisión se queda como está.',
+      icon: '', confirmText: 'Sí, marcar revisado', cancelText: 'Cancelar',
+      askReason: true,
+      reasonPlaceholder: 'Por qué no aplica (opcional) — ej. reporte falso',
+      onConfirm: (r) => resolve(r === undefined ? '' : r),
+      onCancel: () => resolve(null)
+    });
+  }) : (confirm('¿Marcar este reporte como revisado?') ? '' : null);
+  if (razon === null) return;
   const runFn = async () => {
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res   = await fetch(LIVE_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'marcarReporteLiveRevisado', reporteId, token }).toString() });
-    const data  = await res.json();
+    const razonFinal = _combinarRazonReporte(motivoReporte, razon);
+    const data = await _marcarReporteLiveRevisadoActual(reporteId, razonFinal);
     if (!data.ok) { alert('Error: ' + data.error); return; }
     loadReportesLive();
   } catch(err) { alert('Error de conexión.'); }
@@ -1155,15 +1200,29 @@ window.adminMarcarReporteLiveRevisado = async function(reporteId, btn) {
 
 window.adminSuspenderVendedorDesdeReporte = async function(vendedorUid, reporteId, btn) {
   if (!vendedorUid) { alert('Este reporte no tiene un vendedor asociado.'); return; }
-  if (!confirm('¿Suspender la cuenta de este vendedor? No va a poder iniciar sesión ni transmitir hasta que la reactives desde "Vendedores".')) return;
+  const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
+  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+    showCustomConfirm({
+      title: 'Suspender vendedor',
+      message: '¿Suspender la cuenta de este vendedor? No va a poder iniciar sesión ni transmitir hasta que la reactives desde "Vendedores".',
+      icon: '', confirmText: 'Sí, suspender', cancelText: 'Cancelar',
+      askReason: true,
+      reasonPlaceholder: 'Motivo de la suspensión (opcional)',
+      onConfirm: (r) => resolve(r === undefined ? '' : r),
+      onCancel: () => resolve(null)
+    });
+  }) : (confirm('¿Suspender la cuenta de este vendedor? No va a poder iniciar sesión ni transmitir hasta que la reactives desde "Vendedores".') ? '' : null);
+  if (razon === null) return;
   const runFn = async () => {
   try {
     const token = sessionStorage.getItem('admin_token') || '';
+    const razonFinal = _combinarRazonReporte(motivoReporte, razon);
     const VENDEDORES_API_URL_NOTIF = "https://vendedores-api-1038143238323.us-central1.run.app";
-    const res   = await fetch(VENDEDORES_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'suspenderVendedor', uid: vendedorUid, token }).toString() });
+    const res   = await fetch(VENDEDORES_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'suspenderVendedor', uid: vendedorUid, token, razon: razonFinal }).toString() });
     const data  = await res.json();
     if (!data.ok) { alert('Error: ' + data.error); return; }
-    await window.adminMarcarReporteLiveRevisado(reporteId);
+    await _marcarReporteLiveRevisadoActual(reporteId, razonFinal);
+    loadReportesLive();
     alert('Cuenta suspendida.');
     if (window.AdminComunidad) AdminComunidad.loadVendors();
   } catch(err) { alert('Error de conexión.'); }
