@@ -131,7 +131,7 @@ async function networkFirst(request) {
       const action = url.searchParams.get('action');
       const sensitive = ['login', 'loginVendedor', 'notifications', 'notificationsBatch',
                          'update', 'delete', 'create', 'uploadImage',
-                         'verificarAdmin', 'vendedoresAdmin', 'productosPendientes',
+                         'verificarAdmin', 'vendedoresAdmin', 'listarResetsComprador', 'productosPendientes',
                          'obtenerReportes', 'aprobarVendedor', 'rechazarVendedor',
                          'aprobarProductoComunidad', 'rechazarProductoComunidad',
                          'marcarVendedorConfiable', 'marcarVendedorPlan', 'suspenderVendedor',

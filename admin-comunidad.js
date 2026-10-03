@@ -56,6 +56,8 @@
     rechazarVendedor: VENDEDORES_API_URL_COMUNIDAD,
     vendedoresAdmin: VENDEDORES_API_URL_COMUNIDAD,
     resetPasswordVendedor: VENDEDORES_API_URL_COMUNIDAD,
+    listarResetsComprador: VENDEDORES_API_URL_COMUNIDAD,
+    resetPasswordComprador: VENDEDORES_API_URL_COMUNIDAD,
     aprobarCambioTelefono: VENDEDORES_API_URL_COMUNIDAD,
     rechazarCambioTelefono: VENDEDORES_API_URL_COMUNIDAD,
     suspenderVendedor: VENDEDORES_API_URL_COMUNIDAD,
@@ -122,12 +124,22 @@
       const data = await _gasGet({ action: 'vendedoresAdmin', token: _getToken() });
       if (!data.ok) throw new Error(data.error);
       const vendors = data.vendors || [];
+      const resets = (await _gasGet({ action: 'listarResetsComprador', token: _getToken() }).catch(() => ({}))).solicitudes || [];
+      const resetsHtml = resets.map(r => `
+        <div class="vendor-row">
+          <div class="info">
+            <strong>Comprador ${_escapeHtml(r.telefono)}</strong><br>
+            <span>Pidió recuperar su contraseña (respondió bien su pregunta de seguridad)</span>
+            <button class="btn-approve" onclick="AdminComunidad.resetPasswordComprador('${_escapeHtml(r.telefono)}', this)">Generar código</button>
+            <button class="btn-stats" onclick="AdminComunidad.resetPasswordComprador('${_escapeHtml(r.telefono)}', this, true)">Descartar</button>
+          </div>
+        </div>`).join('');
       if (!vendors.length) {
-        container.innerHTML = '<p style="color:#aaa;text-align:center">No hay vendedores registrados aún.</p>';
+        container.innerHTML = resetsHtml || '<p style="color:#aaa;text-align:center">No hay vendedores registrados aún.</p>';
         return;
       }
       window._allVendors = vendors;
-      container.innerHTML = vendors.map(v => `
+      container.innerHTML = resetsHtml + vendors.map(v => `
         <div class="vendor-row" id="vrow-${_escapeHtml(v.uid)}">
           <div class="info">
             <strong>${_escapeHtml(v.nombre)}</strong>
@@ -157,7 +169,7 @@
               <button class="btn-approve" onclick="AdminComunidad.reactivarVendedor('${_escapeHtml(v.uid)}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg> Reactivar</button>` : ''}
           </div>
         </div>`).join('');
-      const pending = vendors.filter(v => v.estado === 'pendiente' || v.resetSolicitado || v.telefonoPendiente).length;
+      const pending = vendors.filter(v => v.estado === 'pendiente' || v.resetSolicitado || v.telefonoPendiente).length + resets.length;
       if (typeof window._updateNotifTabBadge === 'function') window._updateNotifTabBadge('vendors', pending);
     } catch (err) {
       container.innerHTML = `<p style="color:#ef4444">Error: ${_escapeHtml(err.message)}</p>`;
@@ -637,8 +649,31 @@ function verProductoDesdeReporte(reporte) {
 
 
   
+  async function resetPasswordComprador(telefono, btn, descartar) {
+    const runFn = async () => {
+      try {
+        const data = await _gasPost({ action: 'resetPasswordComprador', telefono, ...(descartar && { descartar: 1 }), token: _getToken() });
+        if (!data.ok) throw new Error(data.error);
+        if (data.codigo) {
+          await showCustomAlert({
+            title: 'Código generado',
+            message: `Envía este código por WhatsApp al comprador (${data.telefono}): ${data.codigo}`,
+            confirmText: 'Listo'
+          });
+        }
+        _msg(descartar ? ' Solicitud descartada' : ' Código generado', 'success');
+        loadVendors();
+      } catch (err) {
+        _msg(' ' + err.message, 'error');
+      }
+    };
+    if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, descartar ? 'Descartando…' : 'Generando…');
+    else await runFn();
+  }
+
   window.AdminComunidad = {
     init,
+    resetPasswordComprador,
     loadVendors,
     loadPendingProducts,
     aprobarVendedor,
