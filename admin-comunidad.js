@@ -129,7 +129,7 @@
         <div class="vendor-row">
           <div class="info">
             <strong>Comprador ${_escapeHtml(r.telefono)}</strong><br>
-            <span>Pidió recuperar su contraseña (respondió bien su pregunta de seguridad)</span>
+            <span>Pidió recuperar su contraseña. Envíale el código por WhatsApp a este mismo número.</span>
             <button class="btn-approve" onclick="AdminComunidad.resetPasswordComprador('${_escapeHtml(r.telefono)}', this)">Generar código</button>
             <button class="btn-stats" onclick="AdminComunidad.resetPasswordComprador('${_escapeHtml(r.telefono)}', this, true)">Descartar</button>
           </div>
