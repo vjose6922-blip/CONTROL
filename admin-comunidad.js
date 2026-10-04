@@ -201,7 +201,7 @@
           `Hola ${nombre}, tu cuenta de vendedor en Z&R Comunidad ha sido *aprobada*.\n\n` +
           `*Tu contraseña temporal es:* ${data.codigo}\n\n` +
           `Puedes cambiarla después de iniciar sesión.\n\n` +
-          ` Accede aquí: vjose6922-blip.github.io/znr/vendedor.html\n\n` +
+          ` Accede aquí: znrcommunity.com/vendedor.html\n\n` +
           `¡Bienvenido! `;
         if (isMobile) {
           if (waWindow) waWindow.close();
