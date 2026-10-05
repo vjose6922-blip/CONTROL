@@ -1143,7 +1143,7 @@ window.loadReportesLive = async function() {
           <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${esc(r.motivo)}</div>
         </div>
         <div class="actions">
-          ${r.facebookLink ? `<a class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;text-decoration:none;" href="${esc(r.facebookLink)}" target="_blank" rel="noopener"  >${Icon('play',{size:13})} Ver video</a>` : ''}
+          ${_accionClipLive(r)}
           <button class="btn-suspend" data-motivo="${esc(r.motivo || '')}" onclick="adminSuspenderVendedorDesdeReporte('${esc(r.vendedorUid)}','${esc(r.reporteId)}', this)">${Icon('ban',{size:13})} Suspender cuenta</button>
           <button class="btn-marcar-revisado" data-motivo="${esc(r.motivo || '')}" onclick="adminMarcarReporteLiveRevisado('${esc(r.reporteId)}', this)">${_icCheck} Marcar revisado</button>
         </div>
@@ -1151,6 +1151,183 @@ window.loadReportesLive = async function() {
   } catch(err) {
     list.innerHTML = '<p style="color:#ef4444;text-align:center;padding:16px;">Error de conexión.</p>';
   }
+};
+
+// ── Clip de video de un reporte live ─────────────────────────
+// El backend arma el clip (≈2 min antes y 2 min después del reporte) a
+// partir de segmentos de ~30 s. Aquí se reproducen en orden, con el chat
+// de esa ventana al lado; tocar un mensaje salta a ese momento.
+const _escClip = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function _accionClipLive(r) {
+  switch (r.clipEstado) {
+    case 'listo':
+      return `<button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" onclick="adminVerClipReporteLive('${_escClip(r.reporteId)}', this)">${Icon('play',{size:13})} Ver clip</button>`;
+    case 'pendiente':
+      return '<span class="clip-nota-fila">Preparando clip… (unos minutos)</span>';
+    case 'sin_grabacion':
+      return '<span class="clip-nota-fila">Sin grabación disponible</span>';
+    case 'omitido_limite':
+      return '<span class="clip-nota-fila">Sin clip (muchos reportes en este live)</span>';
+    case 'error':
+      return '<span class="clip-nota-fila">No se pudo preparar el clip</span>';
+    default:
+      // Reportes anteriores a la transmisión dentro de ZNR: link de Facebook/YouTube.
+      return r.facebookLink
+        ? `<a class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;text-decoration:none;" href="${_escClip(r.facebookLink)}" target="_blank" rel="noopener">${Icon('play',{size:13})} Ver video</a>`
+        : '';
+  }
+}
+
+function _inyectarEstilosClip() {
+  if (document.getElementById('clip-estilos')) return;
+  const st = document.createElement('style');
+  st.id = 'clip-estilos';
+  st.textContent = `
+    .clip-nota-fila { font-size:12px; color:#888; align-self:center; }
+    .clip-overlay { position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.75); display:flex; align-items:center; justify-content:center; padding:12px; }
+    .clip-modal { background:#1c1e26; color:#fff; width:100%; max-width:720px; max-height:94vh; overflow:auto; border-radius:16px; padding:14px; }
+    .clip-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .clip-head strong { font-size:14px; line-height:1.3; }
+    .clip-head small { display:block; font-size:11px; color:#aab; margin-top:2px; font-weight:400; }
+    .clip-cerrar { border:none; background:rgba(255,255,255,.12); color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .clip-video-wrap { position:relative; background:#000; border-radius:10px; overflow:hidden; }
+    .clip-video-wrap video { width:100%; max-height:52vh; display:block; background:#000; }
+    .clip-parte { font-size:11px; color:#cfd3e0; padding:6px 2px 0; min-height:16px; }
+    .clip-controles { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 12px; }
+    .clip-controles button { border:none; border-radius:20px; padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer; background:rgba(255,255,255,.14); color:#fff; }
+    .clip-chat-titulo { font-size:12px; font-weight:700; margin-bottom:6px; color:#cfd3e0; }
+    .clip-chat { max-height:26vh; overflow:auto; background:rgba(255,255,255,.05); border-radius:10px; padding:6px; }
+    .clip-msg { display:flex; gap:8px; font-size:12px; padding:5px 6px; border-radius:8px; cursor:pointer; }
+    .clip-msg:hover { background:rgba(255,255,255,.08); }
+    .clip-msg .t { color:#8fa0c8; flex-shrink:0; min-width:44px; font-variant-numeric:tabular-nums; }
+    .clip-msg .a { font-weight:700; }
+    .clip-sep { text-align:center; font-size:11px; font-weight:700; color:#ff8a80; padding:4px 0; }
+    .clip-nota { font-size:13px; color:#cfd3e0; text-align:center; padding:18px 8px; margin:0; }
+    .clip-pie { font-size:10.5px; color:#8c91a3; margin-top:8px; }
+  `;
+  document.head.appendChild(st);
+}
+
+function _fmtRelClip(seg) {
+  const signo = seg < 0 ? '−' : '+';
+  const a = Math.abs(Math.round(seg));
+  return signo + Math.floor(a / 60) + ':' + String(a % 60).padStart(2, '0');
+}
+
+window.adminVerClipReporteLive = async function(reporteId, btn) {
+  _inyectarEstilosClip();
+  const fila = btn && btn.closest ? btn.closest('.reporte-row') : null;
+  const titulo = fila ? ((fila.querySelector('.info strong') || {}).textContent || '').trim() : '';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'clip-overlay';
+  overlay.innerHTML = `
+    <div class="clip-modal" role="dialog" aria-modal="true">
+      <div class="clip-head">
+        <strong>${_escClip(titulo || 'Clip del reporte')}<small id="clip-sub"></small></strong>
+        <button type="button" class="clip-cerrar" id="clip-cerrar" aria-label="Cerrar">${Icon('x',{size:16})}</button>
+      </div>
+      <div id="clip-body"><p class="clip-nota">Cargando clip…</p></div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  let video = null;
+  const onKey = (e) => { if (e.key === 'Escape') cerrar(); };
+  function cerrar() {
+    document.removeEventListener('keydown', onKey);
+    if (video) { try { video.pause(); video.removeAttribute('src'); video.load(); } catch (e) { /* ya liberado */ } }
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+  document.getElementById('clip-cerrar').addEventListener('click', cerrar);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) cerrar(); });
+  document.addEventListener('keydown', onKey);
+
+  const body = document.getElementById('clip-body');
+  const aviso = (msg) => { body.innerHTML = `<p class="clip-nota">${_escClip(msg)}</p>`; };
+
+  let data;
+  try {
+    const token = sessionStorage.getItem('admin_token') || '';
+    const res = await fetch(LIVE_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'obtenerClipReporteLive', token, reporteId }));
+    data = await res.json();
+  } catch (err) { aviso('Error de conexión al cargar el clip.'); return; }
+  if (!data || !data.ok) { aviso('No se pudo cargar el clip: ' + ((data && data.error) || 'error desconocido')); return; }
+  if (data.estado !== 'listo') {
+    const msgs = {
+      pendiente: 'El clip todavía se está preparando. Vuelve a intentar en unos minutos.',
+      sin_grabacion: 'No hay grabación de este momento (el celular del vendedor no alcanzó a subirla).',
+      expirado: 'El clip ya expiró: se guardan como máximo 7 días.',
+      borrado: 'El clip ya se borró porque el reporte fue resuelto.',
+      omitido_limite: 'No se armó clip porque este live recibió demasiados reportes.',
+      error: 'No se pudo preparar el clip.'
+    };
+    aviso(msgs[data.estado] || 'Este reporte no tiene clip.');
+    return;
+  }
+
+  const segs = (data.segmentos || []).slice().sort((a, b) => a.inicioMs - b.inicioMs);
+  const chat = data.chat || [];
+  const T = data.tReporteMs;
+  const hora = (ms) => new Date(ms).toLocaleTimeString('es-MX');
+  document.getElementById('clip-sub').textContent = `Reporte a las ${hora(T)} · ${hora(data.desdeMs)} a ${hora(data.hastaMs)}`;
+
+  const chatHtml = [];
+  let separado = false;
+  chat.forEach((m) => {
+    if (!separado && m.ts >= T) { chatHtml.push('<div class="clip-sep">🚩 Momento del reporte</div>'); separado = true; }
+    chatHtml.push(`<div class="clip-msg" data-ts="${Number(m.ts) || 0}"><span class="t">${_fmtRelClip(((m.ts || 0) - T) / 1000)}</span><span><span class="a">${_escClip(m.author)}${m.isVendor ? ' (vendedor)' : ''}:</span> ${_escClip(m.text)}</span></div>`);
+  });
+  if (!separado) chatHtml.push('<div class="clip-sep">🚩 Momento del reporte</div>');
+
+  body.innerHTML = `
+    <div class="clip-video-wrap"><video id="clip-video" controls playsinline></video></div>
+    <div class="clip-parte" id="clip-parte"></div>
+    <div class="clip-controles">
+      <button type="button" id="clip-inicio">⏮ Desde el inicio</button>
+      <button type="button" id="clip-momento">🚩 Ir al momento del reporte</button>
+    </div>
+    <div class="clip-chat-titulo">Chat de esos minutos (toca un mensaje para ir a ese momento)</div>
+    <div class="clip-chat" id="clip-chat">${chatHtml.join('')}</div>
+    <div class="clip-pie">Las horas del chat las marca el dispositivo de cada persona y pueden variar unos segundos respecto al video.</div>`;
+
+  video = document.getElementById('clip-video');
+  const parte = document.getElementById('clip-parte');
+  let idx = 0;
+
+  function cargar(i, offsetSeg) {
+    idx = i;
+    parte.textContent = `Parte ${i + 1} de ${segs.length}`;
+    video.onloadedmetadata = () => {
+      if (offsetSeg > 0) {
+        const dur = isFinite(video.duration) ? video.duration : offsetSeg + 1;
+        try { video.currentTime = Math.min(offsetSeg, Math.max(0, dur - 0.2)); } catch (e) { /* sin seek: empieza al inicio de la parte */ }
+      }
+      video.play().catch(() => {});
+    };
+    video.src = segs[i].url;
+  }
+
+  // Salta al instante ms: busca el último segmento que empezó antes de ese momento.
+  function irA(ms) {
+    let i = 0;
+    for (let k = 0; k < segs.length; k++) { if (segs[k].inicioMs <= ms) i = k; }
+    cargar(i, Math.max(0, (ms - segs[i].inicioMs) / 1000));
+  }
+
+  video.onended = () => { if (idx + 1 < segs.length) cargar(idx + 1, 0); };
+  video.onerror = () => {
+    parte.textContent = `Parte ${idx + 1} de ${segs.length}: no se pudo reproducir. Si es un video .webm y tu navegador no lo soporta, ábrelo en Chrome.`;
+  };
+
+  document.getElementById('clip-inicio').addEventListener('click', () => cargar(0, 0));
+  document.getElementById('clip-momento').addEventListener('click', () => irA(T));
+  document.getElementById('clip-chat').addEventListener('click', (e) => {
+    const fila = e.target.closest ? e.target.closest('.clip-msg') : null;
+    if (fila) irA(Number(fila.dataset.ts));
+  });
+
+  irA(Math.max(data.desdeMs, T - 15000)); // arranca unos segundos antes del reporte, no desde el minuto -2
 };
 
 // El motivo que escribió quien reportó nunca debe perderse al archivar o
@@ -1177,7 +1354,7 @@ window.adminMarcarReporteLiveRevisado = async function(reporteId, btn) {
   const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
     showCustomConfirm({
       title: 'Marcar revisado',
-      message: '¿Marcar este reporte como revisado? La transmisión se queda como está.',
+      message: '¿Marcar este reporte como revisado? La transmisión se queda como está. El clip de video y el chat guardados de este reporte se borran.',
       icon: '', confirmText: 'Sí, marcar revisado', cancelText: 'Cancelar',
       askReason: true,
       reasonPlaceholder: 'Por qué no aplica (opcional) — ej. reporte falso',
@@ -1204,7 +1381,7 @@ window.adminSuspenderVendedorDesdeReporte = async function(vendedorUid, reporteI
   const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
     showCustomConfirm({
       title: 'Suspender vendedor',
-      message: '¿Suspender la cuenta de este vendedor? No va a poder iniciar sesión ni transmitir hasta que la reactives desde "Vendedores".',
+      message: '¿Suspender la cuenta de este vendedor? No va a poder iniciar sesión ni transmitir hasta que la reactives desde "Vendedores". El reporte se archiva y su clip de video se borra.',
       icon: '', confirmText: 'Sí, suspender', cancelText: 'Cancelar',
       askReason: true,
       reasonPlaceholder: 'Motivo de la suspensión (opcional)',

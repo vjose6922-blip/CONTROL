@@ -89,6 +89,11 @@ function getCacheStrategy(request) {
 
 self.addEventListener('fetch', event => {
   if (event.request.url.startsWith('chrome-extension://')) return;
+  // Clips de reportes live: URLs firmadas de Cloud Storage con el video de
+  // un incidente. Evidencia privada: no debe pasar por el SW ni quedar
+  // guardada en la caché del dispositivo del admin.
+  const reqUrl = new URL(event.request.url);
+  if (reqUrl.hostname.endsWith('googleapis.com') && reqUrl.searchParams.has('X-Goog-Signature')) return;
   const strategy = getCacheStrategy(event.request);
   const handlers = {
     CACHE_FIRST:            cacheFirst,
@@ -137,7 +142,8 @@ async function networkFirst(request) {
                          'marcarVendedorConfiable', 'marcarVendedorPlan', 'suspenderVendedor',
                          'marcarProductoConfiable', 'reportarProducto', 'marcarReporteRevisado',
                          'marcarNotificacionLeida', 'marcarTodasNotificacionesLeidas',
-                         'responderSolicitudPlus', 'solicitudesPlus', 'obtenerResumenPlanPlus'];
+                         'responderSolicitudPlus', 'solicitudesPlus', 'obtenerResumenPlanPlus',
+                         'obtenerReportesLive', 'obtenerClipReporteLive'];
       if (!action || !sensitive.includes(action)) {
         const cache = await caches.open(DYNAMIC_CACHE);
         cache.put(request, net.clone());
