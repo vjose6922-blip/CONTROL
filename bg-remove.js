@@ -19,9 +19,18 @@
 
   var sesion = null;
   var cola = Promise.resolve();  // procesa una foto a la vez
-  var chk = null, estado = null;
+  var chk = null, estado = null, logEl = null, lineas = [];
+
+  function log(t) {
+    var d = new Date();
+    lineas.push(d.toTimeString().slice(0, 8) + ' ' + t);
+    if (lineas.length > 12) lineas.shift();
+    if (logEl) logEl.textContent = lineas.join('\n');
+    try { console.log('[bg-remove]', t); } catch (e) {}
+  }
 
   function msg(t, err) {
+    if (t) log(t);
     if (!estado) return;
     estado.textContent = t || '';
     estado.style.color = err ? '#d32f2f' : '';
@@ -29,10 +38,11 @@
 
   function cargarOrt() {
     if (window.ort) return Promise.resolve();
+    log('cargando onnxruntime…');
     return new Promise(function (ok, fail) {
       var s = document.createElement('script');
       s.src = ORT_JS;
-      s.onload = ok;
+      s.onload = function () { log('onnxruntime cargado'); ok(); };
       s.onerror = function () { fail(new Error('No cargó onnxruntime (revisa la CSP y la conexión).')); };
       document.head.appendChild(s);
     });
@@ -47,8 +57,10 @@
     var r = await fetch(MODEL_URL);
     if (!r.ok) throw new Error('No se encontró ' + MODEL_URL + ' (HTTP ' + r.status + ').');
     var buf = await r.arrayBuffer();
+    log('modelo descargado: ' + buf.byteLength + ' bytes');
     if (buf.byteLength < 1000000) throw new Error('El archivo del modelo es inválido.');
     sesion = await ort.InferenceSession.create(buf, { executionProviders: ['wasm'] });
+    log('sesión del modelo lista');
     return sesion;
   }
 
@@ -87,6 +99,7 @@
     feeds[s.inputNames[0]] = new ort.Tensor('float32', t, [1, 3, SIZE, SIZE]);
     var salida = await s.run(feeds);
     var m = salida[s.outputNames[0]].data;
+    log('inferencia lista');
     var mn = Infinity, mx = -Infinity;
     for (i = 0; i < n; i++) { if (m[i] < mn) mn = m[i]; if (m[i] > mx) mx = m[i]; }
     var rango = (mx - mn) || 1;
@@ -171,7 +184,10 @@
     estado.style.cssText = 'display:block;margin-top:6px;font-size:.9rem;';
     fila.appendChild(lab);
     fila.appendChild(estado);
-    msg('Listo para usar (bg-remove v3).');
+    logEl = document.createElement('pre');
+    logEl.style.cssText = 'margin:6px 0 0;font-size:.72rem;line-height:1.3;white-space:pre-wrap;word-break:break-word;opacity:.85;';
+    fila.appendChild(logEl);
+    msg('Listo para usar (bg-remove v4).');
     primera.parentNode.insertBefore(fila, primera);
   }
 
@@ -196,8 +212,11 @@
   }
 
   function instalarInterceptor() {
-    document.addEventListener('change', function (ev) {
+    window.addEventListener('change', function (ev) {
       var inp = ev.target;
+      if (inp && inp.type === 'file') {
+        log('change en input id=' + (inp.id || '(sin id)') + ' archivos=' + (inp.files ? inp.files.length : 0) + ' casilla=' + (chk && chk.checked));
+      }
       if (!inp || inp.type !== 'file' || !/^image-upload-\d+$/.test(inp.id || '')) return;
       if (inp._znrBgListo) { inp._znrBgListo = false; return; }   // reenvío ya procesado
       if (!chk || !chk.checked) return;
@@ -222,6 +241,10 @@
       }).catch(function (e) { console.error('[bg-remove]', e); });
     }, true);
   }
+
+  window.addEventListener('error', function (e) { log('ERROR: ' + (e && e.message)); });
+  window.addEventListener('unhandledrejection', function (e) { log('ERROR promesa: ' + (e && e.reason && (e.reason.message || e.reason))); });
+  document.addEventListener('securitypolicyviolation', function (e) { log('CSP bloqueó: ' + e.blockedURI + ' (' + e.violatedDirective + ')'); });
 
   crearControl();
   instalarInterceptor();
