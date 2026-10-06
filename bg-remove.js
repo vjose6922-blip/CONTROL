@@ -1,13 +1,13 @@
 /* bg-remove.js — Quitar fondo y poner blanco (solo panel admin)
  * Modelo: U²-Net pequeño (u2netp, Apache-2.0), corre en el navegador con onnxruntime-web.
- * Requiere el archivo models/u2netp.onnx junto a index.html.
+ * Requiere el archivo u2netp.onnx junto a index.html.
  * admin.js llama a window.znrPreprocesarFoto(file, slot) antes de subir cada foto.
  * Si algo falla, sube la foto original (nunca bloquea la publicación).
  */
 (function () {
   'use strict';
 
-  var MODEL_URL = 'models/u2netp.onnx';
+  var MODEL_URL = 'u2netp.onnx';   // en la raíz del repo, junto a index.html
   var ORT_JS = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js';
   var ORT_WASM_PATH = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
   var MAX_LADO = 1200;           // igual que compressImage de admin.js
