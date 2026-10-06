@@ -1,5 +1,5 @@
-const CACHE_NAME    = 'zr-admin-cache-v5';
-const DYNAMIC_CACHE = 'zr-admin-dynamic-v5';
+const CACHE_NAME    = 'zr-admin-cache-v6';
+const DYNAMIC_CACHE = 'zr-admin-dynamic-v6';
 
 const STATIC_ASSETS = [
   './',
@@ -10,6 +10,7 @@ const STATIC_ASSETS = [
   'api-config.js',
   'common.js',
   'admin.js',
+  'bg-remove.js',
   'admin-tools.js',
   'admin-comunidad.js',
   'notifications-optimized.js',

@@ -1446,7 +1446,7 @@ function setupImageUpload(fileInputId, textInputId, previewId, progressId) {
         // Función de subida para admin (usa token de admin)
         const adminUploadFn = async (file, slot) => {
             // Usamos la función existente uploadImageToDrive que ya tiene la lógica de compresión y token
-            return await uploadImageToDrive(file);
+            return await uploadImageToDrive(file, slot);
         };
 
         // Callback para actualizar el progreso (opcional)
