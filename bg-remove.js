@@ -1,7 +1,8 @@
 /* bg-remove.js — Quitar fondo y poner blanco (solo panel admin)
  * Modelo: U²-Net pequeño (u2netp, Apache-2.0), corre en el navegador con onnxruntime-web.
  * Requiere el archivo u2netp.onnx junto a index.html.
- * admin.js llama a window.znrPreprocesarFoto(file, slot) antes de subir cada foto.
+ * Intercepta el 'change' de los inputs image-upload-N (captura) y reenvía las fotos ya procesadas.
+ * No necesita cambios en admin.js ni en common.js.
  * Si algo falla, sube la foto original (nunca bloquea la publicación).
  */
 (function () {
@@ -133,17 +134,6 @@
     return new File([blob], base + '.jpg', { type: 'image/jpeg' });
   }
 
-  // common.js pinta la foto original en la miniatura; aquí la reemplazamos por la procesada
-  function mostrarVistaPrevia(archivo, slot) {
-    if (!slot) return;
-    var url = URL.createObjectURL(archivo);
-    var prev = document.getElementById('preview-image-upload-' + slot);
-    if (prev) { prev.src = url; prev.style.display = 'block'; }
-    var slotDiv = document.getElementById('slot-' + slot);
-    var img = slotDiv && slotDiv.querySelector('img');
-    if (img) img.src = url;
-  }
-
   function crearControl() {
     var form = document.getElementById('product-form');
     if (!form) return;
@@ -181,30 +171,58 @@
     estado.style.cssText = 'display:block;margin-top:6px;font-size:.9rem;';
     fila.appendChild(lab);
     fila.appendChild(estado);
+    msg('Listo para usar (bg-remove v3).');
     primera.parentNode.insertBefore(fila, primera);
   }
 
-  // Punto de entrada que llama admin.js (adminUploadFn) antes de subir cada foto.
-  // Devuelve la foto procesada, o la original si la casilla está apagada o algo falla.
-  window.znrPreprocesarFoto = function (file, slot) {
-    if (!chk || !chk.checked) return Promise.resolve(file);
-    var p = cola.then(async function () {
+  // Intercepta la selección de fotos (fase de captura, antes que cualquier otro manejador),
+  // las procesa y reenvía el evento 'change' con las fotos ya con fondo blanco.
+  // No depende de admin.js ni de common.js.
+  async function procesarLista(archivos) {
+    var salida = [];
+    for (var i = 0; i < archivos.length; i++) {
+      msg('Quitando fondo… (' + (i + 1) + ' de ' + archivos.length + ')');
       try {
-        var usar = await procesar(file);
-        mostrarVistaPrevia(usar, slot);
-        msg('Fondo quitado. Subiendo…');
-        return usar;
+        salida.push(await procesar(archivos[i]));
       } catch (e) {
         console.error('[bg-remove]', e);
-        var texto = 'No se pudo quitar el fondo; se subió la foto original. (' + (e && e.message) + ')';
+        var texto = 'No se pudo quitar el fondo; se usa la foto original. (' + (e && e.message) + ')';
         msg(texto, true);
         if (typeof showTemporaryMessage === 'function') { try { showTemporaryMessage(texto, 'error'); } catch (x) {} }
-        return file;
+        salida.push(archivos[i]);
       }
-    });
-    cola = p.catch(function () {});
-    return p;
-  };
+    }
+    return salida;
+  }
+
+  function instalarInterceptor() {
+    document.addEventListener('change', function (ev) {
+      var inp = ev.target;
+      if (!inp || inp.type !== 'file' || !/^image-upload-\d+$/.test(inp.id || '')) return;
+      if (inp._znrBgListo) { inp._znrBgListo = false; return; }   // reenvío ya procesado
+      if (!chk || !chk.checked) return;
+      var archivos = Array.prototype.slice.call(inp.files || []);
+      if (!archivos.length) return;
+
+      ev.stopImmediatePropagation();
+      ev.preventDefault();
+      msg('Procesando foto…');
+
+      cola = cola.then(function () {
+        return procesarLista(archivos).then(function (lista) {
+          try {
+            var dt = new DataTransfer();
+            lista.forEach(function (f) { dt.items.add(f); });
+            inp.files = dt.files;
+          } catch (e) { console.error('[bg-remove] no se pudo reemplazar los archivos', e); }
+          msg('Listo. Subiendo…');
+          inp._znrBgListo = true;
+          inp.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      }).catch(function (e) { console.error('[bg-remove]', e); });
+    }, true);
+  }
 
   crearControl();
+  instalarInterceptor();
 })();
