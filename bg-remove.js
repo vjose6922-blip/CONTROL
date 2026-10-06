@@ -1,7 +1,7 @@
 /* bg-remove.js — Quitar fondo y poner blanco (solo panel admin)
  * Modelo: U²-Net pequeño (u2netp, Apache-2.0), corre en el navegador con onnxruntime-web.
  * Requiere el archivo models/u2netp.onnx junto a index.html.
- * Se carga DESPUÉS de admin.js: envuelve window.uploadImageToDrive sin modificar admin.js.
+ * admin.js llama a window.znrPreprocesarFoto(file, slot) antes de subir cada foto.
  * Si algo falla, sube la foto original (nunca bloquea la publicación).
  */
 (function () {
@@ -158,10 +158,11 @@
     var fila = document.createElement('div');
     fila.className = 'form-row';
     var lab = document.createElement('label');
-    lab.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;';
+    lab.style.cssText = 'display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;cursor:pointer;';
     chk = document.createElement('input');
     chk.type = 'checkbox';
     chk.id = 'chk-quitar-fondo';
+    chk.style.cssText = 'width:22px;height:22px;flex:none;margin:0;';
     try { chk.checked = localStorage.getItem(LS_KEY) === '1'; } catch (e) {}
     chk.addEventListener('change', function () {
       try { localStorage.setItem(LS_KEY, chk.checked ? '1' : '0'); } catch (e) {}
@@ -175,38 +176,35 @@
     });
     lab.appendChild(chk);
     lab.appendChild(document.createTextNode('Quitar fondo y poner blanco (al subir las fotos)'));
-    estado = document.createElement('small');
+    estado = document.createElement('div');
     estado.id = 'bg-estado';
+    estado.style.cssText = 'display:block;margin-top:6px;font-size:.9rem;';
     fila.appendChild(lab);
     fila.appendChild(estado);
     primera.parentNode.insertBefore(fila, primera);
   }
 
-  function enganchar() {
-    var original = window.uploadImageToDrive;
-    if (typeof original !== 'function') {
-      console.warn('[bg-remove] uploadImageToDrive no existe; no se activa.');
-      return;
-    }
-    window.uploadImageToDrive = function (file, slot) {
-      if (!chk || !chk.checked) return original(file, slot);
-      var p = cola.then(async function () {
-        var usar = file;
-        try {
-          usar = await procesar(file);
-          mostrarVistaPrevia(usar, slot);
-          msg('Fondo quitado. Subiendo…');
-        } catch (e) {
-          console.error('[bg-remove]', e);
-          msg('No se pudo quitar el fondo; se subió la foto original. (' + (e && e.message) + ')', true);
-        }
-        return original(usar, slot);
-      });
-      cola = p.catch(function () {});
-      return p;
-    };
-  }
+  // Punto de entrada que llama admin.js (adminUploadFn) antes de subir cada foto.
+  // Devuelve la foto procesada, o la original si la casilla está apagada o algo falla.
+  window.znrPreprocesarFoto = function (file, slot) {
+    if (!chk || !chk.checked) return Promise.resolve(file);
+    var p = cola.then(async function () {
+      try {
+        var usar = await procesar(file);
+        mostrarVistaPrevia(usar, slot);
+        msg('Fondo quitado. Subiendo…');
+        return usar;
+      } catch (e) {
+        console.error('[bg-remove]', e);
+        var texto = 'No se pudo quitar el fondo; se subió la foto original. (' + (e && e.message) + ')';
+        msg(texto, true);
+        if (typeof showTemporaryMessage === 'function') { try { showTemporaryMessage(texto, 'error'); } catch (x) {} }
+        return file;
+      }
+    });
+    cola = p.catch(function () {});
+    return p;
+  };
 
   crearControl();
-  enganchar();
 })();

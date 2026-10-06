@@ -1445,8 +1445,12 @@ function setupImageUpload(fileInputId, textInputId, previewId, progressId) {
 
         // Función de subida para admin (usa token de admin)
         const adminUploadFn = async (file, slot) => {
+            // Quitar fondo (bg-remove.js): si está activo, devuelve la foto con fondo blanco; si no, la original
+            if (typeof window.znrPreprocesarFoto === 'function') {
+                try { file = await window.znrPreprocesarFoto(file, slot); } catch (e) { console.error(e); }
+            }
             // Usamos la función existente uploadImageToDrive que ya tiene la lógica de compresión y token
-            return await uploadImageToDrive(file, slot);
+            return await uploadImageToDrive(file);
         };
 
         // Callback para actualizar el progreso (opcional)
