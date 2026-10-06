@@ -1312,6 +1312,9 @@ async function handleProductFormSubmit(e) {
     showTemporaryMessage(" Espera a que terminen de subir las imágenes...", "error");
     return;
   }
+if (window.znrSubirPendientes) {
+  try { await window.znrSubirPendientes(); } catch (err) { showTemporaryMessage("Error subiendo imágenes: " + err.message, "error"); return; }
+}
 const id = document.getElementById("product-id").value;
 const data = {
 Nombre: document.getElementById("product-name").value.trim(),

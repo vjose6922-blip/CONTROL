@@ -183,7 +183,7 @@
     logEl.id = 'bg-log';
     logEl.style.cssText = 'margin:6px 0 0;font-size:.72rem;line-height:1.3;white-space:pre-wrap;word-break:break-word;opacity:.85;';
     fila.appendChild(logEl);
-    msg('Listo para usar (bg-remove v5).');
+    msg('Listo para usar (bg-remove v6).');
     primera.parentNode.insertBefore(fila, primera);
   }
 
@@ -207,34 +207,79 @@
     return salida;
   }
 
+  // La foto ya procesada queda en su propio <input type=file> (sin subir) + miniatura local.
+  // Así resetProductForm / clearImageUploads / removeAdminImage ya la limpian solos.
+  function colocar(n, f) {
+    var dt = new DataTransfer(); dt.items.add(f);
+    $('image-upload-' + n).files = dt.files;
+    var p = $('preview-image-upload-' + n), b = $('remove-image-' + n);
+    p.src = URL.createObjectURL(f); p.style.display = 'block';
+    if (b) b.style.display = 'flex';
+  }
+
+  function descartar(n) {
+    $('image-upload-' + n).value = '';
+    var p = $('preview-image-upload-' + n), u = ($('product-image' + n) || {}).value, b = $('remove-image-' + n);
+    if (u) { p.src = u; return; }
+    p.removeAttribute('src'); p.style.display = 'none';
+    if (b) b.style.display = 'none';
+  }
+
+  function overlay(html) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;overflow:auto;color:#fff;text-align:center;';
+    ov.innerHTML = html;
+    document.body.appendChild(ov);
+    return ov;
+  }
+
+  // Modal para ver el resultado ampliado y decidir si se usa cada foto
+  function revisar(ini, n) {
+    var ov = overlay('<b>Revisa las fotos sin fondo</b><div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center"></div>' +
+      '<div style="display:flex;gap:10px"><button type="button" class="btn" data-ok>Usar estas fotos</button><button type="button" class="btn" data-no>Descartar todas</button></div>');
+    var g = ov.children[1];
+    for (var i = 0; i < n; i++) (function (slot) {
+      var f = document.createElement('div');
+      f.innerHTML = '<img style="display:block;width:min(88vw,320px);background:#fff;border-radius:8px"><button type="button" class="btn" style="margin-top:6px">Descartar</button>';
+      f.firstChild.src = $('preview-image-upload-' + slot).src;
+      f.lastChild.onclick = function () { descartar(slot); f.remove(); if (!g.children.length) ov.remove(); };
+      g.appendChild(f);
+    })(ini + i);
+    ov.querySelector('[data-ok]').onclick = function () { ov.remove(); };
+    ov.querySelector('[data-no]').onclick = function () { for (var i = 0; i < n; i++) descartar(ini + i); ov.remove(); };
+  }
+
+  // Lo llama handleProductFormSubmit (admin.js): sube las fotos pendientes con barra de progreso
+  window.znrSubirPendientes = async function () {
+    var ins = [1, 2, 3].map(function (n) { return $('image-upload-' + n); }).filter(function (i) { return i && i.files.length; });
+    if (!ins.length) return;
+    var ov = overlay('<b></b><div style="width:min(80vw,320px);height:10px;background:#555;border-radius:5px;overflow:hidden"><div style="height:100%;width:0;background:#4caf50;transition:width .3s"></div></div>');
+    var txt = ov.firstChild, barra = ov.lastChild.firstChild, hechas = 0;
+    txt.textContent = 'Subiendo imágenes (0 de ' + ins.length + ')…';
+    try {
+      await Promise.all(ins.map(async function (i) {
+        $('product-image' + i.id.slice(-1)).value = await uploadImageToDrive(i.files[0]);
+        i.value = '';   // ya subida: no se vuelve a subir si otra falla y se reintenta
+        barra.style.width = (++hechas / ins.length * 100) + '%';
+        txt.textContent = 'Subiendo imágenes (' + hechas + ' de ' + ins.length + ')…';
+      }));
+    } finally { ov.remove(); }
+  };
+
   function instalarInterceptor() {
     window.addEventListener('change', function (ev) {
-      var inp = ev.target;
-      if (inp && inp.type === 'file') {
-        log('change en input id=' + (inp.id || '(sin id)') + ' archivos=' + (inp.files ? inp.files.length : 0) + ' casilla=' + chkOn());
-      }
-      if (!inp || inp.type !== 'file' || !/^image-upload-\d+$/.test(inp.id || '')) return;
-      if (inp._znrBgListo) { inp._znrBgListo = false; return; }   // reenvío ya procesado
-      if (!chkOn()) return;
-      var archivos = Array.prototype.slice.call(inp.files || []);
+      var inp = ev.target, m = inp && inp.type === 'file' && /^image-upload-(\d)$/.exec(inp.id || '');
+      if (!m) return;
+      var ini = +m[1], archivos = Array.prototype.slice.call(inp.files || [], 0, 4 - ini);   // máx. hasta el slot 3
       if (!archivos.length) return;
-
-      ev.stopImmediatePropagation();
-      ev.preventDefault();
-      msg('Procesando foto…');
-
-      cola = cola.then(function () {
-        return procesarLista(archivos).then(function (lista) {
-          try {
-            var dt = new DataTransfer();
-            lista.forEach(function (f) { dt.items.add(f); });
-            inp.files = dt.files;
-          } catch (e) { console.error('[bg-remove] no se pudo reemplazar los archivos', e); }
-          msg('Listo. Subiendo…');
-          inp._znrBgListo = true;
-          inp.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-      }).catch(function (e) { console.error('[bg-remove]', e); });
+      ev.stopImmediatePropagation();   // evita la subida inmediata de admin.js
+      var quitar = chkOn();
+      cola = cola.then(async function () {
+        var lista = quitar ? await procesarLista(archivos) : archivos;
+        lista.forEach(function (f, i) { colocar(ini + i, f); });
+        msg('Listo. Las fotos se subirán al guardar el producto.');
+        if (quitar) revisar(ini, lista.length);
+      }).catch(function (e) { console.error('[bg-remove]', e); msg('Error: ' + (e && e.message), true); });
     }, true);
   }
 

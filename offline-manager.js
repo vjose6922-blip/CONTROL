@@ -175,6 +175,7 @@ window.handleProductFormSubmit = async function(e) {
 e.preventDefault();
 e.stopPropagation();
 if (!navigator.onLine) {
+if ([...document.querySelectorAll('input[id^="image-upload-"]')].some(i => i.files.length)) { showTemporaryMessage("Sin conexión: las fotos nuevas necesitan internet para subirse", "error"); return; }
 const id = document.getElementById("product-id")?.value || "";
 const productData = {
 Nombre: document.getElementById("product-name")?.value.trim() || "",

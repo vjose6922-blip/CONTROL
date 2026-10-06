@@ -1,5 +1,5 @@
-const CACHE_NAME    = 'zr-admin-cache-v8';
-const DYNAMIC_CACHE = 'zr-admin-dynamic-v8';
+const CACHE_NAME    = 'zr-admin-cache-v9';
+const DYNAMIC_CACHE = 'zr-admin-dynamic-v9';
 
 const STATIC_ASSETS = [
   './',
