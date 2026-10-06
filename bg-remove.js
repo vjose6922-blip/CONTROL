@@ -19,35 +19,31 @@
 
   var sesion = null;
   var cola = Promise.resolve();  // procesa una foto a la vez
-  var lineas = [];
-  // Se buscan por id cada vez: offline-manager.js clona (cloneNode) el formulario y deja las referencias viejas desconectadas del DOM
   var $ = function (id) { return document.getElementById(id); };
   var chkOn = function () { var c = $('chk-quitar-fondo'); return !!(c && c.checked); };
+  var idx = 0, tot = 1, lbl = '';
 
-  function log(t) {
-    var d = new Date();
-    lineas.push(d.toTimeString().slice(0, 8) + ' ' + t);
-    if (lineas.length > 12) lineas.shift();
-    var logEl = $('bg-log');
-    if (logEl) logEl.textContent = lineas.join('\n');
-    try { console.log('[bg-remove]', t); } catch (e) {}
+  // Barra flotante de actividad (f = 0..1; f = null la quita)
+  function avance(f, t) {
+    var b = $('bg-flota');
+    if (f == null) { if (b) b.remove(); return; }
+    if (!b) {
+      b = document.createElement('div'); b.id = 'bg-flota';
+      b.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(86vw,320px);box-sizing:border-box;padding:10px 14px;border-radius:14px;background:#2b2b2b;color:#fff;font-size:.85rem;z-index:10001;box-shadow:0 4px 14px rgba(0,0,0,.4)';
+      b.innerHTML = '<div></div><div style="height:6px;margin-top:6px;background:#555;border-radius:3px;overflow:hidden"><div style="height:100%;width:0;background:#4caf50;transition:width .3s"></div></div>';
+      document.body.appendChild(b);
+    }
+    b.firstChild.textContent = t || lbl;
+    b.lastChild.firstChild.style.width = Math.max(4, f * 100) + '%';
   }
-
-  function msg(t, err) {
-    if (t) log(t);
-    var estado = $('bg-estado');
-    if (!estado) return;
-    estado.textContent = t || '';
-    estado.style.color = err ? '#d32f2f' : '';
-  }
+  var paso = function (p) { avance((idx + p) / tot); };
 
   function cargarOrt() {
     if (window.ort) return Promise.resolve();
-    log('cargando onnxruntime…');
     return new Promise(function (ok, fail) {
       var s = document.createElement('script');
       s.src = ORT_JS;
-      s.onload = function () { log('onnxruntime cargado'); ok(); };
+      s.onload = ok;
       s.onerror = function () { fail(new Error('No cargó onnxruntime (revisa la CSP y la conexión).')); };
       document.head.appendChild(s);
     });
@@ -58,20 +54,18 @@
     await cargarOrt();
     ort.env.wasm.wasmPaths = ORT_WASM_PATH;
     ort.env.wasm.numThreads = 1;
-    msg('Cargando modelo (la primera vez tarda más)…');
+    avance(0, 'Cargando modelo (la 1.ª vez tarda más)…');
     var r = await fetch(MODEL_URL);
     if (!r.ok) throw new Error('No se encontró ' + MODEL_URL + ' (HTTP ' + r.status + ').');
     var buf = await r.arrayBuffer();
-    log('modelo descargado: ' + buf.byteLength + ' bytes');
     if (buf.byteLength < 1000000) throw new Error('El archivo del modelo es inválido.');
     sesion = await ort.InferenceSession.create(buf, { executionProviders: ['wasm'] });
-    log('sesión del modelo lista');
     return sesion;
   }
 
   async function procesar(file) {
     var s = await cargarModelo();
-    msg('Quitando fondo…');
+    paso(0.15);
     await new Promise(function (r) { setTimeout(r, 30); });
 
     var bmp = await createImageBitmap(file);
@@ -100,11 +94,12 @@
       for (c = 0; c < 3; c++) t[c * n + i] = (px[i * 4 + c] / maxP - MEAN[c]) / STD[c];
     }
 
+    paso(0.35);
     var feeds = {};
     feeds[s.inputNames[0]] = new ort.Tensor('float32', t, [1, 3, SIZE, SIZE]);
     var salida = await s.run(feeds);
     var m = salida[s.outputNames[0]].data;
-    log('inferencia lista');
+    paso(0.8);
     var mn = Infinity, mx = -Infinity;
     for (i = 0; i < n; i++) { if (m[i] < mn) mn = m[i]; if (m[i] > mx) mx = m[i]; }
     var rango = (mx - mn) || 1;
@@ -148,6 +143,7 @@
 
     var blob = await new Promise(function (res) { fin.toBlob(res, 'image/jpeg', 0.92); });
     if (!blob) throw new Error('No se pudo generar la imagen final.');
+    paso(1);
     var base = (file.name || 'imagen').replace(/\.[^.]+$/, '');
     return new File([blob], base + '.jpg', { type: 'image/jpeg' });
   }
@@ -174,34 +170,22 @@
     try { chk.checked = localStorage.getItem(LS_KEY) === '1'; } catch (e) {}
     lab.appendChild(chk);
     lab.appendChild(document.createTextNode('Quitar fondo y poner blanco (al subir las fotos)'));
-    var estado = document.createElement('div');
-    estado.id = 'bg-estado';
-    estado.style.cssText = 'display:block;margin-top:6px;font-size:.9rem;';
     fila.appendChild(lab);
-    fila.appendChild(estado);
-    var logEl = document.createElement('pre');
-    logEl.id = 'bg-log';
-    logEl.style.cssText = 'margin:6px 0 0;font-size:.72rem;line-height:1.3;white-space:pre-wrap;word-break:break-word;opacity:.85;';
-    fila.appendChild(logEl);
-    msg('Listo para usar (bg-remove v6).');
     primera.parentNode.insertBefore(fila, primera);
   }
 
-  // Intercepta la selección de fotos (fase de captura, antes que cualquier otro manejador),
-  // las procesa y reenvía el evento 'change' con las fotos ya con fondo blanco.
-  // No depende de admin.js ni de common.js.
   async function procesarLista(archivos) {
     var salida = [];
-    for (var i = 0; i < archivos.length; i++) {
-      msg('Quitando fondo… (' + (i + 1) + ' de ' + archivos.length + ')');
+    tot = archivos.length;
+    for (idx = 0; idx < tot; idx++) {
+      lbl = 'Quitando fondo ' + (idx + 1) + ' de ' + tot;
+      avance(idx / tot);
       try {
-        salida.push(await procesar(archivos[i]));
+        salida.push(await procesar(archivos[idx]));
       } catch (e) {
         console.error('[bg-remove]', e);
-        var texto = 'No se pudo quitar el fondo; se usa la foto original. (' + (e && e.message) + ')';
-        msg(texto, true);
-        if (typeof showTemporaryMessage === 'function') { try { showTemporaryMessage(texto, 'error'); } catch (x) {} }
-        salida.push(archivos[i]);
+        showTemporaryMessage('No se pudo quitar el fondo; se usa la foto original. (' + (e && e.message) + ')', 'error');
+        salida.push(archivos[idx]);
       }
     }
     return salida;
@@ -225,22 +209,25 @@
     if (b) b.style.display = 'none';
   }
 
+  // El contenido va en un wrapper con margin:auto: centrado si cabe y con scroll desde arriba si no
   function overlay(html) {
     var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;overflow:auto;color:#fff;text-align:center;';
-    ov.innerHTML = html;
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);overflow-y:auto;display:flex;padding:12px;box-sizing:border-box;color:#fff;text-align:center;';
+    ov.innerHTML = '<div style="margin:auto;width:100%;max-width:1000px;display:flex;flex-direction:column;align-items:center;gap:12px">' + html + '</div>';
     document.body.appendChild(ov);
     return ov;
   }
 
   // Modal para ver el resultado ampliado y decidir si se usa cada foto
   function revisar(ini, n) {
-    var ov = overlay('<b>Revisa las fotos sin fondo</b><div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center"></div>' +
-      '<div style="display:flex;gap:10px"><button type="button" class="btn" data-ok>Usar estas fotos</button><button type="button" class="btn" data-no>Descartar todas</button></div>');
-    var g = ov.children[1];
+    var ov = overlay('<b>Revisa las fotos sin fondo</b><small>Toca una foto para ampliarla</small>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;width:100%"></div>' +
+      '<div style="position:sticky;bottom:0;width:100%;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:rgba(0,0,0,.85);display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+      '<button type="button" class="btn" data-ok>Usar estas fotos</button><button type="button" class="btn" data-no>Descartar todas</button></div>');
+    var g = ov.firstChild.children[2];
     for (var i = 0; i < n; i++) (function (slot) {
       var f = document.createElement('div');
-      f.innerHTML = '<img style="display:block;width:min(88vw,320px);background:#fff;border-radius:8px"><button type="button" class="btn" style="margin-top:6px">Descartar</button>';
+      f.innerHTML = '<img style="display:block;width:100%;max-height:42vh;object-fit:contain;background:#fff;border-radius:8px" onclick="this.style.maxHeight=this.style.maxHeight==\'none\'?\'42vh\':\'none\'"><button type="button" class="btn" style="margin-top:6px">Descartar</button>';
       f.firstChild.src = $('preview-image-upload-' + slot).src;
       f.lastChild.onclick = function () { descartar(slot); f.remove(); if (!g.children.length) ov.remove(); };
       g.appendChild(f);
@@ -254,7 +241,7 @@
     var ins = [1, 2, 3].map(function (n) { return $('image-upload-' + n); }).filter(function (i) { return i && i.files.length; });
     if (!ins.length) return;
     var ov = overlay('<b></b><div style="width:min(80vw,320px);height:10px;background:#555;border-radius:5px;overflow:hidden"><div style="height:100%;width:0;background:#4caf50;transition:width .3s"></div></div>');
-    var txt = ov.firstChild, barra = ov.lastChild.firstChild, hechas = 0;
+    var w = ov.firstChild, txt = w.firstChild, barra = w.lastChild.firstChild, hechas = 0;
     txt.textContent = 'Subiendo imágenes (0 de ' + ins.length + ')…';
     try {
       await Promise.all(ins.map(async function (i) {
@@ -277,15 +264,10 @@
       cola = cola.then(async function () {
         var lista = quitar ? await procesarLista(archivos) : archivos;
         lista.forEach(function (f, i) { colocar(ini + i, f); });
-        msg('Listo. Las fotos se subirán al guardar el producto.');
         if (quitar) revisar(ini, lista.length);
-      }).catch(function (e) { console.error('[bg-remove]', e); msg('Error: ' + (e && e.message), true); });
+      }).catch(function (e) { console.error('[bg-remove]', e); showTemporaryMessage('Error: ' + (e && e.message), 'error'); }).then(function () { avance(null); });
     }, true);
   }
-
-  window.addEventListener('error', function (e) { log('ERROR: ' + (e && e.message)); });
-  window.addEventListener('unhandledrejection', function (e) { log('ERROR promesa: ' + (e && e.reason && (e.reason.message || e.reason))); });
-  document.addEventListener('securitypolicyviolation', function (e) { log('CSP bloqueó: ' + e.blockedURI + ' (' + e.violatedDirective + ')'); });
 
   // Delegados en document: sobreviven al clonado del formulario
   document.addEventListener('change', function (e) {
@@ -297,7 +279,6 @@
     setTimeout(function () {
       var c = $('chk-quitar-fondo');
       try { if (c) c.checked = localStorage.getItem(LS_KEY) === '1'; } catch (x) {}
-      msg('');
     }, 0);
   });
 
