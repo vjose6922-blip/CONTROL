@@ -19,18 +19,23 @@
 
   var sesion = null;
   var cola = Promise.resolve();  // procesa una foto a la vez
-  var chk = null, estado = null, logEl = null, lineas = [];
+  var lineas = [];
+  // Se buscan por id cada vez: offline-manager.js clona (cloneNode) el formulario y deja las referencias viejas desconectadas del DOM
+  var $ = function (id) { return document.getElementById(id); };
+  var chkOn = function () { var c = $('chk-quitar-fondo'); return !!(c && c.checked); };
 
   function log(t) {
     var d = new Date();
     lineas.push(d.toTimeString().slice(0, 8) + ' ' + t);
     if (lineas.length > 12) lineas.shift();
+    var logEl = $('bg-log');
     if (logEl) logEl.textContent = lineas.join('\n');
     try { console.log('[bg-remove]', t); } catch (e) {}
   }
 
   function msg(t, err) {
     if (t) log(t);
+    var estado = $('bg-estado');
     if (!estado) return;
     estado.textContent = t || '';
     estado.style.color = err ? '#d32f2f' : '';
@@ -148,8 +153,8 @@
   }
 
   function crearControl() {
-    var form = document.getElementById('product-form');
-    if (!form) return;
+    var form = $('product-form');
+    if (!form || $('chk-quitar-fondo')) return;
     var filas = form.querySelectorAll('.form-row');
     var primera = null;
     for (var i = 0; i < filas.length; i++) {
@@ -162,32 +167,23 @@
     fila.className = 'form-row';
     var lab = document.createElement('label');
     lab.style.cssText = 'display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;cursor:pointer;';
-    chk = document.createElement('input');
+    var chk = document.createElement('input');
     chk.type = 'checkbox';
     chk.id = 'chk-quitar-fondo';
     chk.style.cssText = 'width:22px;height:22px;flex:none;margin:0;';
     try { chk.checked = localStorage.getItem(LS_KEY) === '1'; } catch (e) {}
-    chk.addEventListener('change', function () {
-      try { localStorage.setItem(LS_KEY, chk.checked ? '1' : '0'); } catch (e) {}
-    });
-    // product-form.reset() (admin.js) desmarca la casilla: se restaura la preferencia guardada
-    form.addEventListener('reset', function () {
-      setTimeout(function () {
-        try { chk.checked = localStorage.getItem(LS_KEY) === '1'; } catch (e) {}
-        msg('');
-      }, 0);
-    });
     lab.appendChild(chk);
     lab.appendChild(document.createTextNode('Quitar fondo y poner blanco (al subir las fotos)'));
-    estado = document.createElement('div');
+    var estado = document.createElement('div');
     estado.id = 'bg-estado';
     estado.style.cssText = 'display:block;margin-top:6px;font-size:.9rem;';
     fila.appendChild(lab);
     fila.appendChild(estado);
-    logEl = document.createElement('pre');
+    var logEl = document.createElement('pre');
+    logEl.id = 'bg-log';
     logEl.style.cssText = 'margin:6px 0 0;font-size:.72rem;line-height:1.3;white-space:pre-wrap;word-break:break-word;opacity:.85;';
     fila.appendChild(logEl);
-    msg('Listo para usar (bg-remove v4).');
+    msg('Listo para usar (bg-remove v5).');
     primera.parentNode.insertBefore(fila, primera);
   }
 
@@ -215,11 +211,11 @@
     window.addEventListener('change', function (ev) {
       var inp = ev.target;
       if (inp && inp.type === 'file') {
-        log('change en input id=' + (inp.id || '(sin id)') + ' archivos=' + (inp.files ? inp.files.length : 0) + ' casilla=' + (chk && chk.checked));
+        log('change en input id=' + (inp.id || '(sin id)') + ' archivos=' + (inp.files ? inp.files.length : 0) + ' casilla=' + chkOn());
       }
       if (!inp || inp.type !== 'file' || !/^image-upload-\d+$/.test(inp.id || '')) return;
       if (inp._znrBgListo) { inp._znrBgListo = false; return; }   // reenvío ya procesado
-      if (!chk || !chk.checked) return;
+      if (!chkOn()) return;
       var archivos = Array.prototype.slice.call(inp.files || []);
       if (!archivos.length) return;
 
@@ -245,6 +241,20 @@
   window.addEventListener('error', function (e) { log('ERROR: ' + (e && e.message)); });
   window.addEventListener('unhandledrejection', function (e) { log('ERROR promesa: ' + (e && e.reason && (e.reason.message || e.reason))); });
   document.addEventListener('securitypolicyviolation', function (e) { log('CSP bloqueó: ' + e.blockedURI + ' (' + e.violatedDirective + ')'); });
+
+  // Delegados en document: sobreviven al clonado del formulario
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'chk-quitar-fondo') { try { localStorage.setItem(LS_KEY, e.target.checked ? '1' : '0'); } catch (x) {} }
+  });
+  // product-form.reset() (admin.js) desmarca la casilla: se restaura la preferencia guardada
+  document.addEventListener('reset', function (e) {
+    if (!e.target || e.target.id !== 'product-form') return;
+    setTimeout(function () {
+      var c = $('chk-quitar-fondo');
+      try { if (c) c.checked = localStorage.getItem(LS_KEY) === '1'; } catch (x) {}
+      msg('');
+    }, 0);
+  });
 
   crearControl();
   instalarInterceptor();
