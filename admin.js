@@ -455,6 +455,7 @@ const TIPO_LABELS = {
   aprobarSolicitudBeneficiario: "Aprobar solicitud de beneficiario", rechazarSolicitudBeneficiario: "Rechazar solicitud de beneficiario",
   aprobarProductoComunidad: "Aprobar producto de comunidad", rechazarProductoComunidad: "Rechazar producto de comunidad",
   marcarReporteRevisado: "Marcar reporte revisado", marcarReporteLiveRevisado: "Marcar reporte de live revisado",
+  verConversacionPedido: "Revisar conversación reportada", resolverReportePedido: "Resolver reporte de pedido personalizado",
   crearAdmin: "Crear admin", desactivarAdmin: "Desactivar admin", reactivarAdmin: "Reactivar admin",
   iniciarTransicionAdmin: "Iniciar transición de admin", promoverModerador: "Promover moderador a admin",
   eliminarAdmin: "Eliminar admin", cambiarPasswordAdmin: "Cambiar contraseña de admin",
@@ -1556,7 +1557,8 @@ async function checkNotifications() {
     const LIVE_API_BADGES = "https://live-api-1038143238323.us-central1.run.app";
 
     const TIENDA_API_BADGES = "https://tienda-znr-api-1038143238323.us-central1.run.app";
-    const [gasRes, vendRes, pendRes, repRes, benRes, benRepRes, plusRes, liveRes] = await Promise.all([
+    const PEDIDOS_API_BADGES = "https://pedidos-api-1038143238323.us-central1.run.app";
+    const [gasRes, vendRes, pendRes, repRes, benRes, benRepRes, plusRes, liveRes, pedRepRes] = await Promise.all([
       fetch(`${TIENDA_API_BADGES}?${new URLSearchParams({ action: 'notificationsBatch', page: 1, pageSize: 500, token })}`)
         .then(r => r.json())
         .then(d => ({ ok: d.ok, solicitudes: d.ok ? (d.groups || []).filter(g => g.availableCount > 0).length : 0 }))
@@ -1568,6 +1570,7 @@ async function checkNotifications() {
       fetch(`${BENEFICIARIOS_API_BADGES}?${new URLSearchParams({ action: 'obtenerReportesBeneficiarios', token })}`).then(r => r.json()).catch(() => ({ ok: false })),
       fetch(`${VENDEDORES_API_BADGES}?${new URLSearchParams({ action: 'solicitudesPlus', token })}`).then(r => r.json()).catch(() => ({ ok: false })),
       fetch(`${LIVE_API_BADGES}?${new URLSearchParams({ action: 'obtenerReportesLive', token })}`).then(r => r.json()).catch(() => ({ ok: false })),
+      fetch(`${PEDIDOS_API_BADGES}?${new URLSearchParams({ action: 'obtenerReportesPedido', token })}`).then(r => r.json()).catch(() => ({ ok: false })),
     ]);
 
     const vendors = vendRes.ok ? (vendRes.vendors || []) : [];
@@ -1580,8 +1583,9 @@ async function checkNotifications() {
       plus: plusRes.ok ? (plusRes.solicitudes || []).length : 0,
       beneficiarios: benRes.ok ? (benRes.beneficiarios || []).length + (benRepRes.ok ? (benRepRes.reportes || []).length : 0) : 0,
       reportesLive: liveRes.ok ? (liveRes.reportes || []).length : 0,
+      reportesPedidos: pedRepRes.ok ? (pedRepRes.reportes || []).length : 0,
     };
-    data.total = data.solicitudes + data.vendors + data.pending + data.reportes + data.plus + data.beneficiarios + data.reportesLive;
+    data.total = data.solicitudes + data.vendors + data.pending + data.reportes + data.plus + data.beneficiarios + data.reportesLive + data.reportesPedidos;
     if (!data.ok) return;
  
     const count = data.solicitudes;
@@ -1612,6 +1616,7 @@ async function checkNotifications() {
       window._updateNotifTabBadge('pending', data.pending);
       window._updateNotifTabBadge('reportes', data.reportes);
       window._updateNotifTabBadge('reportes_live', data.reportesLive);
+      window._updateNotifTabBadge('reportes_pedidos', data.reportesPedidos);
     }
     const secBadge = document.getElementById('notif-badge-header');
     if (secBadge) { secBadge.textContent = data.total; secBadge.style.display = data.total > 0 ? 'inline' : 'none'; }
@@ -1623,6 +1628,7 @@ async function checkNotifications() {
     setBadge('notif-panel-plus-count',     data.plus);
     setBadge('notif-panel-beneficiarios-count', data.beneficiarios);
     setBadge('notif-panel-reportes-live-count', data.reportesLive);
+    setBadge('notif-panel-reportes-pedidos-count', data.reportesPedidos);
  
   } catch(err) {
     console.log("Error checking notifications:", err);

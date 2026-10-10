@@ -1407,3 +1407,190 @@ window.adminSuspenderVendedorDesdeReporte = async function(vendedorUid, reporteI
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Suspendiendo…');
   else await runFn();
 };
+
+// ── Admin: Reportes de conversaciones de pedidos personalizados ──────────
+// Cola de reportes que los compradores/vendedores mandan desde el chat de un pedido
+// (pedidos-api). El staff solo ve la conversación de un caso reportado y cada apertura
+// queda registrada (quién, cuándo y por qué). Moderador: sin teléfonos y sin poder cancelar.
+const PEDIDOS_API_URL_NOTIF = "https://pedidos-api-1038143238323.us-central1.run.app";
+const _escPed = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const _ESTADOS_PED_ABIERTOS = ['solicitado', 'cotizado', 'aceptado', 'en_elaboracion', 'listo'];
+const _TEXTO_ESTADO_PED = {
+  solicitado: 'Solicitado', cotizado: 'Cotizado', aceptado: 'Aceptado', en_elaboracion: 'En elaboración',
+  listo: 'Listo', entregado: 'Entregado', rechazado: 'Rechazado', cancelado: 'Cancelado', expirado: 'Expirado'
+};
+
+async function _postPedidosApi(params) {
+  const token = sessionStorage.getItem('admin_token') || '';
+  const res = await fetch(PEDIDOS_API_URL_NOTIF, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ ...params, token }).toString()
+  });
+  return res.json();
+}
+
+window.loadReportesPedidos = async function() {
+  const list = document.getElementById('admin-reportes-pedidos-list');
+  if (!list) return;
+  list.innerHTML = window.znrSkeletonRows(3);
+  try {
+    const token = sessionStorage.getItem('admin_token') || '';
+    const rol = sessionStorage.getItem('admin_rol') || 'master';
+    const res = await fetch(PEDIDOS_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'obtenerReportesPedido', token }));
+    const data = await res.json();
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${_escPed(data.error)}</p>`; return; }
+    const reportes = data.reportes || [];
+
+    if (window._updateNotifTabBadge) window._updateNotifTabBadge('reportes_pedidos', reportes.length);
+    else {
+      const badge = document.getElementById('tab-badge-reportes_pedidos');
+      const cnt = document.getElementById('sc-reportes_pedidos');
+      if (badge) badge.textContent = reportes.length;
+      if (cnt) cnt.textContent = reportes.length;
+    }
+
+    if (!reportes.length) {
+      list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay reportes de pedidos pendientes de revisar.</p>';
+      return;
+    }
+    reportes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const puedeCancelar = rol === 'master' || rol === 'admin';
+
+    list.innerHTML = reportes.map(r => {
+      const abierto = _ESTADOS_PED_ABIERTOS.includes(r.estadoPedido);
+      const quien = r.reportadoPorRol === 'vendedor' ? 'el vendedor' : 'el cliente';
+      return `
+      <div class="reporte-row" data-reporte-id="${_escPed(r.reporteId)}">
+        <div class="info">
+          <strong>${Icon('flag',{size:14})} ${_escPed(r.productoNombre || 'Pedido personalizado')} · ${_escPed(r.motivoTexto || r.motivo)}</strong>
+          <span>Vendedor: ${_escPed(r.vendedorNombre || '—')} · Cliente: ${_escPed(r.compradorNombre || '—')}${r.compradorTel ? ' · ' + _icPhone + ' ' + _escPed(r.compradorTel) : ''}</span><br>
+          <span>Reportó ${quien} · ${r.timestamp ? new Date(r.timestamp).toLocaleString('es-MX') : ''} · Pedido ${_escPed(_TEXTO_ESTADO_PED[r.estadoPedido] || r.estadoPedido)}${r.ciudad ? ' · ' + _escPed(r.ciudad) : ''}</span>
+          ${r.detalle ? `<div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${_escPed(r.detalle)}</div>` : ''}
+        </div>
+        <div class="actions">
+          <button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" data-motivo="${_escPed(r.motivoTexto || r.motivo)}" onclick="adminVerConversacionPedido('${_escPed(r.reporteId)}', this)">${Icon('chat-bubble',{size:13})} Ver conversación</button>
+          ${puedeCancelar && abierto ? `<button class="btn-suspend" data-motivo="${_escPed(r.motivoTexto || r.motivo)}" onclick="adminResolverReportePedido('${_escPed(r.reporteId)}', 'cancelar_pedido', this)">${Icon('ban',{size:13})} Cancelar pedido</button>` : ''}
+          <button class="btn-marcar-revisado" data-motivo="${_escPed(r.motivoTexto || r.motivo)}" onclick="adminResolverReportePedido('${_escPed(r.reporteId)}', 'sin_accion', this)">${_icCheck} Marcar revisado</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    list.innerHTML = '<p style="color:#ef4444;text-align:center;padding:16px;">Error de conexión.</p>';
+  }
+};
+
+function _inyectarEstilosPedido() {
+  if (document.getElementById('ped-estilos')) return;
+  const st = document.createElement('style');
+  st.id = 'ped-estilos';
+  st.textContent = `
+    .ped-overlay { position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.75); display:flex; align-items:center; justify-content:center; padding:12px; }
+    .ped-modal { background:#1c1e26; color:#fff; width:100%; max-width:640px; max-height:94vh; display:flex; flex-direction:column; border-radius:16px; padding:14px; }
+    .ped-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .ped-head strong { font-size:14px; line-height:1.3; }
+    .ped-head small { display:block; font-size:11px; color:#aab; margin-top:2px; font-weight:400; }
+    .ped-cerrar { border:none; background:rgba(255,255,255,.12); color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; flex-shrink:0; }
+    .ped-resumen { font-size:12px; color:#cfd3e0; background:rgba(255,255,255,.06); border-radius:10px; padding:8px 10px; margin-bottom:8px; }
+    .ped-chat { overflow:auto; display:flex; flex-direction:column; gap:6px; padding:4px; }
+    .ped-msg { max-width:84%; padding:7px 10px; border-radius:12px; font-size:13px; line-height:1.35; white-space:pre-wrap; word-break:break-word; background:rgba(255,255,255,.1); align-self:flex-start; }
+    .ped-msg.vendedor { align-self:flex-end; background:#6d28d9; }
+    .ped-msg .quien { display:block; font-size:10px; font-weight:700; opacity:.7; margin-bottom:2px; }
+    .ped-msg .hora { display:block; font-size:10px; opacity:.55; margin-top:3px; text-align:right; }
+    .ped-msg img { display:block; max-width:100%; max-height:220px; border-radius:8px; margin-top:4px; cursor:zoom-in; }
+    .ped-sys { align-self:center; text-align:center; font-size:11px; color:#aab; background:rgba(255,255,255,.06); padding:4px 12px; border-radius:999px; max-width:92%; }
+    .ped-card { align-self:stretch; border:1.5px solid #a855f7; border-radius:12px; padding:8px 10px; font-size:12.5px; background:rgba(168,85,247,.1); }
+    .ped-pie { font-size:10.5px; color:#8c91a3; margin-top:8px; }
+  `;
+  document.head.appendChild(st);
+}
+
+window.adminVerConversacionPedido = async function(reporteId, btn) {
+  _inyectarEstilosPedido();
+  const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
+  const overlay = document.createElement('div');
+  overlay.className = 'ped-overlay';
+  overlay.innerHTML = `
+    <div class="ped-modal" role="dialog" aria-modal="true">
+      <div class="ped-head">
+        <strong id="ped-titulo">Conversación reportada<small id="ped-sub"></small></strong>
+        <button type="button" class="ped-cerrar" id="ped-cerrar" aria-label="Cerrar">${Icon('x',{size:16})}</button>
+      </div>
+      <div id="ped-body"><p style="text-align:center;color:#cfd3e0;padding:18px;">Cargando conversación…</p></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const onKey = (e) => { if (e.key === 'Escape') cerrar(); };
+  function cerrar() { document.removeEventListener('keydown', onKey); overlay.remove(); }
+  document.getElementById('ped-cerrar').addEventListener('click', cerrar);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) cerrar(); });
+  document.addEventListener('keydown', onKey);
+  const body = document.getElementById('ped-body');
+  const aviso = (m) => { body.innerHTML = `<p style="text-align:center;color:#cfd3e0;padding:18px;">${_escPed(m)}</p>`; };
+
+  let data;
+  try {
+    // El motivo de la revisión es el propio reporte; queda registrado junto con quién y cuándo.
+    data = await _postPedidosApi({ action: 'verConversacionReportada', reporteId, razon: 'Revisión del reporte: ' + (motivoReporte || 'sin motivo') });
+  } catch (e) { aviso('Error de conexión al cargar la conversación.'); return; }
+  if (!data || !data.ok) { aviso('No se pudo abrir: ' + ((data && data.error) || 'error desconocido')); return; }
+
+  const p = data.pedido || {};
+  document.getElementById('ped-titulo').firstChild.textContent = (p.productoNombre || 'Pedido') + ' ';
+  document.getElementById('ped-sub').textContent = `${p.vendedorNombre || 'Vendedor'} ↔ ${p.compradorNombre || 'Cliente'} · ${_TEXTO_ESTADO_PED[p.estado] || p.estado}`;
+  const din = n => Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+  const ac = p.cotizacionAceptada;
+  const pagoTxt = (x, nom) => x ? `${nom} ${din(x.monto)}: ${_escPed(x.estado)}${x.metodo ? ' (' + _escPed(x.metodo) + ')' : ''}` : '';
+  const resumen = [ac ? `Acordado: ${din(ac.precio)} · entrega ${_escPed(ac.fechaEntrega)}` : 'Sin cotización aceptada', pagoTxt(p.pagoAnticipo, 'Anticipo'), pagoTxt(p.pagoRestante, 'Restante')].filter(Boolean).join(' — ');
+
+  const hora = (iso) => iso ? new Date(iso).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  const msgs = (data.mensajes || []).map(m => {
+    if (m.tipo === 'sistema') return `<div class="ped-sys">${_escPed(m.contenido)}</div>`;
+    if (m.tipo === 'cotizacion' && m.cotizacion) {
+      const c = m.cotizacion;
+      return `<div class="ped-card"><strong>Cotización ${din(c.precio)}</strong>${c.anticipo > 0 ? ' · anticipo ' + din(c.anticipo) : ''} · entrega ${_escPed(c.fechaEntrega)}<br>${_escPed(m.contenido)}<span class="hora">${hora(m.fecha)}</span></div>`;
+    }
+    const quien = m.autorRol === 'vendedor' ? 'Vendedor' : 'Cliente';
+    let extra = '';
+    if (m.foto) extra += `<img src="${_escPed(m.foto)}" alt="Foto" loading="lazy" onclick="window.open(this.src,'_blank','noopener')">`;
+    if (m.tipo === 'pago' && m.pago) {
+      extra = `<strong>Pago de ${_escPed(m.pago.tipo)} ${din(m.pago.monto)} · ${_escPed(m.pago.estado)}</strong>` + (m.pago.comprobante ? `<img src="${_escPed(m.pago.comprobante)}" alt="Comprobante" loading="lazy" onclick="window.open(this.src,'_blank','noopener')">` : '');
+    }
+    return `<div class="ped-msg ${m.autorRol === 'vendedor' ? 'vendedor' : ''}"><span class="quien">${quien}</span>${_escPed(m.contenido)}${extra}<span class="hora">${hora(m.fecha)}</span></div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="ped-resumen">${resumen}</div>
+    <div class="ped-chat" style="max-height:58vh;">${msgs || '<p style="text-align:center;color:#cfd3e0;">Sin mensajes.</p>'}</div>
+    <div class="ped-pie">Esta apertura quedó registrada en la auditoría. Se muestran hasta 300 mensajes.</div>`;
+  const chat = body.querySelector('.ped-chat');
+  if (chat) chat.scrollTop = chat.scrollHeight;
+};
+
+window.adminResolverReportePedido = async function(reporteId, accion, btn) {
+  const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
+  const cancelar = accion === 'cancelar_pedido';
+  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+    showCustomConfirm({
+      title: cancelar ? 'Cancelar pedido' : 'Marcar revisado',
+      message: cancelar
+        ? '¿Cancelar este pedido? Se le avisa a las dos partes. Si ya hubo un anticipo, ellos coordinan la devolución por el chat. El reporte se archiva.'
+        : '¿Marcar este reporte como revisado? El pedido se queda como está.',
+      icon: '', confirmText: cancelar ? 'Sí, cancelar pedido' : 'Sí, marcar revisado', cancelText: 'Volver',
+      askReason: true,
+      reasonPlaceholder: cancelar ? 'Qué encontraste y por qué cancelas (opcional)' : 'Por qué no aplica (opcional) — ej. reporte falso',
+      onConfirm: (r) => resolve(r === undefined ? '' : r),
+      onCancel: () => resolve(null)
+    });
+  }) : (confirm(cancelar ? '¿Cancelar este pedido?' : '¿Marcar este reporte como revisado?') ? '' : null);
+  if (razon === null) return;
+  const runFn = async () => {
+    try {
+      const data = await _postPedidosApi({ action: 'resolverReportePedido', reporteId, accion, razon: _combinarRazonReporte(motivoReporte, razon) });
+      if (!data.ok) { alert('Error: ' + data.error); return; }
+      if (cancelar && !data.pedidoCancelado) alert('El pedido ya estaba cerrado; se archivó el reporte.');
+      loadReportesPedidos();
+    } catch (err) { alert('Error de conexión.'); }
+  };
+  if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, cancelar ? 'Cancelando…' : 'Marcando…');
+  else await runFn();
+};
