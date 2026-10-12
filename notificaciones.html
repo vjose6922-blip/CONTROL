@@ -4,11 +4,11 @@
   <script>
 
     (function() {
-      const token = sessionStorage.getItem('admin_token');
-      const session = sessionStorage.getItem('admin_session');
-      if (!token || session !== 'true') {
-        window.location.replace('vendedor.html');
-      }
+      if (sessionStorage.getItem('admin_token') && sessionStorage.getItem('admin_session') === 'true') return;
+      // Sin sesión (p. ej. se abrió desde un push en una pestaña nueva): ir al login
+      // y volver aquí al terminar (ver _irADestinoPendiente en admin.js).
+      sessionStorage.setItem('admin_next', 'notificaciones.html' + location.hash);
+      window.location.replace('index.html');
     })();
   </script>
  <meta charset="UTF-8">
@@ -293,11 +293,6 @@ border-radius: 8px;
 </head>
 <body class="theme-aeromexico">
 
- <script>
- if (!sessionStorage.getItem('admin_token')) {
- window.location.replace('index.html');
- }
- </script>
  <div id="global-loader" class="global-loader hidden">
  <div class="loader-spinner"></div>
  <div class="loader-text">Cargando...</div>

@@ -889,7 +889,7 @@ window.adminAprobarBeneficiario = async function(id, btn) {
     const data  = await res.json();
     if (!data.ok) { alert('Error: ' + data.error); return; }
     if (data.codigo && data.telefono) {
-      const urlVendedor = window.location.origin + '/vendedor.html';
+      const urlVendedor = 'https://znrcommunity.com/vendedor.html';
       const msg = `¡Felicidades ${data.nombre || ''}! 🎉\n\nTu solicitud de beneficiario en Z&R fue *aprobada*.\n\nTu contraseña temporal:\n*${data.codigo}*\n\nIngresa en:\n${urlVendedor}\n\nUsa tu número de WhatsApp como usuario.`;
       window.open(`https://wa.me/52${data.telefono}?text=${encodeURIComponent(msg)}`, '_blank');
     }

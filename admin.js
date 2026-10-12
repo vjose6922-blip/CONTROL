@@ -131,6 +131,14 @@ function _guardarSesionEnDispositivo() {
   });
 }
 
+// Si el admin llegó a notificaciones.html sin sesión (p. ej. desde un push),
+// esa página lo mandó a iniciar sesión aquí guardando el destino: al terminar, lo regresamos.
+function _irADestinoPendiente() {
+  const next = sessionStorage.getItem("admin_next");
+  sessionStorage.removeItem("admin_next");
+  if (/^notificaciones\.html(#[\w-]+)?$/.test(next || "")) location.replace(next);
+}
+
 function _borrarSesionDelDispositivo() {
   LS_SESSION_KEYS.forEach((k) => localStorage.removeItem(k));
   localStorage.removeItem("biometric_enabled");
@@ -239,7 +247,8 @@ loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
 aplicarVisibilidadPorRol();
-_ofrecerActivarBiometrico("Master");
+await _ofrecerActivarBiometrico("Master");
+_irADestinoPendiente();
 } catch (err) {
 console.error(err);
 await showCustomAlert({
@@ -288,7 +297,8 @@ loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
 aplicarVisibilidadPorRol();
-_ofrecerActivarBiometrico(data.nombre || "tu cuenta");
+await _ofrecerActivarBiometrico(data.nombre || "tu cuenta");
+_irADestinoPendiente();
 } catch (err) {
 console.error(err);
 await showCustomAlert({
@@ -1869,6 +1879,7 @@ sessionStorage.setItem("admin_ciudad", data.ciudad || "");
 
 if (sesionValida) {
 adminSession = "ok";
+_irADestinoPendiente();
 document.getElementById("admin-login-view").hidden = true;
 document.getElementById("admin-panel-view").hidden = false;
 setTimeout(() => {
@@ -2159,7 +2170,7 @@ const mensaje =
 `Hola ${nombre}, tu cuenta de vendedor en Z&R Comunidad ha sido *aprobada*.\n\n` +
 `*Tu contraseña temporal es:* ${data.codigo}\n\n` +
 `Puedes cambiarla después de iniciar sesión.\n\n` +
-` Accede aquí: znr.com/vendedor.html\n\n` +
+` Accede aquí: znrcommunity.com/vendedor.html\n\n` +
 `¡Bienvenido! `;
 if (isMobile) {
 if (waWindow) waWindow.close();
