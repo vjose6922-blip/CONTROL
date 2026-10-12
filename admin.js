@@ -1898,6 +1898,7 @@ showTemporaryMessage(" Sesión expirada, inicia sesión de nuevo", "error");
 
 console.warn("No se pudo verificar sesión con el servidor, confiando en sessionStorage:", e);
 adminSession = "ok";
+_irADestinoPendiente();
 document.getElementById("admin-login-view").hidden = true;
 document.getElementById("admin-panel-view").hidden = false;
 initImageUploads();

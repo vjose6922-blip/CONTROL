@@ -85,7 +85,10 @@ function getCacheStrategy(request) {
   if (url.hostname.includes('wttr.in')) return 'NETWORK_ONLY';
   if (url.hostname.includes('firebaseio.com')) return 'NETWORK_FIRST';
   if (API_DOMAINS.some(d => url.hostname.includes(d))) return 'NETWORK_FIRST';
-  if (['document', 'style', 'script'].includes(request.destination)) return 'STALE_WHILE_REVALIDATE';
+  // HTML y JS siempre por red primero (y sin pasar por el caché del CDN): así un despliegue
+  // se ve en la primera carga, no en la segunda.
+  if (['document', 'script'].includes(request.destination)) return 'NETWORK_FIRST_FRESH';
+  if (request.destination === 'style') return 'STALE_WHILE_REVALIDATE';
   return 'CACHE_FIRST';
 }
 
@@ -101,6 +104,7 @@ self.addEventListener('fetch', event => {
     CACHE_FIRST:            cacheFirst,
     NETWORK_ONLY:           networkOnly,
     NETWORK_FIRST:          networkFirst,
+    NETWORK_FIRST_FRESH:    networkFirstFresh,
     STALE_WHILE_REVALIDATE: staleWhileRevalidate,
   };
   event.respondWith((handlers[strategy] || networkFirst)(event.request));
@@ -127,6 +131,25 @@ async function networkOnly(request) {
     return new Response(JSON.stringify(null), {
       status: 503, headers: { 'Content-Type': 'application/json' }
     });
+  }
+}
+
+// Red primero con un parámetro que cambia en cada intento, para que el CDN de GitHub Pages
+// no devuelva una copia vieja. Se guarda bajo la URL original para el respaldo sin conexión.
+async function networkFirstFresh(request) {
+  const bustUrl = new URL(request.url);
+  bustUrl.searchParams.set('_swfresh', Date.now().toString());
+  try {
+    const net = await fetch(bustUrl.toString(), { cache: 'no-store' });
+    if (net?.status === 200) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, net.clone());
+    }
+    return net;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    throw new Error('Offline');
   }
 }
 
