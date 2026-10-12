@@ -1594,3 +1594,187 @@ window.adminResolverReportePedido = async function(reporteId, accion, btn) {
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, cancelar ? 'Cancelando…' : 'Marcando…');
   else await runFn();
 };
+
+// ─────────────────────────────────────────────────────────────
+// Feedback de usuarios (compradores y vendedores) — ventas-api
+// Lista los reportes abiertos (nuevo / en revisión); al resolver o
+// descartar salen de la lista, igual que los demás reportes.
+// ─────────────────────────────────────────────────────────────
+const FEEDBACK_API_URL_NOTIF = "https://ventas-api-1038143238323.us-central1.run.app";
+const _FB_TIPOS = { error: 'Error', inesperado: 'No funciona como esperaba', sugerencia: 'Sugerencia', otro: 'Otro' };
+
+async function _postFeedbackApi(params) {
+  const token = sessionStorage.getItem('admin_token') || '';
+  const res = await fetch(FEEDBACK_API_URL_NOTIF, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ ...params, token }).toString()
+  });
+  return res.json();
+}
+
+window.loadFeedbackReportes = async function() {
+  const list = document.getElementById('admin-feedback-list');
+  if (!list) return;
+  list.innerHTML = window.znrSkeletonRows(3);
+  try {
+    const token = sessionStorage.getItem('admin_token') || '';
+    const res = await fetch(FEEDBACK_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'listarFeedback', estado: 'abiertos', token }));
+    const data = await res.json();
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${_escPed(data.error)}</p>`; return; }
+    const items = data.items || [];
+
+    if (window._updateNotifTabBadge) window._updateNotifTabBadge('feedback', items.length);
+    else {
+      const badge = document.getElementById('tab-badge-feedback');
+      const cnt = document.getElementById('sc-feedback');
+      if (badge) badge.textContent = items.length;
+      if (cnt) cnt.textContent = items.length;
+    }
+
+    if (!items.length) {
+      list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay reportes de feedback pendientes de revisar.</p>';
+      return;
+    }
+    items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+    list.innerHTML = items.map(r => {
+      const quien = (r.reporter && (r.reporter.nombre || (r.reporter.telefono ? '+' + r.reporter.telefono : ''))) || 'Anónimo';
+      const rolTxt = r.rol === 'vendedor' ? 'Vendedor' : 'Comprador';
+      const id = _escPed(r.id);
+      return `
+      <div class="reporte-row" data-feedback-id="${id}">
+        <div class="info">
+          <strong>${Icon('flag',{size:14})} ${_escPed(_FB_TIPOS[r.tipo] || r.tipo)}${r.area ? ' · ' + _escPed(r.area) : ''}${r.estado === 'en_revision' ? ' · En revisión' : ''}${r.tieneCaptura ? ' · con captura' : ''}</strong>
+          <span>${rolTxt}: ${_escPed(quien)}${r.reporter && r.reporter.verificado ? '' : ' (sin verificar)'}</span><br>
+          <span>${r.fecha ? new Date(r.fecha).toLocaleString('es-MX') : ''}${r.pagina ? ' · ' + _escPed(r.pagina) : ''}</span>
+          <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${_escPed(r.mensaje)}</div>
+        </div>
+        <div class="actions">
+          <button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" onclick="adminVerFeedback('${id}')">${Icon('chat-bubble',{size:13})} Ver detalle</button>
+          ${r.estado === 'nuevo' ? `<button class="btn-marcar-revisado" onclick="adminActualizarFeedback('${id}', 'en_revision', this)">${Icon('clock',{size:13})} En revisión</button>` : ''}
+          <button class="btn-marcar-revisado" onclick="adminActualizarFeedback('${id}', 'resuelto', this)">${_icCheck} Resuelto</button>
+          <button class="btn-suspend" onclick="adminActualizarFeedback('${id}', 'descartado', this)">${Icon('ban',{size:13})} Descartar</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    list.innerHTML = '<p style="color:#ef4444;text-align:center;padding:16px;">Error de conexión.</p>';
+  }
+};
+
+function _inyectarEstilosFeedback() {
+  if (document.getElementById('fb-estilos')) return;
+  const st = document.createElement('style');
+  st.id = 'fb-estilos';
+  st.textContent = `
+    .fb-overlay { position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,.75); display:flex; align-items:center; justify-content:center; padding:12px; }
+    .fb-modal { background:#1c1e26; color:#fff; width:100%; max-width:640px; max-height:94vh; overflow:auto; border-radius:16px; padding:14px; }
+    .fb-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .fb-head strong { font-size:14px; line-height:1.3; }
+    .fb-cerrar { border:none; background:rgba(255,255,255,.12); color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; flex-shrink:0; }
+    .fb-sec { background:rgba(255,255,255,.06); border-radius:10px; padding:8px 10px; margin-bottom:8px; font-size:13px; line-height:1.4; white-space:pre-wrap; word-break:break-word; }
+    .fb-sec h5 { margin:0 0 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:#aab; }
+    .fb-sec pre { margin:0; font-size:11px; white-space:pre-wrap; word-break:break-word; color:#cfd3e0; }
+    .fb-sec img { max-width:100%; border-radius:8px; cursor:zoom-in; display:block; }
+    .fb-acciones { display:flex; gap:8px; margin-top:6px; }
+    .fb-acciones button { flex:1; padding:9px; border-radius:10px; border:none; font-weight:700; cursor:pointer; background:#6d28d9; color:#fff; }
+  `;
+  document.head.appendChild(st);
+}
+
+function _fbTextoReporte(i) {
+  const f = i.fecha ? new Date(i.fecha).toLocaleString('es-MX') : '';
+  const r = i.reporter || {};
+  return [
+    `REPORTE ${i.id} — ${_FB_TIPOS[i.tipo] || i.tipo}`,
+    `Fecha: ${f} | Reporta: ${i.rol} ${r.nombre || ''} ${r.telefono ? '+' + r.telefono : ''}${r.verificado ? ' (verificado)' : ''}`,
+    `Página: ${i.pagina || '-'} | Área: ${i.area || '-'}`,
+    '', 'QUÉ PASÓ:', i.mensaje,
+    i.pasos ? '\nPASOS PARA REPETIRLO:\n' + i.pasos : '',
+    i.esperado ? '\nQUÉ ESPERABA:\n' + i.esperado : '',
+    '', 'INFO TÉCNICA:', JSON.stringify(i.tecnico || {}, null, 2)
+  ].filter(x => x !== '').join('\n');
+}
+
+window.adminVerFeedback = async function(id) {
+  _inyectarEstilosFeedback();
+  const overlay = document.createElement('div');
+  overlay.className = 'fb-overlay';
+  overlay.innerHTML = `
+    <div class="fb-modal" role="dialog" aria-modal="true">
+      <div class="fb-head"><strong id="fb-titulo">Reporte de feedback</strong>
+        <button type="button" class="fb-cerrar" id="fb-cerrar" aria-label="Cerrar">${Icon('x',{size:16})}</button></div>
+      <div id="fb-body"><p style="text-align:center;color:#cfd3e0;padding:18px;">Cargando…</p></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const onKey = (e) => { if (e.key === 'Escape') cerrar(); };
+  function cerrar() { document.removeEventListener('keydown', onKey); overlay.remove(); }
+  document.getElementById('fb-cerrar').addEventListener('click', cerrar);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) cerrar(); });
+  document.addEventListener('keydown', onKey);
+  const body = document.getElementById('fb-body');
+
+  let data;
+  try {
+    const token = sessionStorage.getItem('admin_token') || '';
+    const res = await fetch(FEEDBACK_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'obtenerFeedback', id, token }));
+    data = await res.json();
+  } catch (e) { body.innerHTML = '<p style="text-align:center;color:#cfd3e0;padding:18px;">Error de conexión.</p>'; return; }
+  if (!data || !data.ok) { body.innerHTML = `<p style="text-align:center;color:#cfd3e0;padding:18px;">${_escPed((data && data.error) || 'No se pudo abrir')}</p>`; return; }
+
+  const i = data.item;
+  const r = i.reporter || {};
+  document.getElementById('fb-titulo').textContent = _FB_TIPOS[i.tipo] || 'Reporte de feedback';
+  body.innerHTML = `
+    <div class="fb-sec"><h5>Quién reporta</h5>${i.rol === 'vendedor' ? 'Vendedor' : 'Comprador'} · ${_escPed(r.nombre || 'Sin nombre')}${r.telefono ? ' · +' + _escPed(r.telefono) : ''} ${r.verificado ? '(verificado)' : '(teléfono sin verificar)'}\n${i.fecha ? new Date(i.fecha).toLocaleString('es-MX') : ''} · página: ${_escPed(i.pagina || '-')} · área: ${_escPed(i.area || '-')}</div>
+    <div class="fb-sec"><h5>Qué pasó</h5>${_escPed(i.mensaje)}</div>
+    ${i.pasos ? `<div class="fb-sec"><h5>Pasos para repetirlo</h5>${_escPed(i.pasos)}</div>` : ''}
+    ${i.esperado ? `<div class="fb-sec"><h5>Qué esperaba</h5>${_escPed(i.esperado)}</div>` : ''}
+    ${i.captura ? `<div class="fb-sec"><h5>Captura</h5><img id="fb-captura" src="${_escPed(i.captura)}" alt="Captura del usuario"></div>` : ''}
+    <div class="fb-sec"><h5>Información técnica</h5><pre>${_escPed(JSON.stringify(i.tecnico || {}, null, 2))}</pre></div>
+    ${i.notaAdmin ? `<div class="fb-sec"><h5>Nota del admin</h5>${_escPed(i.notaAdmin)}</div>` : ''}
+    <div class="fb-acciones"><button type="button" id="fb-copiar">Copiar reporte</button></div>
+    <p id="fb-msg" style="text-align:center;font-size:12px;min-height:16px;margin:8px 0 0;color:#cfd3e0;"></p>`;
+
+  const cap = document.getElementById('fb-captura');
+  if (cap) cap.addEventListener('click', async () => {
+    try { const blob = await (await fetch(i.captura)).blob(); window.open(URL.createObjectURL(blob), '_blank', 'noopener'); } catch (_) {}
+  });
+  document.getElementById('fb-copiar').addEventListener('click', async () => {
+    const msg = document.getElementById('fb-msg');
+    try { await navigator.clipboard.writeText(_fbTextoReporte(i)); msg.textContent = 'Copiado: pégalo donde quieras analizar el error.'; }
+    catch (_) { msg.textContent = 'No se pudo copiar.'; }
+  });
+};
+
+window.adminActualizarFeedback = async function(id, estado, btn) {
+  let nota = '';
+  if (estado !== 'en_revision') {
+    const resolver = estado === 'resuelto';
+    const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+      showCustomConfirm({
+        title: resolver ? 'Marcar como resuelto' : 'Descartar reporte',
+        message: resolver ? '¿Marcar este reporte como resuelto? Sale de la lista de pendientes.' : '¿Descartar este reporte? Sale de la lista de pendientes.',
+        icon: '', confirmText: resolver ? 'Sí, resuelto' : 'Sí, descartar', cancelText: 'Volver',
+        askReason: true,
+        reasonPlaceholder: resolver ? 'Qué se encontró / corrigió (opcional)' : 'Por qué se descarta (opcional)',
+        onConfirm: (r) => resolve(r === undefined ? '' : r),
+        onCancel: () => resolve(null)
+      });
+    }) : (confirm(resolver ? '¿Marcar como resuelto?' : '¿Descartar este reporte?') ? '' : null);
+    if (razon === null) return;
+    nota = razon || '';
+  }
+  const runFn = async () => {
+    try {
+      const params = { action: 'actualizarFeedback', id, estado };
+      if (nota) params.notaAdmin = nota;
+      const data = await _postFeedbackApi(params);
+      if (!data.ok) { alert('Error: ' + data.error); return; }
+      loadFeedbackReportes();
+    } catch (err) { alert('Error de conexión.'); }
+  };
+  if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Guardando…');
+  else await runFn();
+};
