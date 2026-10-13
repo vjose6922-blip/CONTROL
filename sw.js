@@ -38,6 +38,7 @@ const API_DOMAINS      = [
   'ventas-api-1038143238323.us-central1.run.app',
   'live-api-1038143238323.us-central1.run.app',
   'pedidos-api-1038143238323.us-central1.run.app',
+  'historias-api-1038143238323.us-central1.run.app',
   'admin-api-1038143238323.us-central1.run.app',
   'beneficiarios-api-1038143238323.us-central1.run.app',
   'tienda-znr-api-1038143238323.us-central1.run.app',
@@ -168,7 +169,8 @@ async function networkFirst(request) {
                          'marcarProductoConfiable', 'reportarProducto', 'marcarReporteRevisado',
                          'marcarNotificacionLeida', 'marcarTodasNotificacionesLeidas',
                          'responderSolicitudPlus', 'solicitudesPlus', 'obtenerResumenPlanPlus',
-                         'obtenerReportesLive', 'obtenerClipReporteLive', 'obtenerReportesPedido'];
+                         'obtenerReportesLive', 'obtenerClipReporteLive', 'obtenerReportesPedido',
+                         'obtenerReportesHistorias', 'resolverReporteHistoria'];
       if (!action || !sensitive.includes(action)) {
         const cache = await caches.open(DYNAMIC_CACHE);
         cache.put(request, net.clone());

@@ -1596,6 +1596,104 @@ window.adminResolverReportePedido = async function(reporteId, accion, btn) {
 };
 
 // ─────────────────────────────────────────────────────────────
+// Reportes de historias de vendedores — historias-api
+// Un renglón por historia reportada (con todos los motivos). Al
+// resolver, el reporte sale de la lista, igual que los demás.
+// ─────────────────────────────────────────────────────────────
+const HISTORIAS_API_URL_NOTIF = "https://historias-api-1038143238323.us-central1.run.app";
+
+window.loadReportesHistorias = async function() {
+  const list = document.getElementById('admin-reportes-historias-list');
+  if (!list) return;
+  list.innerHTML = window.znrSkeletonRows(3);
+  try {
+    const token = sessionStorage.getItem('admin_token') || '';
+    const res = await fetch(HISTORIAS_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'obtenerReportesHistorias', token }));
+    const data = await res.json();
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${_escPed(data.error)}</p>`; return; }
+    const reportes = data.reportes || [];
+
+    if (window._updateNotifTabBadge) window._updateNotifTabBadge('reportes_historias', reportes.length);
+    else {
+      const badge = document.getElementById('tab-badge-reportes_historias');
+      const cnt = document.getElementById('sc-reportes_historias');
+      if (badge) badge.textContent = reportes.length;
+      if (cnt) cnt.textContent = reportes.length;
+    }
+
+    if (!reportes.length) {
+      list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay reportes de historias pendientes de revisar.</p>';
+      return;
+    }
+
+    list.innerHTML = reportes.map(r => {
+      const media = r.historiaExiste && r.url
+        ? (r.tipo === 'video'
+            ? `<video src="${_escPed(r.url)}#t=0.1" controls playsinline preload="metadata" style="width:104px;height:184px;object-fit:cover;border-radius:10px;background:#000;flex-shrink:0;"></video>`
+            : `<img src="${_escPed(r.url)}" alt="Historia reportada" loading="lazy" onclick="window.open(this.src,'_blank','noopener')" style="width:104px;height:184px;object-fit:cover;border-radius:10px;background:#000;flex-shrink:0;cursor:zoom-in;">`)
+        : `<div style="width:104px;height:184px;border-radius:10px;background:rgba(0,0,0,.08);color:#999;font-size:.72rem;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;flex-shrink:0;">Ya no está disponible</div>`;
+      const estado = !r.historiaExiste ? 'Ya expiró o fue eliminada' : (r.oculta ? 'Oculta automáticamente' : 'Visible');
+      const motivos = (r.motivos || []).slice(0, 5).map(m =>
+        `<li>${_escPed(m.motivo)} <span style="color:#999;">· ${m.fecha ? new Date(m.fecha).toLocaleString('es-MX') : ''}</span></li>`).join('');
+      const mas = (r.motivos || []).length > 5 ? `<li style="color:#999;">y ${r.motivos.length - 5} más…</li>` : '';
+      const motivoResumen = _escPed([...new Set((r.motivos || []).map(m => m.motivo))].join(', ').slice(0, 160));
+      return `
+      <div class="reporte-row" data-historia-id="${_escPed(r.historiaId)}">
+        <div class="info" style="display:flex;gap:12px;align-items:flex-start;">
+          ${media}
+          <div style="min-width:0;">
+            <strong>${Icon('flag',{size:14})} Historia de ${_escPed(r.vendedor || 'vendedor')} · ${r.total} reporte${r.total === 1 ? '' : 's'}</strong>
+            <span>${r.tipo === 'video' ? 'Video' : 'Foto'} · ${_escPed(estado)}${r.ciudad ? ' · ' + _escPed(r.ciudad) : ''}${r.expiraEn && r.historiaExiste ? ' · expira ' + new Date(r.expiraEn).toLocaleString('es-MX') : ''}</span>
+            <ul style="margin:8px 0 0;padding-left:18px;font-size:.82rem;line-height:1.5;">${motivos}${mas}</ul>
+          </div>
+        </div>
+        <div class="actions">
+          ${r.historiaExiste ? `<button class="btn-suspend" data-motivo="${motivoResumen}" onclick="adminResolverReporteHistoria('${_escPed(r.historiaId)}', 'eliminar', this)">${Icon('trash',{size:13})} Eliminar historia</button>` : ''}
+          <button class="btn-marcar-revisado" data-motivo="${motivoResumen}" onclick="adminResolverReporteHistoria('${_escPed(r.historiaId)}', 'sin_accion', this)">${_icCheck} ${r.historiaExiste ? (r.oculta ? 'Revisada: que se vea' : 'Marcar revisado') : 'Archivar reporte'}</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    list.innerHTML = '<p style="color:#ef4444;text-align:center;padding:16px;">Error de conexión.</p>';
+  }
+};
+
+window.adminResolverReporteHistoria = async function(historiaId, accion, btn) {
+  const eliminar = accion === 'eliminar';
+  const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
+  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+    showCustomConfirm({
+      title: eliminar ? 'Eliminar historia' : 'Marcar revisado',
+      message: eliminar
+        ? '¿Eliminar esta historia? Se borra para siempre y el reporte se archiva.'
+        : '¿Marcar este reporte como revisado? La historia se queda (si estaba oculta, vuelve a verse).',
+      icon: '', confirmText: eliminar ? 'Sí, eliminar' : 'Sí, marcar revisado', cancelText: 'Volver',
+      askReason: true,
+      reasonPlaceholder: eliminar ? 'Qué encontraste y por qué la eliminas (opcional)' : 'Por qué no aplica (opcional) — ej. reporte falso',
+      onConfirm: (r) => resolve(r === undefined ? '' : r),
+      onCancel: () => resolve(null)
+    });
+  }) : (confirm(eliminar ? '¿Eliminar esta historia?' : '¿Marcar este reporte como revisado?') ? '' : null);
+  if (razon === null) return;
+  const runFn = async () => {
+    try {
+      const token = sessionStorage.getItem('admin_token') || '';
+      const res = await fetch(HISTORIAS_API_URL_NOTIF, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ action: 'resolverReporteHistoria', historiaId, accion, token, razon: _combinarRazonReporte(motivoReporte, razon) }).toString()
+      });
+      const data = await res.json();
+      if (!data.ok) { alert('Error: ' + data.error); return; }
+      loadReportesHistorias();
+      if (typeof checkNotifications === 'function') checkNotifications();
+    } catch (err) { alert('Error de conexión.'); }
+  };
+  if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, eliminar ? 'Eliminando…' : 'Marcando…');
+  else await runFn();
+};
+
+// ─────────────────────────────────────────────────────────────
 // Feedback de usuarios (compradores y vendedores) — ventas-api
 // Lista los reportes abiertos (nuevo / en revisión); al resolver o
 // descartar salen de la lista, igual que los demás reportes.

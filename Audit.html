@@ -351,7 +351,7 @@
         aprobarSolicitudBeneficiario: "Aprobar solicitud de beneficiario", rechazarSolicitudBeneficiario: "Rechazar solicitud de beneficiario",
         aprobarProductoComunidad: "Aprobar producto de comunidad", rechazarProductoComunidad: "Rechazar producto de comunidad",
         marcarReporteRevisado: "Marcar reporte revisado", marcarReporteLiveRevisado: "Marcar reporte de live revisado",
-        verConversacionPedido: "Revisar conversación reportada", resolverReportePedido: "Resolver reporte de pedido personalizado",
+        verConversacionPedido: "Revisar conversación reportada", resolverReportePedido: "Resolver reporte de pedido personalizado", resolverReporteHistoria: "Resolver reporte de historia",
         crearAdmin: "Crear admin", desactivarAdmin: "Desactivar admin", reactivarAdmin: "Reactivar admin",
         iniciarTransicionAdmin: "Iniciar transición de admin", promoverModerador: "Promover moderador a admin",
         eliminarAdmin: "Eliminar admin", cambiarPasswordAdmin: "Cambiar contraseña de admin",
@@ -372,7 +372,7 @@
         vendedorNuevo: "Alta de vendedor", cambioTelefono: "Cambio de teléfono",
         resetPassword: "Reset de contraseña", solicitudPlus: "Solicitud Plan Plus",
         productoComunidad: "Producto de comunidad", reporteProducto: "Reporte de producto",
-        reporteLive: "Reporte de live", beneficiarioNuevo: "Alta de beneficiario",
+        reporteLive: "Reporte de live", reporteHistoria: "Reporte de historia", beneficiarioNuevo: "Alta de beneficiario",
         reporteBeneficiario: "Reporte de beneficiario", solicitudBeneficiario: "Solicitud de beneficiario",
     };
     async function obtenerFilasAuditoria(dias) {
@@ -397,7 +397,7 @@
         // Usuario/Rol asignado todavía (nadie lo ha tomado) y con Estado
         // "Pendiente", para que se pueda filtrar junto con lo Completado
         // en la misma columna en vez de verlo aparte en un resumen.
-        // Para los tipos que son un reporte (reporteProducto/reporteLive/
+        // Para los tipos que son un reporte (reporteProducto/reporteLive/reporteHistoria/
         // reporteBeneficiario), `detalle` trae el motivo que escribió quien
         // reportó — se muestra en la misma columna Razón que usan las
         // acciones ya resueltas, aunque acá no la escribió el staff.
