@@ -1217,7 +1217,6 @@ async function openPlanPlusResumenModal() {
   const rol   = sessionStorage.getItem('admin_rol') || 'master';
   const api   = "https://vendedores-api-1038143238323.us-central1.run.app";
   const esMaster = rol === 'master';
-  const ciudades = (window.ZNR_CIUDADES || []).map(c => c.ciudad).sort();
 
   const modal = document.createElement('div');
   modal.id = 'modal-plan-plus-resumen';
@@ -1230,14 +1229,13 @@ async function openPlanPlusResumenModal() {
     ${esMaster ? `
     <div style="padding:14px 20px 0;">
       <label style="font-size:.72rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px;">Ciudad</label>
-      <select id="ppr-ciudad-select" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--modal-border);background:var(--modal-bg);color:var(--modal-text);">
-        <option value="">Todas (global)</option>
-        ${ciudades.map(c => `<option value="${c}">${c}</option>`).join('')}
-      </select>
+      <select id="ppr-estado-select" style="width:100%;padding:10px;margin-bottom:8px;border-radius:10px;border:1.5px solid var(--modal-border);background:var(--modal-bg);color:var(--modal-text);"></select>
+      <select id="ppr-ciudad-select" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--modal-border);background:var(--modal-bg);color:var(--modal-text);"></select>
     </div>` : ''}
     <div id="ppr-body" style="padding:18px 20px;">Cargando…</div>
   </div>`;
   document.body.appendChild(modal);
+  if (esMaster) enlazarEstadoCiudad(document.getElementById('ppr-estado-select'), document.getElementById('ppr-ciudad-select'), 'Todas (global)');
   document.getElementById('btn-close-plan-plus-resumen').onclick = () => modal.remove();
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
@@ -2311,3 +2309,26 @@ document.getElementById('theme-toggle')?.addEventListener('click', () => {
   document.documentElement.dataset.theme = next;
   localStorage.setItem('theme', next);
 });
+
+// ── Llamada directa a vendedores-api con el token del admin ──
+const _vApi = (action, extra = {}) => fetch("https://vendedores-api-1038143238323.us-central1.run.app", {
+  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ action, token: sessionStorage.getItem('admin_token') || '', ...extra }),
+}).then(r => r.json()).catch(e => ({ ok: false, error: e.message }));
+
+// Llena contacto_admin (botón de WhatsApp por ciudad) con los admins que ya existían.
+async function sincronizarContactosAdminsBtn() {
+  const res = await _vApi('sincronizarContactosAdmins');
+  alert(res.ok ? `Listo — ${res.ciudades} ciudades sincronizadas` : 'Error: ' + (res.error || ''));
+}
+window.sincronizarContactosAdminsBtn = sincronizarContactosAdminsBtn;
+
+// Migración única: ciudad "Nuevo Laredo" → "Nuevo Laredo, Tamaulipas". Primero simula y pregunta; después aplica.
+async function migrarCiudadesBtn() {
+  const sim = await _vApi('migrarCiudadesConEstado');
+  if (!sim.ok) return alert('Error: ' + (sim.error || ''));
+  if (!confirm(`Simulación (aún no se cambió nada)\nPor colección: ${JSON.stringify(sim.actualizados)}\nSin equivalencia: ${JSON.stringify(sim.sinEquivalencia)}\n\n¿Aplicar la migración?`)) return;
+  const r = await _vApi('migrarCiudadesConEstado', { aplicar: true });
+  alert(r.ok ? 'Migración aplicada: ' + JSON.stringify(r.actualizados) : 'Error: ' + (r.error || ''));
+}
+window.migrarCiudadesBtn = migrarCiudadesBtn;

@@ -90,6 +90,8 @@
       <button type="button" class="admin-mini-card" data-tool="backfillcomunidad"><span class="amc-label">Asignar ciudad retroactiva (Comunidad)</span></button>
       <button type="button" class="admin-mini-card" data-tool="backfillznr"><span class="amc-label">Asignar ciudad retroactiva (Z&amp;R)</span></button>
       <button type="button" class="admin-mini-card" data-tool="planplusadmins"><span class="amc-label">Plan Plus retroactivo (admins/moderadores)</span></button>
+      <button type="button" class="admin-mini-card" data-tool="contactoadmins"><span class="amc-label">Sincronizar WhatsApp de admins por ciudad</span></button>
+      <button type="button" class="admin-mini-card" data-tool="migrarciudades"><span class="amc-label">Migrar ciudades a formato Ciudad, Estado</span></button>
     </div>
   </section>
   <button type="button" id="tools-back" hidden style="margin-bottom:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:inherit;cursor:pointer;font-size:13px;padding:8px 16px;border-radius:20px;">&larr; Volver a herramientas</button>
@@ -125,7 +127,9 @@ const ACTION_TOOLS = {
   algolia: () => window.resincronizarComunidadAlgoliaBtn(),
   backfillcomunidad: () => window.backfillCiudadComunidadBtn(),
   backfillznr: () => window.asignarCiudadMasivaZNRBtn(),
-  planplusadmins: () => window.sincronizarPlanPlusAdminsBtn()
+  planplusadmins: () => window.sincronizarPlanPlusAdminsBtn(),
+  contactoadmins: () => window.sincronizarContactosAdminsBtn(),
+  migrarciudades: () => window.migrarCiudadesBtn()
 };
 
 function closeAllTools() {
