@@ -2319,7 +2319,7 @@ const _vApi = (action, extra = {}) => fetch("https://vendedores-api-103814323832
 // Llena contacto_admin (botón de WhatsApp por ciudad) con los admins que ya existían.
 async function sincronizarContactosAdminsBtn() {
   const res = await _vApi('sincronizarContactosAdmins');
-  alert(res.ok ? `Listo — ${res.ciudades} ciudades sincronizadas` : 'Error: ' + (res.error || ''));
+  alert(res.ok ? `Listo — ${res.ciudades} ciudades sincronizadas` + (res.master ? '' : '\n⚠ Falta el WhatsApp del Master: define la variable MASTER_WHATSAPP en vendedores-api') : 'Error: ' + (res.error || ''));
 }
 window.sincronizarContactosAdminsBtn = sincronizarContactosAdminsBtn;
 
