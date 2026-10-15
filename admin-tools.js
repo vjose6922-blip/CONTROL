@@ -784,11 +784,11 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 async function openDonacionesStatsModal() {
   const old = document.getElementById('modal-donaciones-stats');
   if (old) old.remove();
-  const token = sessionStorage.getItem('admin_token') || '';
+  const token = getAdminToken();
   const api   = window.API_URL || '';
-  const beneficiariosApi = "https://beneficiarios-api-1038143238323.us-central1.run.app";
-  const vendedoresApi = "https://vendedores-api-1038143238323.us-central1.run.app";
-  const catalogoApi = "https://catalogo-api-1038143238323.us-central1.run.app";
+  const beneficiariosApi = window.BENEFICIARIOS_API_URL;
+  const vendedoresApi = window.VENDEDORES_API_URL;
+  const catalogoApi = window.CATALOGO_API_URL;
 
   const modal = document.createElement('div');
   modal.id = 'modal-donaciones-stats';
@@ -807,10 +807,10 @@ async function openDonacionesStatsModal() {
   try {
     // Cargar vendedores, productos comunidad, beneficiarios y el historial de donaciones
     const [vRes, prodRes, benRes, donRes] = await Promise.all([
-      fetch(vendedoresApi + '?' + new URLSearchParams({ action:'vendedoresAdmin', token })).then(r=>r.json()).catch(()=>({})),
-      fetch(catalogoApi + '?' + new URLSearchParams({ action:'listarTodoComunidad', token })).then(r=>r.json()).catch(()=>({})),
-      fetch(beneficiariosApi + '?' + new URLSearchParams({ action:'obtenerBeneficiarios', token })).then(r=>r.json()).catch(()=>({})),
-      fetch(beneficiariosApi + '?' + new URLSearchParams({ action:'obtenerDonaciones', token })).then(r=>r.json()).catch(()=>({})),
+      apiFetch(vendedoresApi, { action:'vendedoresAdmin', token }).then(r=>r.json()).catch(()=>({})),
+      apiFetch(catalogoApi, { action:'listarTodoComunidad', token }).then(r=>r.json()).catch(()=>({})),
+      apiFetch(beneficiariosApi, { action:'obtenerBeneficiarios', token }).then(r=>r.json()).catch(()=>({})),
+      apiFetch(beneficiariosApi, { action:'obtenerDonaciones', token }).then(r=>r.json()).catch(()=>({})),
     ]);
     const vendors    = vRes.vendors || [];
     const products   = prodRes.products || [];
@@ -855,7 +855,6 @@ async function openDonacionesStatsModal() {
       .sort((a, b) => new Date(b.fecha_asignacion) - new Date(a.fecha_asignacion))
       .slice(0, 6);
 
-    const esc      = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const fmtMoney = v => '$' + Number(v||0).toLocaleString('es-MX');
     const fmtFecha = d => { try { return new Date(d).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' }); } catch(_) { return ''; } };
 
@@ -896,10 +895,10 @@ async function openDonacionesStatsModal() {
         return `
         <div style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <div style="display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:.85rem;font-weight:600;">${Icon('heart-fill')} ${esc(label)}</span>
+            <span style="font-size:.85rem;font-weight:600;">${Icon('heart-fill')} ${escapeHtml(label)}</span>
             <span style="background:#f97316;color:#fff;border-radius:20px;padding:2px 10px;font-size:.78rem;font-weight:700;">${info.count}</span>
           </div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:4px;">${fmtMoney(info.valor)} · donado por ${esc(vendsLabel || '—')}</div>
+          <div style="font-size:.72rem;color:#aaa;margin-top:4px;">${fmtMoney(info.valor)} · donado por ${escapeHtml(vendsLabel || '—')}</div>
         </div>`;
       }).join('')}` : '<p style="color:#aaa;text-align:center;padding:16px 0;">Aún no hay donaciones asignadas.</p>'}
 
@@ -907,7 +906,7 @@ async function openDonacionesStatsModal() {
       <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Top vendedores donadores</p>
       ${topVendedores.map((v, i) => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="font-size:.82rem;">${['🥇','🥈','🥉'][i] || '•'} ${esc(v.nombre)}</span>
+          <span style="font-size:.82rem;">${['🥇','🥈','🥉'][i] || '•'} ${escapeHtml(v.nombre)}</span>
           <span style="font-size:.75rem;color:#aaa;">${v.count} prod · ${fmtMoney(v.valor)}</span>
         </div>`).join('')}` : ''}
 
@@ -919,8 +918,8 @@ async function openDonacionesStatsModal() {
         const vNombre = prod.vendedor_nombre || vendorNameMap[d.vendedor_uid] || 'Vendedor';
         return `
         <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem;color:#ccc;">
-          <strong style="color:#fff;">${esc(prod.nombre || 'Producto')}</strong><br>
-          ${esc(vNombre)} ${Icon('arrow-right',{size:12})} ${esc(ben.nombre || 'beneficiario')} · <span style="color:#888;">${fmtFecha(d.fecha_asignacion)}</span>
+          <strong style="color:#fff;">${escapeHtml(prod.nombre || 'Producto')}</strong><br>
+          ${escapeHtml(vNombre)} ${Icon('arrow-right',{size:12})} ${escapeHtml(ben.nombre || 'beneficiario')} · <span style="color:#888;">${fmtFecha(d.fecha_asignacion)}</span>
         </div>`;
       }).join('')}` : ''}
     `;
@@ -935,7 +934,7 @@ async function openAnalyticsModal(period, source) {
   source = source || 'znr';
   const old = document.getElementById('modal-analytics');
   if (old) old.remove();
-  const token = sessionStorage.getItem('admin_token') || '';
+  const token = getAdminToken();
   const api   = window.API_URL || '';
   const periodLabels = { day:'Hoy', week:'Semana', month:'Mes', all:'Todo' };
   const sourceLabels = { znr:'Catálogo ZNR', comunidad:'Comunidad' };
@@ -970,11 +969,10 @@ async function openAnalyticsModal(period, source) {
   try {
     if (!token) throw new Error('Sin sesión de admin');
     const action = source === 'comunidad' ? 'getAnalyticsComunidad' : 'getAnalytics';
-    const apiUrl = source === 'comunidad' ? "https://ventas-api-1038143238323.us-central1.run.app" : "https://tienda-znr-api-1038143238323.us-central1.run.app";
-    const res = await fetch(apiUrl + '?' + new URLSearchParams({ action, token, period })).then(r=>r.json());
+    const apiUrl = source === 'comunidad' ? window.VENTAS_API_URL : window.TIENDA_ZNR_API_URL;
+    const res = await apiFetch(apiUrl, { action, token, period }).then(r=>r.json());
     if (!res.ok) throw new Error(res.error || 'Error del servidor');
 
-    const esc      = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const fmtMoney = v => '$' + Number(v||0).toLocaleString('es-MX');
     const byDay    = res.requestsByDay  || [];
     const topProds = res.topProducts    || [];
@@ -1024,7 +1022,7 @@ async function openAnalyticsModal(period, source) {
         ${byDay.map(d => `
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:flex-end;height:100%;">
             <div title="${d.count}" style="width:100%;max-width:30px;background:linear-gradient(180deg,#ff7a4f,#ff4f81);border-radius:6px 6px 2px 2px;height:${Math.max(4, (d.count/maxDay)*64)}px;"></div>
-            <span style="font-size:.62rem;color:#888;">${esc(d.label)}</span>
+            <span style="font-size:.62rem;color:#888;">${escapeHtml(d.label)}</span>
           </div>`).join('')}
       </div>` : '<p style="color:#aaa;text-align:center;padding:10px 0;">Sin solicitudes en este período.</p>'}
 
@@ -1033,7 +1031,7 @@ async function openAnalyticsModal(period, source) {
       ${topProds.map(p => `
         <div style="margin-bottom:9px;">
           <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px;">
-            <span style="color:#eee;">${esc(p.name)}</span><span style="color:#aaa;">${p.count}</span>
+            <span style="color:#eee;">${escapeHtml(p.name)}</span><span style="color:#aaa;">${p.count}</span>
           </div>
           <div style="background:rgba(255,255,255,.08);border-radius:20px;height:6px;overflow:hidden;">
             <div style="background:#ff4f81;height:100%;width:${(p.count/maxProd)*100}%;"></div>
@@ -1044,7 +1042,7 @@ async function openAnalyticsModal(period, source) {
       <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Top vendedores por ingresos</p>
       ${topVends.map((v, i) => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="font-size:.82rem;color:#eee;">${['🥇','🥈','🥉'][i] || '•'} ${esc(v.nombre)}</span>
+          <span style="font-size:.82rem;color:#eee;">${['🥇','🥈','🥉'][i] || '•'} ${escapeHtml(v.nombre)}</span>
           <span style="font-size:.75rem;color:#aaa;">${v.orders} ped · ${fmtMoney(v.revenue)}</span>
         </div>`).join('')}` : ''}
 
@@ -1052,7 +1050,7 @@ async function openAnalyticsModal(period, source) {
       <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Entregado / Sin stock por vendedor</p>
       ${vendorStatus.map(v => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.8rem;">
-          <span style="color:#eee;">${esc(v.nombre)}</span>
+          <span style="color:#eee;">${escapeHtml(v.nombre)}</span>
           <span style="display:flex;gap:6px;">
             <span title="Entregados" style="background:rgba(34,197,94,.15);color:#22c55e;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">✔ ${v.entregados}</span>
             <span title="Sin stock" style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">✖ ${v.sinStock}</span>
@@ -1062,21 +1060,20 @@ async function openAnalyticsModal(period, source) {
       <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Actividad reciente</p>
       ${recent.map(a => {
         const visual = STATUS_VISUAL[a.status] || { color:'#f97316', label:'Pendiente' };
-        const vendedorTxt = a.vendedor ? esc(a.vendedor) + ' · ' : '';
+        const vendedorTxt = a.vendedor ? escapeHtml(a.vendedor) + ' · ' : '';
         return `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem;">
-          <span style="color:#ccc;">${vendedorTxt}${a.items} producto${a.items===1?'':'s'} · ${esc(a.date)}</span>
+          <span style="color:#ccc;">${vendedorTxt}${a.items} producto${a.items===1?'':'s'} · ${escapeHtml(a.date)}</span>
           <span style="background:${visual.color};color:#fff;border-radius:20px;padding:2px 9px;font-size:.7rem;font-weight:700;">${visual.label}</span>
         </div>`;
       }).join('')}` : '')}
     `;
   } catch(e) {
-    bodyEl.innerHTML = '<p style="color:#ef4444;text-align:center;">Error al cargar estadísticas' + (e.message ? ': ' + esc_(e.message) : '') + '</p>';
+    bodyEl.innerHTML = '<p style="color:#ef4444;text-align:center;">Error al cargar estadísticas' + (e.message ? ': ' + escapeHtml(e.message) : '') + '</p>';
   }
 }
 
 
-function esc_(s) { return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 // ── Monitor de Errores (movido al panel de Notificaciones > Herramientas) ──
 // ── Reentrenar modelo de IA (auto-tag de categoría) ───────────────────────
@@ -1096,8 +1093,8 @@ async function resincronizarComunidadAlgoliaBtn() {
 
   showLoader('Resincronizando Comunidad con Algolia...');
   try {
-    const api = "https://catalogo-api-1038143238323.us-central1.run.app";
-    const token = sessionStorage.getItem('admin_token') || '';
+    const api = window.CATALOGO_API_URL;
+    const token = getAdminToken();
     if (!api || !token) {
       hideLoader();
       showCustomAlert({
@@ -1108,11 +1105,7 @@ async function resincronizarComunidadAlgoliaBtn() {
       });
       return;
     }
-    const res = await fetch(api, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ action: 'resincronizarComunidadAlgolia', token }).toString()
-    });
+    const res = await apiFetch(api, { action: 'resincronizarComunidadAlgolia', token }, true);
     const data = await res.json();
     hideLoader();
     if (!data || !data.ok) {
@@ -1158,8 +1151,8 @@ async function reentrenarModeloIA() {
 
   showLoader('Disparando reentrenamiento...');
   try {
-    const api = "https://admin-api-1038143238323.us-central1.run.app";
-    const token = sessionStorage.getItem('admin_token') || '';
+    const api = window.ADMIN_API_URL;
+    const token = getAdminToken();
     if (!api || !token) {
       hideLoader();
       showCustomAlert({
@@ -1170,11 +1163,7 @@ async function reentrenarModeloIA() {
       });
       return;
     }
-    const res = await fetch(api, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ action: 'reentrenarModeloIA', token }).toString()
-    });
+    const res = await apiFetch(api, { action: 'reentrenarModeloIA', token }, true);
     const data = await res.json();
     hideLoader();
     if (!data || !data.ok) {
@@ -1213,9 +1202,9 @@ async function reentrenarModeloIA() {
 async function openPlanPlusResumenModal() {
   const old = document.getElementById('modal-plan-plus-resumen');
   if (old) old.remove();
-  const token = sessionStorage.getItem('admin_token') || '';
+  const token = getAdminToken();
   const rol   = sessionStorage.getItem('admin_rol') || 'master';
-  const api   = "https://vendedores-api-1038143238323.us-central1.run.app";
+  const api   = window.VENDEDORES_API_URL;
   const esMaster = rol === 'master';
 
   const modal = document.createElement('div');
@@ -1240,7 +1229,6 @@ async function openPlanPlusResumenModal() {
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
   const bodyEl = document.getElementById('ppr-body');
-  const esc      = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmtMoney = v => '$' + Number(v || 0).toLocaleString('es-MX');
 
   async function cargar(ciudad) {
@@ -1249,7 +1237,7 @@ async function openPlanPlusResumenModal() {
       if (!token) throw new Error('Sin sesión de admin');
       const params = { action: 'obtenerResumenPlanPlus', token };
       if (ciudad) params.ciudad = ciudad;
-      const res = await fetch(api + '?' + new URLSearchParams(params)).then(r => r.json());
+      const res = await apiFetch(api, params).then(r => r.json());
       if (!res.ok) throw new Error(res.error || 'Error del servidor');
       const proximos = res.proximosVencimientos || [];
 
@@ -1259,12 +1247,12 @@ async function openPlanPlusResumenModal() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;">
           <div style="grid-column:span 2;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:14px;padding:16px;text-align:center;">
             <div style="font-size:2rem;font-weight:900;color:#22c55e;">${fmtMoney(res.mrr)}</div>
-            <div style="font-size:.75rem;color:#aaa;margin-top:2px;">MRR real${res.ciudad ? ' — ' + esc(res.ciudad) : ' (global)'} (${res.vendedoresActivos} × ${fmtMoney(res.precioMensual)}/mes)</div>
+            <div style="font-size:.75rem;color:#aaa;margin-top:2px;">MRR real${res.ciudad ? ' — ' + escapeHtml(res.ciudad) : ' (global)'} (${res.vendedoresActivos} × ${fmtMoney(res.precioMensual)}/mes)</div>
           </div>
           ${esMaster && res.ciudad ? `
           <div style="grid-column:span 2;background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.28);border-radius:14px;padding:16px;text-align:center;">
             <div style="font-size:1.7rem;font-weight:900;color:#eab308;">${fmtMoney(res.montoAdmin)}</div>
-            <div style="font-size:.75rem;color:#aaa;margin-top:2px;">Pago sugerido para el admin de ${esc(res.ciudad)} (${Math.round(res.porcentajeAdmin * 100)}% del MRR real — no incluye Plan Plus gratis por ser staff, y este monto no se paga solo)</div>
+            <div style="font-size:.75rem;color:#aaa;margin-top:2px;">Pago sugerido para el admin de ${escapeHtml(res.ciudad)} (${Math.round(res.porcentajeAdmin * 100)}% del MRR real — no incluye Plan Plus gratis por ser staff, y este monto no se paga solo)</div>
           </div>` : ''}
           <div style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:14px;text-align:center;">
             <div style="font-size:1.6rem;font-weight:900;color:#818cf8;">${res.vendedoresActivos}</div>
@@ -1277,22 +1265,22 @@ async function openPlanPlusResumenModal() {
         </div>
 
         ${esMaster && admins.length ? `
-        <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Pagar a ${admins.length > 1 ? 'los admins de ' + esc(res.ciudad) : 'el admin de ' + esc(res.ciudad)}</p>
+        <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Pagar a ${admins.length > 1 ? 'los admins de ' + escapeHtml(res.ciudad) : 'el admin de ' + escapeHtml(res.ciudad)}</p>
         ${admins.length > 1 ? `<p style="font-size:.72rem;color:#eab308;margin:0 0 12px;">Hay más de un admin activo en esta ciudad — el monto de arriba es el total de la ciudad, repártanlo entre ustedes.</p>` : ''}
         ${admins.map(a => `
           <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:10px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <span style="font-weight:700;font-size:.88rem;">${esc(a.nombre)}${a.activo ? '' : ' <span style="color:#ef4444;font-weight:600;font-size:.7rem;">(desactivado)</span>'}</span>
+              <span style="font-weight:700;font-size:.88rem;">${escapeHtml(a.nombre)}${a.activo ? '' : ' <span style="color:#ef4444;font-weight:600;font-size:.7rem;">(desactivado)</span>'}</span>
             </div>
             ${a.clabe ? `
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;">
-              <span style="font-size:.78rem;color:#ccc;">CLABE: <b style="font-family:monospace;letter-spacing:.03em;">${esc(a.clabe)}</b></span>
-              <button type="button" data-copy="${esc(a.clabe)}" style="background:rgba(99,102,241,.18);border:none;color:#a5b4fc;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copiar</button>
+              <span style="font-size:.78rem;color:#ccc;">CLABE: <b style="font-family:monospace;letter-spacing:.03em;">${escapeHtml(a.clabe)}</b></span>
+              <button type="button" data-copy="${escapeHtml(a.clabe)}" style="background:rgba(99,102,241,.18);border:none;color:#a5b4fc;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copiar</button>
             </div>` : ''}
             ${a.tarjeta ? `
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;">
-              <span style="font-size:.78rem;color:#ccc;">Tarjeta: <b style="font-family:monospace;letter-spacing:.03em;">${esc(a.tarjeta)}</b></span>
-              <button type="button" data-copy="${esc(a.tarjeta)}" style="background:rgba(99,102,241,.18);border:none;color:#a5b4fc;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copiar</button>
+              <span style="font-size:.78rem;color:#ccc;">Tarjeta: <b style="font-family:monospace;letter-spacing:.03em;">${escapeHtml(a.tarjeta)}</b></span>
+              <button type="button" data-copy="${escapeHtml(a.tarjeta)}" style="background:rgba(99,102,241,.18);border:none;color:#a5b4fc;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copiar</button>
             </div>` : ''}
             ${!a.clabe && !a.tarjeta ? '<p style="font-size:.76rem;color:#888;margin:4px 0;">Todavía no capturó CLABE ni tarjeta.</p>' : ''}
             <button type="button" ${a.pagado ? 'disabled' : `data-marcar-pago="${a.uid}"`}
@@ -1310,7 +1298,7 @@ async function openPlanPlusResumenModal() {
           const urgente = v.diasRestantes <= 7;
           return `
           <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-            <span style="font-size:.82rem;color:#eee;">${esc(v.nombre)}</span>
+            <span style="font-size:.82rem;color:#eee;">${escapeHtml(v.nombre)}</span>
             <span style="background:${urgente ? '#ef4444' : 'rgba(255,255,255,.1)'};color:#fff;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">${v.diasRestantes} día${v.diasRestantes === 1 ? '' : 's'}</span>
           </div>`;
         }).join('')}` : '<p style="color:#aaa;text-align:center;padding:16px 0;">Nadie vence en los próximos 30 días.</p>'}
@@ -1335,7 +1323,7 @@ async function openPlanPlusResumenModal() {
     }
     const pagoBtn = e.target.closest('[data-marcar-pago]');
     if (pagoBtn) {
-      if (!confirm('¿Confirmas que ya le transferiste este pago? No se puede desmarcar.')) return;
+      if (!await askConfirm('¿Confirmas que ya le transferiste este pago? No se puede desmarcar.')) return;
       pagoBtn.disabled = true;
       pagoBtn.textContent = 'Guardando…';
       try {
@@ -1347,7 +1335,7 @@ async function openPlanPlusResumenModal() {
         const ciudadActual = document.getElementById('ppr-ciudad-select')?.value || '';
         await cargar(ciudadActual);
       } catch (e2) {
-        alert('No se pudo marcar el pago: ' + (e2.message || ''));
+        askAlert('No se pudo marcar el pago: ' + (e2.message || ''));
         pagoBtn.disabled = false;
         pagoBtn.textContent = 'Marcar pagado';
       }
@@ -1373,7 +1361,7 @@ window.openSyncVendedorModal = function() {
     modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:19999;align-items:center;justify-content:center;';
     modal.innerHTML = `
       <div style="background:var(--modal-bg);color:var(--modal-text);border-radius:22px;padding:28px;max-width:400px;width:90%;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.3);">
-        <button onclick="document.getElementById('sync-vendedor-modal').style.display='none'" style="position:absolute;top:14px;right:14px;background:var(--modal-chip-bg);border:none;width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer;color:var(--modal-muted);">${Icon('x')}</button>
+        <button data-hide="sync-vendedor-modal" style="position:absolute;top:14px;right:14px;background:var(--modal-chip-bg);border:none;width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer;color:var(--modal-muted);">${Icon('x')}</button>
         <h3 style="margin:0 0 8px;font-size:18px;">${Icon('refresh')} Sincronizar productos de vendedor</h3>
         <p style="margin:0 0 18px;font-size:13px;color:#666;">Vuelve a sincronizar todos los productos publicados de un vendedor, según su UID.</p>
         <label style="font-size:12px;font-weight:700;color:#444;display:block;margin-bottom:6px;">UID del vendedor</label>
@@ -1400,8 +1388,8 @@ async function ejecutarSyncVendedor() {
     if (window.showTemporaryMessage) window.showTemporaryMessage('Ingresa el UID del vendedor', 'error');
     return;
   }
-  const api = "https://catalogo-api-1038143238323.us-central1.run.app";
-  const token = sessionStorage.getItem('admin_token') || '';
+  const api = window.CATALOGO_API_URL;
+  const token = getAdminToken();
   if (!api || !token) {
     showCustomAlert({
       title: 'Sin sesión activa',
@@ -1414,11 +1402,7 @@ async function ejecutarSyncVendedor() {
   document.getElementById('sync-vendedor-modal').style.display = 'none';
   showLoader('Sincronizando productos del vendedor...');
   try {
-    const res = await fetch(api, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ action: 'sincronizarProductosVendedor', vendedor_uid: vendedorUid, token }).toString()
-    });
+    const res = await apiFetch(api, { action: 'sincronizarProductosVendedor', vendedor_uid: vendedorUid, token }, true);
     const data = await res.json();
     hideLoader();
     if (!data || !data.ok) {
@@ -1463,13 +1447,13 @@ function openErrorMonitorModal() {
     </div>
     <div style="padding:16px 20px;">
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <button onclick="loadErrorLog()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <button data-click="loadErrorLog" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-refresh"/></svg> Actualizar
         </button>
-        <button onclick="clearErrorLog()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#ef4444;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <button data-click="clearErrorLog" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#ef4444;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-trash"/></svg> Limpiar log
         </button>
-        <select id="em-filter" onchange="renderErrorLog()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer">
+        <select id="em-filter" data-change="renderErrorLog" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer">
           <option value="all">Todos</option>
           <option value="CRÍTICO">Solo críticos</option>
           <option value="ERROR">Solo errores</option>
@@ -1492,8 +1476,8 @@ window.loadErrorLog = function() {
   const list = document.getElementById('em-list');
   if (!list) return;
   list.innerHTML = '<p style="color:#888;text-align:center;padding:20px">' + Icon('clock') + ' Cargando errores...</p>';
-  const api   = "https://admin-api-1038143238323.us-central1.run.app";
-  const token = sessionStorage.getItem('admin_token') || '';
+  const api   = window.ADMIN_API_URL;
+  const token = getAdminToken();
 
   if (!api || !token) {
     list.innerHTML = '<p style="color:#f97316;text-align:center;padding:20px">' + Icon('error') + ' Sin sesión activa o sin API_URL. Inicia sesión de nuevo.</p>';
@@ -1509,7 +1493,7 @@ window.loadErrorLog = function() {
     .then(data => {
       if (!data.ok && data.error) {
         // Backend respondió con error (ej: token inválido)
-        list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:20px">${Icon('x')} ${data.error}</p>`;
+        list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:20px">${Icon('x')} ${escapeHtml(data.error)}</p>`;
         return;
       }
       // Normalizar campos en español del Apps Script → formato interno
@@ -1535,7 +1519,7 @@ window.loadErrorLog = function() {
     })
     .catch(err => {
       console.error('[Monitor] Error al obtener errores:', err);
-      list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:20px">${Icon('x')} Error de red: ${err.message}.<br><span style="color:#888;font-size:11px;">Revisa la consola para más detalles.</span></p>`;
+      list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:20px">${Icon('x')} Error de red: ${escapeHtml(err.message)}.<br><span style="color:#888;font-size:11px;">Revisa la consola para más detalles.</span></p>`;
     });
 };
 
@@ -1555,15 +1539,15 @@ window.renderErrorLog = function() {
   list.innerHTML = errors.map(e => {
     const fecha = e.ts ? new Date(e.ts).toLocaleString('es-MX', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '–';
     const c     = colorMap[e.level] || '#aaa';
-    const src   = e.source || (e.filename||'').split('/').pop() || '?';
-    const msg   = (e.message || '').slice(0, 200);
-    const file  = e.filename || '';
+    const src   = escapeHtml(e.source || (e.filename||'').split('/').pop() || '?');
+    const msg   = escapeHtml((e.message || '').slice(0, 200));
+    const file  = escapeHtml(e.filename || '');
     const line  = e.lineno || 0;
     const col   = e.colno  || 0;
-    const stk   = e.stack  || '';
+    const stk   = escapeHtml(e.stack  || '');
     return `<div style="background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px;margin-bottom:10px;border-left:3px solid ${c};">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
-        <span style="color:${c};font-weight:700;font-size:11px;">${e.level||'?'} &bull; ${src}</span>
+        <span style="color:${c};font-weight:700;font-size:11px;">${escapeHtml(e.level||'?')} &bull; ${src}</span>
         <span style="color:#666;font-size:11px;">${fecha}</span>
       </div>
       <div style="color:#ddd;font-size:12px;word-break:break-word;">${msg}</div>
@@ -1574,17 +1558,13 @@ window.renderErrorLog = function() {
 };
 
 window.clearErrorLog = async function() {
-  if (!confirm('¿Borrar todos los errores del log?')) return;
-  const api   = "https://admin-api-1038143238323.us-central1.run.app";
-  const token = sessionStorage.getItem('admin_token') || '';
+  if (!await askConfirm('¿Borrar todos los errores del log?')) return;
+  const api   = window.ADMIN_API_URL;
+  const token = getAdminToken();
   if (window.ZRMonitor) window.ZRMonitor.clear();
   if (api && token) {
     try {
-      const res = await fetch(api, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ action: 'limpiarErrorLog', token }).toString()
-      });
+      const res = await apiFetch(api, { action: 'limpiarErrorLog', token }, true);
       const data = await res.json();
       if (!data.ok) {
         showTemporaryMessage('No se pudo limpiar el log del servidor: ' + (data.error || 'error desconocido'), 'error');
@@ -1609,9 +1589,8 @@ window.clearErrorLog = async function() {
 async function openSugerenciasConfiableModal() {
   const old = document.getElementById('modal-sugerencias-confiable');
   if (old) old.remove();
-  const token = sessionStorage.getItem('admin_token') || '';
-  const api   = "https://vendedores-api-1038143238323.us-central1.run.app";
-  const esc   = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const token = getAdminToken();
+  const api   = window.VENDEDORES_API_URL;
 
   const modal = document.createElement('div');
   modal.id = 'modal-sugerencias-confiable';
@@ -1638,20 +1617,20 @@ async function openSugerenciasConfiableModal() {
       params.append('token', token);
       params.append('uid', uid);
       params.append('confiable', 'true');
-      const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() }).then(r => r.json());
+      const res = await apiFetch(api, params, true).then(r => r.json());
       if (!res.ok) throw new Error(res.error || 'Error del servidor');
       const row = btn.closest('.sc-row');
       if (row) row.remove();
     } catch (e) {
       btn.disabled = false;
       btn.textContent = 'Reintentar';
-      alert('Error al marcar confiable: ' + e.message);
+      askAlert('Error al marcar confiable: ' + e.message);
     }
   }
 
   try {
     if (!token) throw new Error('Sin sesión de admin');
-    const res = await fetch(api + '?' + new URLSearchParams({ action: 'obtenerSugerenciasConfiable', token })).then(r => r.json());
+    const res = await apiFetch(api, { action: 'obtenerSugerenciasConfiable', token }).then(r => r.json());
     if (!res.ok) throw new Error(res.error || 'Error del servidor');
 
     const sugerencias = res.sugerencias || [];
@@ -1661,10 +1640,10 @@ async function openSugerenciasConfiableModal() {
         ${sugerencias.length ? sugerencias.map(s => `
           <div class="sc-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);gap:10px;">
             <div>
-              <div style="font-size:.85rem;color:#eee;font-weight:600;">${esc(s.nombre)}</div>
+              <div style="font-size:.85rem;color:#eee;font-weight:600;">${escapeHtml(s.nombre)}</div>
               <div style="font-size:.72rem;color:#888;">${s.ventasEntregadas} pedidos entregados</div>
             </div>
-            <button class="sc-marcar-btn" data-uid="${esc(s.uid)}" style="padding:7px 14px;border:none;border-radius:20px;background:#2563eb;color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;">Marcar confiable</button>
+            <button class="sc-marcar-btn" data-uid="${escapeHtml(s.uid)}" style="padding:7px 14px;border:none;border-radius:20px;background:#2563eb;color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;">Marcar confiable</button>
           </div>`).join('') : '<p style="color:#aaa;text-align:center;padding:20px 0;">No hay vendedores nuevos que sugerir por ahora.</p>'}
       </div>`;
 
@@ -1678,42 +1657,42 @@ async function openSugerenciasConfiableModal() {
 
 // ── Backfill de ciudad en productos viejos (Comunidad + Z&R) ────────────────
 async function backfillCiudadComunidadBtn() {
-  const token = sessionStorage.getItem('admin_token') || '';
-  if (!confirm('Esto pone la ciudad del vendedor en todos sus productos de Comunidad que aún no la tienen. ¿Continuar?')) return;
+  const token = getAdminToken();
+  if (!await askConfirm('Esto pone la ciudad del vendedor en todos sus productos de Comunidad que aún no la tienen. ¿Continuar?')) return;
   try {
-    const api = "https://catalogo-api-1038143238323.us-central1.run.app";
+    const api = window.CATALOGO_API_URL;
     const params = new URLSearchParams({ action: 'backfillCiudadComunidad', token });
-    const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() }).then(r => r.json());
+    const res = await apiFetch(api, params, true).then(r => r.json());
     if (!res.ok) throw new Error(res.error || 'Error del servidor');
-    alert(`Listo: ${res.actualizados} de ${res.revisados} productos actualizados. (Los que no se movieron son de vendedores que tampoco tienen ciudad asignada todavía — resuélvelo primero en "Vendedores sin ciudad".)`);
+    askAlert(`Listo: ${res.actualizados} de ${res.revisados} productos actualizados. (Los que no se movieron son de vendedores que tampoco tienen ciudad asignada todavía — resuélvelo primero en "Vendedores sin ciudad".)`);
   } catch (e) {
-    alert('Error: ' + e.message);
+    askAlert('Error: ' + e.message);
   }
 }
 window.backfillCiudadComunidadBtn = backfillCiudadComunidadBtn;
 
 async function asignarCiudadMasivaZNRBtn() {
-  const token = sessionStorage.getItem('admin_token') || '';
+  const token = getAdminToken();
   const rol = sessionStorage.getItem('admin_rol') || 'master';
   let pais = null, ciudad = null;
   if (rol === 'master') {
-    pais = prompt('País para TODOS los productos Z&R sin ciudad:', 'México');
+    pais = await askPrompt('País para TODOS los productos Z&R sin ciudad:', 'México');
     if (!pais) return;
-    ciudad = prompt('Ciudad para TODOS los productos Z&R sin ciudad:');
+    ciudad = await askPrompt('Ciudad para TODOS los productos Z&R sin ciudad:');
     if (!ciudad) return;
-  } else if (!confirm(`Esto asigna TODOS los productos Z&R sin ciudad a tu ciudad (${sessionStorage.getItem('admin_ciudad') || ''}). ¿Continuar?`)) {
+  } else if (!await askConfirm(`Esto asigna TODOS los productos Z&R sin ciudad a tu ciudad (${sessionStorage.getItem('admin_ciudad') || ''}). ¿Continuar?`)) {
     return;
   }
   try {
-    const api = "https://catalogo-api-1038143238323.us-central1.run.app";
+    const api = window.CATALOGO_API_URL;
     const params = new URLSearchParams({ action: 'asignarCiudadMasivaProductosZNR', token });
     if (pais) params.append('pais', pais);
     if (ciudad) params.append('ciudad', ciudad);
-    const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() }).then(r => r.json());
+    const res = await apiFetch(api, params, true).then(r => r.json());
     if (!res.ok) throw new Error(res.error || 'Error del servidor');
-    alert(`Listo: ${res.actualizados} productos Z&R actualizados.`);
+    askAlert(`Listo: ${res.actualizados} productos Z&R actualizados.`);
   } catch (e) {
-    alert('Error: ' + e.message);
+    askAlert('Error: ' + e.message);
   }
 }
 window.asignarCiudadMasivaZNRBtn = asignarCiudadMasivaZNRBtn;
@@ -1721,18 +1700,18 @@ window.asignarCiudadMasivaZNRBtn = asignarCiudadMasivaZNRBtn;
 // ── Plan Plus retroactivo para admins/moderadores ya existentes (creados
 // antes de que existiera este perk) ─────────────────────────────────────
 async function sincronizarPlanPlusAdminsBtn() {
-  if (!confirm('Esto revisa TODOS los admins/moderadores activos y le genera una contraseña NUEVA a cada uno, sincronizada con su cuenta de vendedor. Las contraseñas anteriores dejan de funcionar. ¿Continuar?')) return;
-  const token = sessionStorage.getItem('admin_token') || '';
+  if (!await askConfirm('Esto revisa TODOS los admins/moderadores activos y le genera una contraseña NUEVA a cada uno, sincronizada con su cuenta de vendedor. Las contraseñas anteriores dejan de funcionar. ¿Continuar?')) return;
+  const token = getAdminToken();
   try {
-    const api = "https://vendedores-api-1038143238323.us-central1.run.app";
+    const api = window.VENDEDORES_API_URL;
     const res = await fetch(api, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'sincronizarPlanPlusAdminsExistentes', token }),
     }).then(r => r.json());
     if (!res.ok) throw new Error(res.error || 'Error del servidor');
-    alert(`Listo — ${res.total} cuentas revisadas (${res.sinDatos} sin teléfono):\n\n${(res.resultados || []).join('\n')}`);
+    askAlert(`Listo — ${res.total} cuentas revisadas (${res.sinDatos} sin teléfono):\n\n${(res.resultados || []).join('\n')}`);
   } catch (e) {
-    alert('Error: ' + (e.message || ''));
+    askAlert('Error: ' + (e.message || ''));
   }
 }
 window.sincronizarPlanPlusAdminsBtn = sincronizarPlanPlusAdminsBtn;
@@ -1741,10 +1720,9 @@ window.sincronizarPlanPlusAdminsBtn = sincronizarPlanPlusAdminsBtn;
 async function openVendedoresSinCiudadModal() {
   const old = document.getElementById('modal-vendedores-sin-ciudad');
   if (old) old.remove();
-  const token = sessionStorage.getItem('admin_token') || '';
+  const token = getAdminToken();
   const rol = sessionStorage.getItem('admin_rol') || 'master';
-  const api = "https://vendedores-api-1038143238323.us-central1.run.app";
-  const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const api = window.VENDEDORES_API_URL;
 
   const modal = document.createElement('div');
   modal.id = 'modal-vendedores-sin-ciudad';
@@ -1765,26 +1743,26 @@ async function openVendedoresSinCiudadModal() {
   async function asignar(uid, row, paisSel, ciudadSel, btn) {
     const pais = rol === 'master' ? paisSel.value : null;
     const ciudad = rol === 'master' ? ciudadSel.value : null;
-    if (rol === 'master' && (!pais || !ciudad)) return alert('Elige país y ciudad.');
+    if (rol === 'master' && (!pais || !ciudad)) return askAlert('Elige país y ciudad.');
     btn.disabled = true;
     btn.textContent = 'Asignando…';
     try {
       const params = new URLSearchParams({ action: 'asignarCiudadVendedor', token, uid });
       if (pais) params.append('pais', pais);
       if (ciudad) params.append('ciudad', ciudad);
-      const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() }).then(r => r.json());
+      const res = await apiFetch(api, params, true).then(r => r.json());
       if (!res.ok) throw new Error(res.error || 'Error del servidor');
       row.remove();
     } catch (e) {
       btn.disabled = false;
       btn.textContent = 'Reintentar';
-      alert('Error al asignar ciudad: ' + e.message);
+      askAlert('Error al asignar ciudad: ' + e.message);
     }
   }
 
   try {
     if (!token) throw new Error('Sin sesión de admin');
-    const res = await fetch(api + '?' + new URLSearchParams({ action: 'listarVendedoresSinCiudad', token })).then(r => r.json());
+    const res = await apiFetch(api, { action: 'listarVendedoresSinCiudad', token }).then(r => r.json());
     if (!res.ok) throw new Error(res.error || 'Error del servidor');
 
     const vendors = res.vendors || [];
@@ -1795,9 +1773,9 @@ async function openVendedoresSinCiudadModal() {
       <p style="font-size:.78rem;color:#aaa;margin:0 0 16px;">${nota}</p>
       <div id="vsc-list">
         ${vendors.length ? vendors.map(v => `
-          <div class="vsc-row" data-uid="${esc(v.uid)}" style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-            <div style="font-size:.85rem;color:#eee;font-weight:600;">${esc(v.nombre)} · ${esc(v.telefono)}</div>
-            <div style="font-size:.72rem;color:#888;margin:2px 0 8px;">${esc(v.puntoEntrega) || 'Sin punto de entrega registrado'}</div>
+          <div class="vsc-row" data-uid="${escapeHtml(v.uid)}" style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+            <div style="font-size:.85rem;color:#eee;font-weight:600;">${escapeHtml(v.nombre)} · ${escapeHtml(v.telefono)}</div>
+            <div style="font-size:.72rem;color:#888;margin:2px 0 8px;">${escapeHtml(v.puntoEntrega) || 'Sin punto de entrega registrado'}</div>
             <div style="display:flex;gap:8px;align-items:center;">
               ${rol === 'master' ? `<select class="vsc-pais" style="flex:1;padding:6px;border-radius:8px;"></select>
               <select class="vsc-ciudad" style="flex:1;padding:6px;border-radius:8px;"></select>` : ''}
@@ -1858,16 +1836,16 @@ function setBadge(id, count) {
 }
 
 function openInspectorMode() {
-  const token = sessionStorage.getItem('admin_token') || '';
+  const token = getAdminToken();
   if (!token) { if (window.showTemporaryMessage) window.showTemporaryMessage('Sin sesión de admin', 'error'); return; }
   const url = 'https://znrcommunity.com/comunidad.html?inspector=1&token=' + encodeURIComponent(token);
   window.open(url, '_blank');
 }
 
 window.openVendorStatsGlobal = async function() {
-  const token = sessionStorage.getItem('admin_token') || '';
-  const vendedoresApi = "https://vendedores-api-1038143238323.us-central1.run.app";
-  const catalogoApi = "https://catalogo-api-1038143238323.us-central1.run.app";
+  const token = getAdminToken();
+  const vendedoresApi = window.VENDEDORES_API_URL;
+  const catalogoApi = window.CATALOGO_API_URL;
   let modal = document.getElementById('global-vendor-stats-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -1875,7 +1853,7 @@ window.openVendorStatsGlobal = async function() {
     modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:19999;align-items:center;justify-content:center;';
     modal.innerHTML = `
       <div style="background:var(--modal-bg);color:var(--modal-text);border-radius:22px;padding:28px;max-width:500px;width:93%;max-height:85vh;overflow-y:auto;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.3);">
-        <button onclick="document.getElementById('global-vendor-stats-modal').style.display='none'; const m=document.getElementById('gvs-action-menu'); if(m) m.style.display='none';" style="position:absolute;top:14px;right:14px;background:var(--modal-chip-bg);border:none;width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer;color:var(--modal-muted);">${Icon('x')}</button>
+        <button data-hide="global-vendor-stats-modal,gvs-action-menu" style="position:absolute;top:14px;right:14px;background:var(--modal-chip-bg);border:none;width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer;color:var(--modal-muted);">${Icon('x')}</button>
         <h3 style="margin:0 0 18px;font-size:19px;">${Icon('stats')} Estadísticas de Vendedores</h3>
         <div id="gvs-summary" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;"></div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
@@ -1904,8 +1882,8 @@ window.openVendorStatsGlobal = async function() {
   document.getElementById('gvs-list').innerHTML = '';
   try {
     const [vRes, pRes] = await Promise.all([
-      fetch(vendedoresApi + '?' + new URLSearchParams({ action: "vendedoresAdmin", token: token }).toString()).then(r=>r.json()).catch(()=>({})),
-      fetch(catalogoApi + '?' + new URLSearchParams({ action: "listarTodoComunidad", token: token }).toString()).then(r=>r.json()).catch(()=>({}))
+      apiFetch(vendedoresApi, { action: "vendedoresAdmin", token: token }).then(r=>r.json()).catch(()=>({})),
+      apiFetch(catalogoApi, { action: "listarTodoComunidad", token: token }).then(r=>r.json()).catch(()=>({}))
     ]);
     const vendors  = vRes.vendors  || [];
     const products = pRes.products || pRes.pendientes || [];
@@ -1991,7 +1969,7 @@ window._renderVendorStatsList = function() {
       const venceTxt = (esPlus && diasRestantes != null)
         ? `<div style="font-size:11px;color:${diasRestantes<=7?'#c62828':'#888'};margin-top:2px;">vence en ${diasRestantes}d</div>`
         : '';
-      return `<div class="gvs-row" style="padding:14px 0;border-bottom:1px solid #f0f0f5;" data-uid="${v.uid}">
+      return `<div class="gvs-row" style="padding:14px 0;border-bottom:1px solid #f0f0f5;" data-uid="${escapeAttr(v.uid)}">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
           <div style="min-width:0;flex:1;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -2001,7 +1979,7 @@ window._renderVendorStatsList = function() {
             <div style="font-size:12px;color:#888;margin-top:2px;">${escapeHtml(v.telefono||'—')} · <span style="color:${v.estado==='activo'?'#2e7d32':'#f57f17'}">${escapeHtml(v.estado)}</span></div>
             ${venceTxt}
           </div>
-          <button class="btn-row-menu" data-uid="${v.uid}" data-plan="${v.plan||'free'}" data-nombre="${escapeHtml(v.nombre||'')}" data-dias="${diasRestantes != null ? diasRestantes : 0}" data-suspendible="${puedeSuspender ? '1':'0'}" style="flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid #eee;background:#fafafa;color:#555;font-size:16px;font-weight:700;line-height:1;cursor:pointer;">⋮</button>
+          <button class="btn-row-menu" data-uid="${escapeAttr(v.uid)}" data-plan="${escapeAttr(v.plan||'free')}" data-nombre="${escapeHtml(v.nombre||'')}" data-dias="${diasRestantes != null ? diasRestantes : 0}" data-suspendible="${puedeSuspender ? '1':'0'}" style="flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid #eee;background:#fafafa;color:#555;font-size:16px;font-weight:700;line-height:1;cursor:pointer;">⋮</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:11.5px;color:#888;flex-wrap:wrap;">
           <span style="font-weight:700;color:#333;">${actuales}/${limite} productos</span>
@@ -2072,8 +2050,8 @@ window._renderVendorStatsList = function() {
 };
 
 window.togglePlanVendedor = async function(uid, nombre, currentPlan) {
-  const token = sessionStorage.getItem('admin_token') || '';
-  const api   = "https://vendedores-api-1038143238323.us-central1.run.app";
+  const token = getAdminToken();
+  const api   = window.VENDEDORES_API_URL;
 
   if (!api) {
     if (window.showTemporaryMessage) window.showTemporaryMessage('API no disponible', 'error');
@@ -2088,18 +2066,18 @@ window.togglePlanVendedor = async function(uid, nombre, currentPlan) {
   let dias = 20;
 
   if (nuevoPlan === 'plus') {
-    const input = prompt(`¿Por cuántos días activar el plan Plus para "${nombre}"?`, '30');
+    const input = await askPrompt(`¿Por cuántos días activar el plan Plus para "${nombre}"?`, '30');
     if (input === null) return; // cancelado
     const parsed = parseInt(input, 10);
     if (!Number.isFinite(parsed) || parsed <= 0) {
       if (window.showTemporaryMessage) window.showTemporaryMessage('Número de días inválido.', 'error');
-      else alert('Número de días inválido.');
+      else askAlert('Número de días inválido.');
       return;
     }
     dias = parsed;
   } else {
 
-    if (!confirm(`¿Quitar el plan Plus a "${nombre}"? Se ocultarán productos si excede el límite.`)) {
+    if (!await askConfirm(`¿Quitar el plan Plus a "${nombre}"? Se ocultarán productos si excede el límite.`)) {
       return;
     }
   }
@@ -2113,11 +2091,7 @@ window.togglePlanVendedor = async function(uid, nombre, currentPlan) {
     params.append('dias', String(dias));
     params.append('token', token);
 
-    const res = await fetch(api, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
-    });
+    const res = await apiFetch(api, params, true);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || 'Error del servidor');
 
@@ -2126,19 +2100,19 @@ window.togglePlanVendedor = async function(uid, nombre, currentPlan) {
       : `Plan Plus removido de ${nombre}`;
 
     if (window.showTemporaryMessage) window.showTemporaryMessage(mensaje, 'success');
-    else alert(mensaje);
+    else askAlert(mensaje);
 
     window.openVendorStatsGlobal();
 
   } catch (err) {
     if (window.showTemporaryMessage) window.showTemporaryMessage(err.message, 'error');
-    else alert('Error: ' + err.message);
+    else askAlert('Error: ' + err.message);
   } finally {
     if (window.hideLoader) window.hideLoader();
   }
 };
 
-// Modal propio de texto+número, para no depender de prompt()/alert()
+// Modal propio de texto+número, para no depender de los diálogos nativos prompt()/alert()
 // nativos (en algunos entornos — WebView, PWA instalada, etc. — esos
 // diálogos del navegador no se muestran encima del resto de la página).
 // z-index más alto que el de #global-vendor-stats-modal (19999) para
@@ -2201,8 +2175,8 @@ function customAlertModal(mensaje) {
 }
 
 window.ajustarDiasPlus = async function(uid, nombre, diasActuales) {
-  const token = sessionStorage.getItem('admin_token') || '';
-  const api   = "https://vendedores-api-1038143238323.us-central1.run.app";
+  const token = getAdminToken();
+  const api   = window.VENDEDORES_API_URL;
 
   if (!api) { await customAlertModal('API no disponible'); return; }
   if (!token) { await customAlertModal('Token no encontrado. Re-inicia sesión.'); return; }
@@ -2227,11 +2201,7 @@ window.ajustarDiasPlus = async function(uid, nombre, diasActuales) {
     params.append('dias', String(delta));
     params.append('token', token);
 
-    const res = await fetch(api, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
-    });
+    const res = await apiFetch(api, params, true);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || 'Error del servidor');
 
@@ -2249,14 +2219,13 @@ window.ajustarDiasPlus = async function(uid, nombre, diasActuales) {
 };
 
 window.eliminarCuentaVendedorAdmin = async function(uid, nombre) {
-  const token = sessionStorage.getItem('admin_token') || '';
-  const api   = "https://vendedores-api-1038143238323.us-central1.run.app";
+  const token = getAdminToken();
+  const api   = window.VENDEDORES_API_URL;
   if (!token) { if (window.showTemporaryMessage) window.showTemporaryMessage('Token no encontrado. Re-inicia sesión.', 'error'); return; }
 
-  if (!(await confirm(`Esto borrará TODO de "${nombre}": productos, sesiones en vivo, entregas y su cuenta. Es irreversible. ¿Continuar?`))) return;
+  if (!(await askConfirm(`Esto borrará TODO de "${nombre}": productos, sesiones en vivo, entregas y su cuenta. Es irreversible. ¿Continuar?`))) return;
 
   const razon = await new Promise((resolve) => {
-    if (typeof showCustomConfirm !== 'function') { confirm(`Última confirmación: se eliminará por completo a "${nombre}" y no podrás recuperar sus datos. ¿Eliminar definitivamente?`).then((ok) => resolve(ok ? '' : null)); return; }
     showCustomConfirm({
       title: 'Última confirmación',
       message: `Se eliminará por completo a "${nombre}" y no podrás recuperar sus datos. ¿Eliminar definitivamente?`,
@@ -2279,17 +2248,13 @@ window.eliminarCuentaVendedorAdmin = async function(uid, nombre) {
     params.append('token', token);
     params.append('razon', razon);
 
-    const res = await fetch(api, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString()
-    });
+    const res = await apiFetch(api, params, true);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || 'Error del servidor');
 
     const mensaje = `Cuenta de "${nombre}" eliminada por completo`;
     if (window.showTemporaryMessage) window.showTemporaryMessage(mensaje, 'success');
-    else alert(mensaje);
+    else askAlert(mensaje);
 
     window.openVendorStatsGlobal();
     if (typeof AdminComunidad !== 'undefined' && AdminComunidad.loadVendors) AdminComunidad.loadVendors();
@@ -2297,7 +2262,7 @@ window.eliminarCuentaVendedorAdmin = async function(uid, nombre) {
 
   } catch (err) {
     if (window.showTemporaryMessage) window.showTemporaryMessage(err.message, 'error');
-    else alert('Error: ' + err.message);
+    else askAlert('Error: ' + err.message);
   } finally {
     if (window.hideLoader) window.hideLoader();
   }
@@ -2311,24 +2276,24 @@ document.getElementById('theme-toggle')?.addEventListener('click', () => {
 });
 
 // ── Llamada directa a vendedores-api con el token del admin ──
-const _vApi = (action, extra = {}) => fetch("https://vendedores-api-1038143238323.us-central1.run.app", {
+const _vApi = (action, extra = {}) => fetch(window.VENDEDORES_API_URL, {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ action, token: sessionStorage.getItem('admin_token') || '', ...extra }),
+  body: JSON.stringify({ action, token: getAdminToken(), ...extra }),
 }).then(r => r.json()).catch(e => ({ ok: false, error: e.message }));
 
 // Llena contacto_admin (botón de WhatsApp por ciudad) con los admins que ya existían.
 async function sincronizarContactosAdminsBtn() {
   const res = await _vApi('sincronizarContactosAdmins');
-  alert(res.ok ? `Listo — ${res.ciudades} ciudades sincronizadas` + (res.master ? '' : '\n⚠ Falta el WhatsApp del Master: define la variable MASTER_WHATSAPP en vendedores-api') : 'Error: ' + (res.error || ''));
+  askAlert(res.ok ? `Listo — ${res.ciudades} ciudades sincronizadas` + (res.master ? '' : '\n⚠ Falta el WhatsApp del Master: define la variable MASTER_WHATSAPP en vendedores-api') : 'Error: ' + (res.error || ''));
 }
 window.sincronizarContactosAdminsBtn = sincronizarContactosAdminsBtn;
 
 // Migración única: ciudad "Nuevo Laredo" → "Nuevo Laredo, Tamaulipas". Primero simula y pregunta; después aplica.
 async function migrarCiudadesBtn() {
   const sim = await _vApi('migrarCiudadesConEstado');
-  if (!sim.ok) return alert('Error: ' + (sim.error || ''));
-  if (!confirm(`Simulación (aún no se cambió nada)\nPor colección: ${JSON.stringify(sim.actualizados)}\nSin equivalencia: ${JSON.stringify(sim.sinEquivalencia)}\n\n¿Aplicar la migración?`)) return;
+  if (!sim.ok) return askAlert('Error: ' + (sim.error || ''));
+  if (!await askConfirm(`Simulación (aún no se cambió nada)\nPor colección: ${JSON.stringify(sim.actualizados)}\nSin equivalencia: ${JSON.stringify(sim.sinEquivalencia)}\n\n¿Aplicar la migración?`)) return;
   const r = await _vApi('migrarCiudadesConEstado', { aplicar: true });
-  alert(r.ok ? 'Migración aplicada: ' + JSON.stringify(r.actualizados) : 'Error: ' + (r.error || ''));
+  askAlert(r.ok ? 'Migración aplicada: ' + JSON.stringify(r.actualizados) : 'Error: ' + (r.error || ''));
 }
 window.migrarCiudadesBtn = migrarCiudadesBtn;

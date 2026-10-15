@@ -14,7 +14,6 @@ try {
 const saved = localStorage.getItem('zr_admin_pending');
 if (saved) {
 pendingActions = JSON.parse(saved);
-console.log(`📦 Cargadas ${pendingActions.length} acciones pendientes`);
 }
 } catch(e) { pendingActions = []; }
 updatePendingBadge();
@@ -23,7 +22,7 @@ function savePendingActions() {
 try {
 localStorage.setItem('zr_admin_pending', JSON.stringify(pendingActions));
 updatePendingBadge();
-} catch(e) {}
+} catch (e) { reportError('offline-manager', e); }
 }
 function addPendingAction(type, data, productId = null) {
 pendingActions.push({
@@ -36,13 +35,12 @@ retries: 0
 });
 savePendingActions();
 showMessage(`Producto guardado localmente. Se sincronizará cuando haya internet.`, 'info');
-console.log(`📝 Acción "${type}" guardada. Total pendientes: ${pendingActions.length}`);
 }
-const ADMIN_API = "https://catalogo-api-1038143238323.us-central1.run.app";
+const ADMIN_API = window.CATALOGO_API_URL;
 let syncing = false;
 async function syncPendingActions(manual = false) {
 if (syncing || !navigator.onLine || pendingActions.length === 0) return;
-const token = sessionStorage.getItem("admin_token");
+const token = getAdminToken();
 if (!token) {
 if (manual) showMessage("Inicia sesión como admin para sincronizar los productos pendientes", 'warning');
 return;
@@ -127,16 +125,9 @@ pendingBadge.style.display = 'none';
 }
 }
 }
-function showMessage(msg, type = 'info') {
-if (typeof showTemporaryMessage === 'function') {
-showTemporaryMessage(msg, type);
-} else {
-console.log(`[Offline] ${msg}`);
-}
-}
+const showMessage = (msg, type = 'info') => showTemporaryMessage(msg, type);
 function setupInterception() {
 window.addEventListener('adminReady', () => {
-console.log("✅ adminReady recibido, aplicando interceptación offline");
 window._originalSubmit = window.handleProductFormSubmit;
 window._originalDelete = window.deleteProduct;
 window.handleProductFormSubmit = async function(e) {
@@ -199,14 +190,12 @@ await window._originalDelete(id);
 }, { once: true });
 }
 window.addEventListener('online', () => {
-console.log("🟢 Conexión recuperada - Sincronizando...");
 if (pendingActions.length === 0) return;
 showMessage("Conexión recuperada. Sincronizando cambios...", 'success');
 setTimeout(() => syncPendingActions(), 1000);
 });
 window.addEventListener('offline', () => {
-console.log("🔴 Conexión perdida");
-if (sessionStorage.getItem("admin_token")) showMessage("Sin conexión - Los cambios se guardarán localmente", 'warning');
+if (getAdminToken()) showMessage("Sin conexión - Los cambios se guardarán localmente", 'warning');
 });
 loadPendingActions();
 setupInterception();

@@ -4,7 +4,7 @@
   const EM_KEY              = 'zr_error_queue';
   const EM_MAX_LOCAL        = 100;
   const EM_DEBOUNCE         = 1000;
-  const EM_MAX_SENDS_PER_LOAD = 40; // 100
+  const EM_MAX_SENDS_PER_LOAD = 40;
 
   let _lastErrors = {};
   let _queue      = [];
@@ -70,7 +70,7 @@
   }
 
   async function sendEntry(entry) {
-    const api = 'https://admin-api-1038143238323.us-central1.run.app';
+    const api = window.ADMIN_API_URL;
     if (_sendsThisLoad >= EM_MAX_SENDS_PER_LOAD) return false; // ya está en localStorage, se reintentará en el próximo flush()
     _sendsThisLoad++;
     try {
@@ -245,8 +245,8 @@
     });
     html += `</table>`;
     html += `<div style="margin-top:10px;display:flex;gap:10px;">`;
-    html += `<button onclick="ZRMonitor.clear();alert('Errores borrados');location.reload();" style="padding:6px 14px;border:none;border-radius:6px;background:#ef4444;color:#fff;cursor:pointer;">${Icon('trash')} Borrar todos</button>`;
-    html += `<button onclick="document.getElementById('error-log-modal').remove();" style="padding:6px 14px;border:none;border-radius:6px;background:#666;color:#fff;cursor:pointer;">Cerrar</button>`;
+    html += `<button id="em-clear-btn" style="padding:6px 14px;border:none;border-radius:6px;background:#ef4444;color:#fff;cursor:pointer;">${Icon('trash')} Borrar todos</button>`;
+    html += `<button id="em-close-btn" style="padding:6px 14px;border:none;border-radius:6px;background:#666;color:#fff;cursor:pointer;">Cerrar</button>`;
     html += `</div></div>`;
 
     const modal = document.createElement('div');
@@ -259,6 +259,8 @@
     `;
     modal.innerHTML = `<div style="background:#fff; border-radius:16px; max-width:800px; width:100%; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">${html}</div>`;
     document.body.appendChild(modal);
+    modal.querySelector('#em-clear-btn').onclick = () => { ZRMonitor.clear(); alert('Errores borrados'); location.reload(); };
+    modal.querySelector('#em-close-btn').onclick = () => modal.remove();
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.remove();
     });
@@ -276,9 +278,6 @@
 
   // ─── Inicialización ──────────────────────────────────────────
 
-  console.log(`📊 ZRMonitor: ${_queue.length} errores en caché local.`);
-  console.log('💡 Para ver errores guardados, ejecuta: ZRMonitor.getErrors()');
-  console.log('💡 Para mostrar panel: showErrorLog()');
 
   window.addEventListener('load', () => setTimeout(flush, 3000));
 })();

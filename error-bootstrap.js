@@ -8,6 +8,13 @@
     window.__zrEarlyErrors.push({ type, payload, ts: Date.now() });
   };
 
+  // Para catch que no deben tragarse el error: lo manda a ZRMonitor (o a la cola temprana si aún no cargó).
+  window.reportError = function (source, err) {
+    const e = err || {};
+    if (window.ZRMonitor) return window.ZRMonitor.report('error', source, 'catch', e.message || String(err), { stack: e.stack || '' });
+    window.__zrEarlyHandler('script', { message: '[' + source + '] ' + (e.message || err), filename: '', lineno: 0, colno: 0, stack: e.stack || '' });
+  };
+
   window.addEventListener('error', function (e) {
     const isResourceError = !e.message && e.target && e.target !== window;
 

@@ -186,10 +186,6 @@ function populateSizeFilterGlobal() {
 window.fetchFilterOptions = fetchFilterOptions;
 window.populateFilterSelects = populateFilterSelects;
 
-function clearProductIndex() {
-productsByCategoryMap = null;
-allProductsIndexed = [];
-}
 function showLoader(text = "Cargando...") {
 let loader = document.getElementById("global-loader");
 if (!loader) {
@@ -259,7 +255,7 @@ modal.className = "custom-alert-modal";
 modal.innerHTML = `
 <div class="custom-alert-content">
 <div class="custom-alert-header"><span class="custom-alert-icon">${icon ? Icon(icon, {size:22}) : ''}</span><h3>${escapeHtml(title)}</h3></div>
-<div class="custom-alert-body"><p>${escapeHtml(message)}</p>${extraHtml}</div>
+<div class="custom-alert-body"><p style="white-space:pre-line">${escapeHtml(message)}</p>${extraHtml}</div>
 <div class="custom-alert-footer"><button class="custom-alert-btn confirm"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> ${escapeHtml(confirmText)}</button></div>
 </div>
 `;
@@ -338,15 +334,11 @@ cancelBtn.addEventListener("click", () => close(onCancel, null));
 input.addEventListener("keypress", (e) => { if (e.key === "Enter") { e.preventDefault(); close(onConfirm, input.value); } });
 modal.addEventListener("click", (e) => { if (e.target === modal && !modal.classList.contains("closing")) close(onCancel, null); });
 }
-if (!window.alertIntercepted) {
-window.originalAlert = window.alert;
-window.alert = function(message) { return new Promise((resolve) => { closeCurrentModal(); showCustomAlert({ title: "Aviso", message: String(message), icon: "", confirmText: "Aceptar", onConfirm: () => resolve() }); }); };
-window.originalConfirm = window.confirm;
-window.confirm = function(message) { return new Promise((resolve) => { closeCurrentModal(); showCustomConfirm({ title: "Confirmar", message: String(message), icon: "", confirmText: "Aceptar", cancelText: "Cancelar", onConfirm: () => resolve(true), onCancel: () => resolve(false) }); }); };
-window.originalPrompt = window.prompt;
-window.prompt = function(message, defaultValue = "") { return new Promise((resolve) => { closeCurrentModal(); showCustomPrompt({ title: "Ingresar información", message: String(message), icon: "", defaultValue: defaultValue, confirmText: "Aceptar", cancelText: "Cancelar", onConfirm: (value) => resolve(value), onCancel: () => resolve(null) }); }); };
-window.alertIntercepted = true;
-}
+window.askAlert = (message) => new Promise((resolve) => { closeCurrentModal(); showCustomAlert({ title: "Aviso", message: String(message), onConfirm: resolve }); });
+window.askConfirm = (message) => new Promise((resolve) => { closeCurrentModal(); showCustomConfirm({ title: "Confirmar", message: String(message), onConfirm: () => resolve(true), onCancel: () => resolve(false) }); });
+window.askPrompt = (message, defaultValue = "") => new Promise((resolve) => { closeCurrentModal(); showCustomPrompt({ title: "Ingresar información", message: String(message), defaultValue, onConfirm: resolve, onCancel: () => resolve(null) }); });
+// Compatibilidad: scripts viejos que aún llaman alert/confirm/prompt reciben el modal propio (devuelven Promise: usar await).
+Object.assign(window, { alert: askAlert, confirm: askConfirm, prompt: askPrompt });
 function getCachedProducts() {
 if (window.CacheManager && window.CacheManager.getSessionProductsCache) {
 const sessionCached = window.CacheManager.getSessionProductsCache();
@@ -427,16 +419,6 @@ if (subtitleEl) subtitleEl.textContent = 'Opcional — para envío a domicilio';
 }
 }
 }
-async function fetchWithRetry(fn, maxAttempts = 3, delays = [2000, 5000, 10000]) {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      if (attempt === maxAttempts - 1) throw err;
-      await new Promise(r => setTimeout(r, delays[attempt]));
-    }
-  }
-}
 function escapeHtml(str) {
 if (!str) return '';
 return String(str)
@@ -472,6 +454,51 @@ return String(str)
 .replace(/\r/g, '&#13;');
 }
 
+// ── Handlers declarativos (sustituyen a onclick/onchange/onerror inline; permiten una CSP sin 'unsafe-inline') ──
+// data-click="Fn.ruta" data-args='[...]' · data-change · data-href · data-hide/data-remove="id1,id2" · data-open · data-stop · data-fb (img)
+// Los argumentos viajan como JSON en data-args: {"$":"this"} = el elemento, {"$":"value"} = su value, {"$":"data","k":"x"} = dataset.x
+window.ARG = { THIS: { $: 'this' }, VALUE: { $: 'value' }, data: (k) => ({ $: 'data', k }) };
+window.dargs = (...a) => escapeAttr(JSON.stringify(a));
+(function () {
+  const walk = (path) => String(path).split('.').reduce((o, k) => (o == null ? o : o[k]), window);
+  const run = (el, path, e) => {
+    if (!/^[\w$.]+$/.test(path)) return;
+    const fn = walk(path);
+    if (typeof fn !== 'function') return;
+    const ctx = walk(path.split('.').slice(0, -1).join('.') || 'window');
+    const args = JSON.parse(el.dataset.args || '[]').map((a) => (a && a.$ === 'this' ? el : a && a.$ === 'value' ? el.value : a && a.$ === 'data' ? el.dataset[a.k] : a));
+    fn.apply(ctx, args);
+  };
+  const ids = (list, cb) => list.split(',').forEach((id) => { const n = document.getElementById(id.trim()); if (n) cb(n); });
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-click],[data-href],[data-hide],[data-remove],[data-open]');
+    if (!el) return;
+    const stop = e.target.closest('[data-stop]');
+    if (stop && stop !== el && el.contains(stop)) return;
+    const d = el.dataset;
+    if (d.click) run(el, d.click, e);
+    if (d.hide) ids(d.hide, (n) => { n.style.display = 'none'; });
+    if (d.remove) ids(d.remove, (n) => n.remove());
+    if (d.open !== undefined) window.open(d.open || el.currentSrc || el.src, '_blank', 'noopener');
+    if (d.href) location.href = d.href;
+  });
+  document.addEventListener('change', (e) => { const el = e.target.closest('[data-change]'); if (el) run(el, el.dataset.change, e); });
+  const FB = {
+    clear: (el) => { el.src = ''; },
+    hide: (el) => { el.style.display = 'none'; },
+    'hide-parent': (el) => { el.parentElement.style.display = 'none'; },
+    src: (el) => { el.src = el.dataset.fbSrc; },
+    initials: (el) => { el.style.display = 'none'; el.parentElement.textContent = el.dataset.fbText; },
+    placeholder: (el) => { el.parentNode.innerHTML = '<div class="admin-card-img-placeholder"></div>'; }
+  };
+  document.addEventListener('error', (e) => {
+    const el = e.target, fb = el.dataset && el.dataset.fb;
+    if (!fb || !FB[fb]) return;
+    el.removeAttribute('data-fb'); // una sola vez, evita bucles
+    FB[fb](el);
+  }, true);
+})();
+
 // ── Mini-slider de imágenes reutilizable para tarjetas de producto (Comunidad, perfil-vendedor) ──
 // Igual patrón que las tarjetas del catálogo propio: swipe/drag manual, sin temporizador propio.
 // Además: auto-avance lento, pero SOLO mientras la tarjeta está visible en pantalla (IntersectionObserver),
@@ -479,7 +506,7 @@ return String(str)
 function crearSliderImagenesHTML(images, alt) {
   const safeAlt = escapeAttr(alt || '');
   const imgs = (images && images.length) ? images : ['placeholder.svg'];
-  const slides = imgs.map((url, i) => `<div class="mini-slider-slide"><img src="${escapeAttr(url)}" alt="${safeAlt}" loading="lazy" style="width:100%;height:100%;object-fit:contain;display:block;background:var(--color-surface-2,#f5f5f8);" onerror="this.onerror=null;this.src='placeholder.svg'"></div>`).join('');
+  const slides = imgs.map((url, i) => `<div class="mini-slider-slide"><img src="${escapeAttr(url)}" alt="${safeAlt}" loading="lazy" style="width:100%;height:100%;object-fit:contain;display:block;background:var(--color-surface-2,#f5f5f8);" data-fb="src" data-fb-src="placeholder.svg"></div>`).join('');
   const dots = imgs.length > 1
     ? `<div class="mini-slider-dots">${imgs.map((_, i) => `<span class="mini-slider-dot${i === 0 ? ' active' : ''}"></span>`).join('')}</div>`
     : '';
@@ -537,15 +564,6 @@ window.activarMiniSlider = activarMiniSlider;
 const _miniSliderSt = document.createElement('style');
 _miniSliderSt.textContent = '.mini-slider{position:relative;width:100%;height:100%;overflow:hidden;touch-action:pan-y;}.mini-slider-track{display:flex;width:100%;height:100%;transition:transform .3s ease;}.mini-slider-slide{min-width:100%;height:100%;flex-shrink:0;}.mini-slider-dots{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:2;}.mini-slider-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.6);box-shadow:0 0 2px rgba(0,0,0,.4);transition:all .2s;}.mini-slider-dot.active{background:#ff4f81;width:12px;border-radius:3px;}';
 document.head.appendChild(_miniSliderSt);
-function safeHtml(strings, ...values) {
-return strings.reduce((result, string, i) => {
-const value = values[i];
-const escaped = typeof value === 'string' ? escapeHtml(value) :
-value === null || value === undefined ? '' :
-String(value);
-return result + string + escaped;
-}, '');
-}
 
 function optimizeDriveUrl(url, size = 400) {
   if (!url) return "https://placehold.co/400x400/3b1f5f/white?text=Z%26R";
@@ -652,7 +670,7 @@ onCancel: () => resolve(false)
 if (confirmDelete) {
 const oldPhone = localStorage.getItem("client_phone");
 if (oldPhone && typeof window.eliminarTokenFCM === 'function') {
-  window.eliminarTokenFCM('cliente', oldPhone.replace(/\D/g, '')).catch(() => {});
+  window.eliminarTokenFCM('cliente', oldPhone.replace(/\D/g, '')).catch((e) => reportError('fcm', e));
 }
 localStorage.removeItem("client_phone");
 updateSavedPhoneDisplay();
@@ -897,7 +915,7 @@ row.className = "cart-item";
 const imgUrl = item.Imagen1 ? optimizeDriveUrl(item.Imagen1, 120) : '';
 const imgHtml = imgUrl
 ? `<div class="cart-item-img-wrap">
-<img class="cart-item-img" src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" onerror="this.parentElement.style.display='none'">
+<img class="cart-item-img" src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" data-fb="hide-parent">
 </div>`
 : `<div class="cart-item-img-wrap cart-item-img-placeholder">
 <span></span>
@@ -1132,12 +1150,12 @@ descToggle.dataset.expanded = expanded ? '0' : '1';
 }
 }
 
-const BENEFICIARIOS_API_URL_RESOLVE = "https://beneficiarios-api-1038143238323.us-central1.run.app"; // TODO: pegar la URL real tras el deploy
+const BENEFICIARIOS_API_URL_RESOLVE = window.BENEFICIARIOS_API_URL; // TODO: pegar la URL real tras el deploy
 window.resolveBeneficiario = async function(beneficiarioId) {
 const beneficiario = { id: beneficiarioId || '', nombre: '', cuenta_bancaria: '' };
 if (!beneficiarioId) return beneficiario;
 try {
-const res  = await fetch(BENEFICIARIOS_API_URL_RESOLVE + '?' + new URLSearchParams({ action: 'obtenerBeneficiario', id: beneficiarioId }));
+const res  = await apiFetch(BENEFICIARIOS_API_URL_RESOLVE, { action: 'obtenerBeneficiario', id: beneficiarioId });
 const data = await res.json();
 if (data.ok && data.beneficiario) {
 beneficiario.nombre = data.beneficiario.nombre || '';
@@ -1194,7 +1212,7 @@ const donado = p._donado === true || p.donado === true || p.donado === 'TRUE' ||
 const beneficiarioId = p._beneficiarioId || p.beneficiario_id || '';
 const vendorInitials = vendorName ? vendorName.trim().split(/\s+/).map(w => w[0]).slice(0,2).join('').toUpperCase() : 'ZR';
 const vendorAvatarHtml = (vendorPlan === 'plus' && vendorLogo)
-? `<img src="${escapeAttr(vendorLogo)}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`
+? `<img src="${escapeAttr(vendorLogo)}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;" data-fb="hide">`
 : `<span style="width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.2);font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${escapeHtml(vendorInitials)}</span>`;
 const vendorPillHtml = esComunidad && vendorName
 ? `<a href="perfil-vendedor.html?vendedor=${escapeAttr(vendorUid)}" class="im-vendor-pill">${vendorAvatarHtml}<span>${escapeHtml(vendorName)}</span></a>`
@@ -1518,425 +1536,8 @@ function initImageModalControls() {
   observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
 
   if (!document.getElementById('im-styles')) {
-    const st = document.createElement('style');
-    st.id = 'im-styles';
-    st.textContent = `
-      .image-modal {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.88);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 8000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  box-sizing: border-box;
-}
-.image-modal.open { display: flex; }
-
-.im-magazine-layout {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: min(480px, 96vw);
-  max-height: 92dvh;
-  background: #0d0d14;
-  border-radius: 22px;
-  overflow: hidden;
-  box-shadow: 0 32px 80px rgba(0,0,0,.75);
-  animation: im-fade-in .22s ease;
-}
-@keyframes im-fade-in { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
-
-.im-top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 14px;
-  background: #0d0d14;
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 62px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-  flex-shrink: 0;
-}
-
-.im-vendor-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  flex: 1;
-  min-width: 0;
-}
-.im-vendor-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(255,255,255,.08);
-  backdrop-filter: blur(6px);
-  color: #fff;
-  font-size: 14px;   
-  font-weight: 700;
-  padding: 6px 14px 6px 6px;
-  border-radius: 30px;
-  text-decoration: none;
-  max-width: 260px;  
-  transition: background .2s;
-}
-.im-vendor-pill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.im-vendor-pill-znr {
-  padding: 6px 14px; 
-  background: linear-gradient(135deg,#ff4f81,#a855f7);
-}
-.im-donation-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: linear-gradient(135deg,#f97316,#ef4444);
-  color: #fff;
-  font-size: 13px;   
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 30px;
-  white-space: nowrap;
-}
-.im-ver-beneficiario-btn {
-  background: rgba(255,255,255,.08);
-  border: none;
-  color: #ffd9b3;
-  font-size: 13px;   
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 30px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background .2s;
-}
-.im-ver-beneficiario-btn:hover { background: rgba(249,115,22,.45); color: #fff; }
-
-.im-close {
-  background: rgba(255,255,255,.13);
-  border: none;
-  color: #fff;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .2s;
-  flex-shrink: 0;
-}
-.im-close:hover { background: rgba(255,79,129,.4); }
-
-.im-hero-col {
-  position: relative;
-  width: 100%;
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #111118;
-  min-height: 0;
-  overflow: hidden;
-}
-.im-prev, .im-next {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  background: rgba(0,0,0,.45);
-  border: none; color: #fff;
-  width: 36px; height: 36px;
-  border-radius: 50%; font-size: 24px;
-  cursor: pointer; display: flex;
-  align-items: center; justify-content: center;
-  transition: background .2s; z-index: 4;
-  backdrop-filter: blur(6px);
-}
-.im-prev { left: 10px; } .im-next { right: 10px; }
-.im-prev:hover, .im-next:hover { background: rgba(255,79,129,.55); }
-
-.im-wrapper {
-  width: 100%;
-  height: 50dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #111118;
-  overflow: hidden;
-}
-.im-wrapper img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.im-dots {
-  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
-  display: flex; gap: 5px; z-index: 3;
-}
-.im-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.35); transition: all .2s; }
-.im-dot.active { background: #ff4f81; width: 16px; border-radius: 3px; }
-
-.im-product-info {
-  width: 100%;
-  margin: 0;
-  background: #252831;
-  border-top: 1px solid rgba(255,255,255,.07);
-  border-bottom: 1px solid rgba(255,255,255,.07);
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-sizing: border-box;
-}
-.im-info-top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.im-info-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.3;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 180px;
-}
-.im-info-price {
-  font-size: 17px;
-  font-weight: 800;
-  color: #ff4f81;
-  white-space: nowrap;
-  background: rgba(255,79,129,.12);
-  padding: 2px 6px;
-  border-radius: 10px;
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
-}
-.im-info-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.im-info-price-original {
-  font-size: 12px;
-  color: rgba(255,255,255,.45);
-  text-decoration: line-through;
-  text-align: right;
-}
-.im-info-pct {
-  font-size: 11px;
-  font-weight: 800;
-  color: #22c55e;
-}
-.im-info-entrega {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #16a34a;
-}
-.im-desc-toggle {
-  background: none;
-  border: none;
-  color: #ff4f81;
-  font-size: 12.5px;
-  font-weight: 700;
-  padding: 0;
-  margin-top: -4px;
-  cursor: pointer;
-}
-.im-info-cat {
-  background: rgba(255,255,255,.08);
-  color: rgba(255,255,255,.7);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-}
-.im-info-badge {
-  background: linear-gradient(135deg,#ff4f81,#ff7a4f);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-}
-.im-info-stock {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 20px;
-}
-.im-info-stock.ok  { background: rgba(34,197,94,.15); color: #4ade80; }
-.im-info-stock.out { background: rgba(239,68,68,.15);  color: #f87171; }
-.im-info-talla {
-  font-size: 12px;
-  color: rgba(255,255,255,.65);
-}
-.im-info-talla strong { color: rgba(255,255,255,.9); }
-.im-info-desc {
-  font-size: 13px;
-  color: rgba(255,255,255,.5);
-  margin: 4px 0 0;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.im-buy-slot {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  z-index: 5;
-}
-.im-buy-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 16px;
-  font-size: 13px;
-  font-weight: 800;
-  color: #fff;
-  background: linear-gradient(135deg,#ff4f81,#a855f7);
-  border: none;
-  border-radius: 24px;
-  cursor: pointer;
-  transition: transform .15s ease, box-shadow .15s ease;
-  box-shadow: 0 6px 18px rgba(0,0,0,.4);
-}
-.im-buy-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0,0,0,.5); }
-.im-buy-btn:active { transform: translateY(0); }
-.im-buy-btn:disabled {
-  background: rgba(20,20,20,.7);
-  color: rgba(255,255,255,.4);
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-
-.mini-slider-slide {
-  min-width: 100%;
-  height: 100%;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-surface-2, #f5f5f8);
-}
-.mini-slider-slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-}
-
-
-.im-magazine-panel {
-  flex: 0 0 auto;
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  gap: 0;
-  background: #0d0d14;
-  border-top: 1px solid rgba(255,255,255,.07);
-  overflow: hidden;           
-  scrollbar-width: none;
-  justify-content: flex-start;
-  margin: 0;
-}
-
-.im-related-card {
-  flex: 0 0 33.333%;         
-  max-width: 33.333%;
-  display: flex;
-  flex-direction: column;
-  background: transparent;
-  border: none;
-  border-right: 1px solid rgba(255,255,255,.06);
-  cursor: pointer;
-  padding: 0;
-  color: #fff;
-  transition: background .18s;
-  position: relative;
-  overflow: hidden;
-}
-
-.im-magazine-panel::-webkit-scrollbar { display: none; }
-.im-related-card:last-child { border-right: none; }
-.im-related-card:hover { background: rgba(255,79,129,.08); }
-.im-related-card::after { content: ''; position: absolute; inset: 0; border: 2px solid transparent; border-radius: 0; transition: border-color .18s; pointer-events: none; }
-.im-related-card:hover::after { border-color: rgba(255,79,129,.4); }
-.im-related-img-wrap { width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #1a1a28; }
-.im-related-img-wrap img { width: 100%; height: 100%; object-fit: contain; transition: transform .3s; }
-.im-related-card:hover .im-related-img-wrap img { transform: scale(1.08); }
-.im-related-info { padding: 5px 6px 7px; display: flex; flex-direction: column; gap: 1px; background: rgba(0,0,0,.55); }
-.im-related-name { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.8); line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.im-related-price { font-size: 12px; font-weight: 800; color: #ff4f81; margin-top: 1px; }
-
-.im-magazine-layout.im-no-panel .im-hero-col { flex: 1 1 auto; }
-.im-magazine-layout.im-no-panel .im-wrapper { height: 82dvh; }
-
-@keyframes im-slide-in-right  { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
-@keyframes im-slide-in-left  { from{opacity:0;transform:translateX(-40px)} to{opacity:1;transform:translateX(0)} }
-@keyframes im-slide-out-left  { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-40px)} }
-@keyframes im-slide-out-right { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(40px)} }
-.im-enter-right { animation: im-slide-in-right  .28s ease forwards; }
-.im-enter-left  { animation: im-slide-in-left  .28s ease forwards; }
-.im-exit-left  { animation: im-slide-out-left  .2s ease forwards; }
-.im-exit-right  { animation: im-slide-out-right .2s ease forwards; }
-
-@media (min-width: 600px) {
-  .im-magazine-layout { width: min(520px, 92vw); }
-  .im-wrapper { height: 54dvh; }
-}
-
-[data-theme="light"] .im-magazine-layout { background: #ffffff; box-shadow: 0 32px 80px rgba(0,0,0,.25); }
-[data-theme="light"] .im-top-bar { background: #ffffff; border-bottom-color: rgba(0,0,0,.08); }
-[data-theme="light"] .im-vendor-pill { background: rgba(0,0,0,.06); color: #222; }
-[data-theme="light"] .im-ver-beneficiario-btn { background: rgba(0,0,0,.06); color: #b45309; }
-[data-theme="light"] .im-ver-beneficiario-btn:hover { background: rgba(249,115,22,.15); color: #9a3412; }
-[data-theme="light"] .im-close { background: rgba(0,0,0,.07); color: #333; }
-[data-theme="light"] .im-close:hover { background: rgba(255,79,129,.15); color: #e11d6a; }
-[data-theme="light"] .im-hero-col,
-[data-theme="light"] .im-wrapper { background: #f2f3f6; }
-[data-theme="light"] .im-dot { background: rgba(0,0,0,.18); }
-[data-theme="light"] .im-prev, [data-theme="light"] .im-next { background: rgba(255,255,255,.75); color: #333; }
-[data-theme="light"] .im-prev:hover, [data-theme="light"] .im-next:hover { background: rgba(255,79,129,.5); color: #fff; }
-[data-theme="light"] .im-product-info { background: #ffffff; border-top-color: rgba(0,0,0,.08); border-bottom-color: rgba(0,0,0,.08); }
-[data-theme="light"] .im-info-name { color: #111318; }
-[data-theme="light"] .im-info-cat { background: rgba(0,0,0,.06); color: #555; }
-[data-theme="light"] .im-info-talla { color: #666; }
-[data-theme="light"] .im-info-talla strong { color: #222; }
-[data-theme="light"] .im-info-desc { color: #777; }
-[data-theme="light"] .im-info-price-original { color: rgba(0,0,0,.35); }
-[data-theme="light"] .im-buy-btn:disabled { background: rgba(0,0,0,.07); color: rgba(0,0,0,.35); }
-[data-theme="light"] .im-magazine-panel { background: #ffffff; border-top-color: rgba(0,0,0,.08); }
-[data-theme="light"] .im-related-card { color: #111318; border-right-color: rgba(0,0,0,.08); }
-[data-theme="light"] .im-related-card:hover { background: rgba(255,79,129,.06); }
-[data-theme="light"] .im-related-img-wrap { background: #eef0f4; }
-[data-theme="light"] .im-related-info { background: rgba(255,255,255,.92); }
-[data-theme="light"] .im-related-name { color: #333; }
-    `;
-document.head.appendChild(st);
-const _btnSvgSt=document.createElement('style');_btnSvgSt.textContent='button svg{vertical-align:middle;margin-right:4px;flex-shrink:0}';document.head.appendChild(_btnSvgSt);
-}
+    document.head.insertAdjacentHTML('beforeend', '<link id="im-styles" rel="stylesheet" href="image-modal.css">');
+  }
 }
 window.shareContent = shareContent;
 window.shareProduct = shareProduct;
@@ -2032,7 +1633,7 @@ const savedFrom = localStorage.getItem('client_hour_from')|| '';
 const savedTo  = localStorage.getItem('client_hour_to')  || '';
 const savedNote = localStorage.getItem('client_note')  || '';
 const savedPhoneForPerfil = (localStorage.getItem('client_phone') || '').replace(/\D/g, '');
-const AUTH_API_URL_CART = "https://auth-api-1038143238323.us-central1.run.app";
+const AUTH_API_URL_CART = window.AUTH_API_URL;
 const DAYS  = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const HOURS = ['7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM',
 '1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM',
@@ -2097,7 +1698,7 @@ setTimeout(() => overlay.querySelector('textarea').focus(), 100);
 // usa comprador-live.html) — solo rellena los campos que sigan vacíos,
 // nunca pisa lo que la persona ya tenga puesto o guardado localmente.
 if (savedPhoneForPerfil.length === 10) {
-fetch(`${AUTH_API_URL_CART}?${new URLSearchParams({ action: 'leerPerfilComprador', telefono: savedPhoneForPerfil })}`)
+apiFetch(AUTH_API_URL_CART, { action: 'leerPerfilComprador', telefono: savedPhoneForPerfil })
 .then(r => r.json()).then(resp => {
 const perfil = resp && resp.ok ? resp.perfil : null;
 if (!perfil) return;
@@ -2214,7 +1815,7 @@ overlay.remove();
 if (savedPhoneForPerfil.length === 10) {
 const payload = { action: 'guardarPerfilComprador', telefono: savedPhoneForPerfil, direccion: address, dias: selectedDays.join(','), horaDesde: hourFrom, horaHasta: hourTo, nota: note };
 if (overlay._gpsLat !== undefined && overlay._gpsLng !== undefined) { payload.lat = overlay._gpsLat; payload.lng = overlay._gpsLng; }
-fetch(AUTH_API_URL_CART, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(payload).toString() }).catch(() => {});
+apiFetch(AUTH_API_URL_CART, payload, true).catch((e) => reportError('auth-cart', e));
 }
 resolve({ address, schedule, note });
 });
@@ -2640,7 +2241,7 @@ max-height:85vh;overflow-y:auto;
 <div style="width:40px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 20px"></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
 <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#3b1f5f);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${(plan === 'plus' && logo)
-  ? `<img src="${escapeAttr(logo)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.parentElement.textContent='${escapeAttr(String(nombre || '').trim().split(/\s+/).map(w => w[0]).slice(0,2).join('').toUpperCase() || '?')}';">`
+  ? `<img src="${escapeAttr(logo)}" alt="" style="width:100%;height:100%;object-fit:cover;" data-fb="initials" data-fb-text="${escapeAttr(String(nombre || '').trim().split(/\s+/).map(w => w[0]).slice(0,2).join('').toUpperCase() || '?')}">`
   : `<span style="font-size:16px;font-weight:800;color:#fff">${escapeHtml(String(nombre || '').trim().split(/\s+/).map(w => w[0]).slice(0,2).join('').toUpperCase() || '?')}</span>`}</div>
 <div>
 <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Pedido para</div>
@@ -2723,7 +2324,7 @@ sendBtn.textContent = 'Enviando notificación…';
 let ok = false;
 try {
 if (vendorUid && window.API_URL) {
-const VENTAS_API_URL_CHECKOUT = "https://ventas-api-1038143238323.us-central1.run.app"; // TODO: pegar la URL real tras el deploy
+const VENTAS_API_URL_CHECKOUT = window.VENTAS_API_URL; // TODO: pegar la URL real tras el deploy
 const res = await fetch(VENTAS_API_URL_CHECKOUT, {
 method: "POST",
 headers: { "Content-Type": "application/json" },
@@ -3255,7 +2856,6 @@ window.buildProductIndex = buildProductIndex;
 window._commonBuildProductIndex = buildProductIndex;
 window.getProductsByCategoryIndexed = getProductsByCategoryIndexed;
 window.getIndexedProducts = getIndexedProducts;
-window.clearProductIndex = clearProductIndex;
 window.loadProductsUnified = loadProductsUnified;
 Object.defineProperty(window, 'allProductsIndexed', { get: () => allProductsIndexed, configurable: true });
 let deferredPrompt;
@@ -3687,28 +3287,18 @@ document.head.appendChild(s);
 return _accountPanelPromise;
 }
 window.openPanelOnTab = function(tabName) {
-_loadAccountPanel().then(() => window._openPanelOnTabReal(tabName)).catch(() => {});
+_loadAccountPanel().then(() => window._openPanelOnTabReal(tabName)).catch((e) => reportError('panel-cuenta', e));
 };
 function initUserPreferences() {
 if (location.pathname.includes('admin') || location.pathname.includes('notificaciones')) return;
 const btn = document.getElementById('up-open-btn');
 if (!btn) return;
-btn.addEventListener('click', () => { _loadAccountPanel().then(() => window.buildPanel()).catch(() => {}); });
+btn.addEventListener('click', () => { _loadAccountPanel().then(() => window.buildPanel()).catch((e) => reportError('panel-cuenta', e)); });
 }
 document.addEventListener('DOMContentLoaded', initUserPreferences);
 window.escapeHtml = escapeHtml;
 window.escapeAttr = escapeAttr;
 
-window.fetchWithRetry = async function(fn, maxAttempts = 3, delays = [2000, 5000, 10000]) {
-for (let attempt = 0; attempt < maxAttempts; attempt++) {
-try { return await fn(); }
-catch(err) {
-if (attempt === maxAttempts - 1) throw err;
-await new Promise(r => setTimeout(r, delays[attempt]));
-}
-}
-};
-window.safeHtml = safeHtml;
 (function injectCartSectionStyles() {
 if (document.getElementById('cart-section-styles')) return;
 const style = document.createElement('style');
@@ -3765,7 +3355,6 @@ window.hasPendingImageUploads = function() {
 };
 
 window.uploadImagesInQueue = async function(files, startSlot = 1, uploadFn, onProgress, onSuccess) {
-    console.log('[ZR-DEBUG] uploadImagesInQueue llamada, files:', files ? files.length : 0, 'startSlot:', startSlot);
     const maxFiles = 3;
     const filesArray = Array.from(files).slice(0, maxFiles);
     if (filesArray.length === 0) return;
@@ -3812,9 +3401,7 @@ window.uploadImagesInQueue = async function(files, startSlot = 1, uploadFn, onPr
 
         try {
             if (typeof onProgress === 'function') onProgress(slot, 10);
-            console.log('[ZR-DEBUG] subiendo imagen, slot', slot);
             const url = await uploadFn(file, slot);
-            console.log('[ZR-DEBUG] upload OK, url:', url);
             const textInput = document.getElementById(`product-image${slot}`) || document.getElementById(`Imagen${slot}`);
             if (textInput) textInput.value = url;
             if (progress) progress.style.width = '100%';
@@ -3822,7 +3409,6 @@ window.uploadImagesInQueue = async function(files, startSlot = 1, uploadFn, onPr
             if (typeof onSuccess === 'function') onSuccess(slot, url);
             showTemporaryMessage(`Imagen ${slot} subida correctamente`, 'success');
         } catch (err) {
-            console.log('[ZR-DEBUG] ERROR subiendo imagen:', err.message);
             console.error(`Error subiendo imagen ${slot}:`, err);
             showTemporaryMessage(`Error en imagen ${slot}: ${err.message}`, 'error');
             if (progress) progress.style.width = '0%';
@@ -3875,8 +3461,8 @@ if ('serviceWorker' in navigator) {
 // Devuelve un objeto con .stop() en vez de un id — usa eso en vez de
 // clearInterval().
 function intervalConJitter(fn, baseMs, jitterMs) {
-  var activo = true;
-  var timeoutId = null;
+  let activo = true;
+  let timeoutId = null;
 
   function tick() {
     if (!activo) return;

@@ -48,9 +48,9 @@
   // ── Router de migración GAS → Cloud Run (mismo criterio que en
   // vendedor-unificado.js / admin.js) ──────────────────────────────
   const VENDEDORES_API_URL_COMUNIDAD =
-    "https://vendedores-api-1038143238323.us-central1.run.app";
+    window.VENDEDORES_API_URL;
   const CATALOGO_API_URL_COMUNIDAD =
-    "https://catalogo-api-1038143238323.us-central1.run.app"; // TODO: pegar la URL real tras el deploy
+    window.CATALOGO_API_URL; // TODO: pegar la URL real tras el deploy
   const MAPA_ACCIONES_MIGRADAS_COMUNIDAD = {
     aprobarVendedor: VENDEDORES_API_URL_COMUNIDAD,
     rechazarVendedor: VENDEDORES_API_URL_COMUNIDAD,
@@ -74,28 +74,8 @@
   function _resolverApiUrlComunidad(action) {
     return MAPA_ACCIONES_MIGRADAS_COMUNIDAD[action] || API_URL;
   }
-  function _escapeHtml(str) {
-    if (typeof escapeHtml === 'function') return escapeHtml(str);
-    if (!str) return '';
-    return String(str).replace(/[&<>"']/g, m =>
-      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-  }
-  function _getToken() {
-    if (typeof getToken === 'function') return getToken();
-    return sessionStorage.getItem('admin_token') || '';
-  }
-  function _gasGet(params) {
-    const url = _resolverApiUrlComunidad(params && params.action) + '?' + new URLSearchParams(params).toString();
-    return fetch(url, { cache: 'no-store' }).then(r => r.json());
-  }
-  function _gasPost(params) {
-    const url = _resolverApiUrlComunidad(params && params.action);
-    return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(params).toString()
-    }).then(r => r.json());
-  }
+  const _gasGet = (p) => apiFetch(_resolverApiUrlComunidad(p.action), p).then(r => r.json());
+  const _gasPost = (p) => apiFetch(_resolverApiUrlComunidad(p.action), p, true).then(r => r.json());
   function _msg(text, type) {
     if (typeof showTemporaryMessage === 'function') showTemporaryMessage(text, type);
   }
@@ -106,7 +86,7 @@
 
   
   function init() {
-    if (!_getToken()) return;
+    if (!getAdminToken()) return;
     if (!document.getElementById('admin-comunidad-styles')) {
       document.head.insertAdjacentHTML('beforeend', STYLES);
     }
@@ -121,17 +101,17 @@
     if (!container) return;
     container.innerHTML = window.znrSkeletonRows(3);
     try {
-      const data = await _gasGet({ action: 'vendedoresAdmin', token: _getToken() });
+      const data = await _gasGet({ action: 'vendedoresAdmin', token: getAdminToken() });
       if (!data.ok) throw new Error(data.error);
       const vendors = data.vendors || [];
-      const resets = (await _gasGet({ action: 'listarResetsComprador', token: _getToken() }).catch(() => ({}))).solicitudes || [];
+      const resets = (await _gasGet({ action: 'listarResetsComprador', token: getAdminToken() }).catch(() => ({}))).solicitudes || [];
       const resetsHtml = resets.map(r => `
         <div class="vendor-row">
           <div class="info">
-            <strong>Comprador ${_escapeHtml(r.telefono)}</strong><br>
+            <strong>Comprador ${escapeHtml(r.telefono)}</strong><br>
             <span>Pidió recuperar su contraseña. Envíale el código por WhatsApp a este mismo número.</span>
-            <button class="btn-approve" onclick="AdminComunidad.resetPasswordComprador('${_escapeHtml(r.telefono)}', this)">Generar código</button>
-            <button class="btn-stats" onclick="AdminComunidad.resetPasswordComprador('${_escapeHtml(r.telefono)}', this, true)">Descartar</button>
+            <button class="btn-approve" data-click="AdminComunidad.resetPasswordComprador" data-args="${dargs(r.telefono, ARG.THIS)}">Generar código</button>
+            <button class="btn-stats" data-click="AdminComunidad.resetPasswordComprador" data-args="${dargs(r.telefono, ARG.THIS, true)}">Descartar</button>
           </div>
         </div>`).join('');
       if (!vendors.length) {
@@ -140,39 +120,39 @@
       }
       window._allVendors = vendors;
       container.innerHTML = resetsHtml + vendors.map(v => `
-        <div class="vendor-row" id="vrow-${_escapeHtml(v.uid)}">
+        <div class="vendor-row" id="vrow-${escapeHtml(v.uid)}">
           <div class="info">
-            <strong>${_escapeHtml(v.nombre)}</strong>
-            <span> ${_escapeHtml(v.telefono)}</span><br>
-            <span class="vest-${_escapeHtml(v.estado)}">${_escapeHtml(v.estado)}</span>
+            <strong>${escapeHtml(v.nombre)}</strong>
+            <span> ${escapeHtml(v.telefono)}</span><br>
+            <span class="vest-${escapeHtml(v.estado)}">${escapeHtml(v.estado)}</span>
             <span style="font-size:11px;color:#aaa;margin-left:8px">${v.fecha ? new Date(v.fecha).toLocaleDateString() : ''}</span>
             ${v.productos != null ? `<span style="font-size:11px;color:#888;margin-left:8px"> ${v.productos} productos</span>` : ''}
-            ${v.resetSolicitado ? `<div style="margin-top:6px;padding:6px 10px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:11.5px;color:#854d0e;display:flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true"><use href="#ic-lock"/></svg> Solicitó recuperar su contraseña${v.telefonoPendiente ? ` y cambiar su número a ${_escapeHtml(v.telefonoPendiente)}` : ''}</div>` : ''}
-            ${v.telefonoPendiente && !v.resetSolicitado ? `<div style="margin-top:6px;padding:6px 10px;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;font-size:11.5px;color:#075985;display:flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true"><use href="#ic-lock"/></svg> Solicitó cambiar su número a ${_escapeHtml(v.telefonoPendiente)}</div>` : ''}
+            ${v.resetSolicitado ? `<div style="margin-top:6px;padding:6px 10px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:11.5px;color:#854d0e;display:flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true"><use href="#ic-lock"/></svg> Solicitó recuperar su contraseña${v.telefonoPendiente ? ` y cambiar su número a ${escapeHtml(v.telefonoPendiente)}` : ''}</div>` : ''}
+            ${v.telefonoPendiente && !v.resetSolicitado ? `<div style="margin-top:6px;padding:6px 10px;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;font-size:11.5px;color:#075985;display:flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true"><use href="#ic-lock"/></svg> Solicitó cambiar su número a ${escapeHtml(v.telefonoPendiente)}</div>` : ''}
           </div>
           <div class="actions" style="flex-wrap:wrap;gap:6px;">
             ${v.estado === 'pendiente' ? `
-              <button class="btn-approve" onclick="AdminComunidad.aprobarVendedor('${_escapeHtml(v.uid)}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> Aprobar</button>
-              <button class="btn-reject"  onclick="AdminComunidad.rechazarVendedor('${_escapeHtml(v.uid)}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-x"/></svg> Rechazar</button>` : ''}
+              <button class="btn-approve" data-click="AdminComunidad.aprobarVendedor" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> Aprobar</button>
+              <button class="btn-reject"  data-click="AdminComunidad.rechazarVendedor" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-x"/></svg> Rechazar</button>` : ''}
             ${v.estado === 'activo' ? `
-              <button class="btn-suspend" onclick="AdminComunidad.suspenderVendedor('${_escapeHtml(v.uid)}','${_escapeHtml(v.nombre)}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender</button>
-              <button class="btn-stats"   onclick="AdminComunidad.verEstadisticas('${_escapeHtml(v.uid)}','${_escapeHtml(v.nombre)}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-stats"/></svg> Stats</button>
-              <button class="${v.resetSolicitado ? 'btn-approve' : 'btn-stats'}" onclick="AdminComunidad.resetPasswordVendedor('${_escapeHtml(v.uid)}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-lock"/></svg> Nueva contraseña</button>
+              <button class="btn-suspend" data-click="AdminComunidad.suspenderVendedor" data-args="${dargs(v.uid, v.nombre)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender</button>
+              <button class="btn-stats"   data-click="AdminComunidad.verEstadisticas" data-args="${dargs(v.uid, v.nombre)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-stats"/></svg> Stats</button>
+              <button class="${v.resetSolicitado ? 'btn-approve' : 'btn-stats'}" data-click="AdminComunidad.resetPasswordVendedor" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-lock"/></svg> Nueva contraseña</button>
               ${v.telefonoPendiente ? `
-              <button class="btn-stats" onclick="AdminComunidad.contactarPorTelefonoPendiente('${_escapeHtml(v.telefonoPendiente)}','${_escapeHtml(v.nombre)}')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-whatsapp"/></svg> Contactar por WhatsApp</button>` : ''}
+              <button class="btn-stats" data-click="AdminComunidad.contactarPorTelefonoPendiente" data-args="${dargs(v.telefonoPendiente, v.nombre)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-whatsapp"/></svg> Contactar por WhatsApp</button>` : ''}
               ${v.telefonoPendiente && !v.resetSolicitado ? `
-              <button class="btn-approve" onclick="AdminComunidad.aprobarCambioTelefono('${_escapeHtml(v.uid)}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> Aprobar número</button>
-              <button class="btn-reject" onclick="AdminComunidad.rechazarCambioTelefono('${_escapeHtml(v.uid)}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-x"/></svg> Rechazar número</button>` : ''}` : ''}
+              <button class="btn-approve" data-click="AdminComunidad.aprobarCambioTelefono" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> Aprobar número</button>
+              <button class="btn-reject" data-click="AdminComunidad.rechazarCambioTelefono" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-x"/></svg> Rechazar número</button>` : ''}` : ''}
             ${v.estado === 'rechazado' ? `
-              <button class="btn-approve" onclick="AdminComunidad.aprobarVendedor('${_escapeHtml(v.uid)}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg> Activar</button>` : ''}
+              <button class="btn-approve" data-click="AdminComunidad.aprobarVendedor" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg> Activar</button>` : ''}
             ${v.estado === 'suspendido' ? `
-              <button class="btn-approve" onclick="AdminComunidad.reactivarVendedor('${_escapeHtml(v.uid)}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg> Reactivar</button>` : ''}
+              <button class="btn-approve" data-click="AdminComunidad.reactivarVendedor" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg> Reactivar</button>` : ''}
           </div>
         </div>`).join('');
       const pending = vendors.filter(v => v.estado === 'pendiente' || v.resetSolicitado || v.telefonoPendiente).length + resets.length;
       if (typeof window._updateNotifTabBadge === 'function') window._updateNotifTabBadge('vendors', pending);
     } catch (err) {
-      container.innerHTML = `<p style="color:#ef4444">Error: ${_escapeHtml(err.message)}</p>`;
+      container.innerHTML = `<p style="color:#ef4444">Error: ${escapeHtml(err.message)}</p>`;
     }
   }
 
@@ -191,7 +171,7 @@
         waWindow = window.open('', '_blank');
         if (waWindow) waWindow.document.write('<p style="font-family:sans-serif;padding:20px">⏳ Aprobando vendedor, un momento...</p>');
       }
-      const data = await _gasPost({ action, uid, token: _getToken() });
+      const data = await _gasPost({ action, uid, token: getAdminToken() });
       if (!data.ok) { if (waWindow) waWindow.close(); throw new Error(data.error); }
       if (action === 'aprobarVendedor' && data.codigo && data.telefono) {
         const row    = document.getElementById(`vrow-${uid}`);
@@ -222,7 +202,6 @@
   }
 
   async function resetPasswordVendedor(uid, btn) {
-    if (typeof showCustomConfirm !== 'function') { await _doResetPassword(uid, btn); return; }
     showCustomConfirm({
       title: 'Nueva contraseña',
       message: '¿Generar una contraseña temporal nueva para este vendedor? La anterior dejará de funcionar.',
@@ -234,7 +213,7 @@
   async function _doResetPassword(uid, btn) {
     const runFn = async () => {
     try {
-      const data = await _gasPost({ action: 'resetPasswordVendedor', uid, token: _getToken() });
+      const data = await _gasPost({ action: 'resetPasswordVendedor', uid, token: getAdminToken() });
       if (!data.ok) throw new Error(data.error);
       if (data.codigo && data.telefono) {
         const row    = document.getElementById(`vrow-${uid}`);
@@ -268,7 +247,6 @@
   }
 
   async function suspenderVendedor(uid, nombre, motivoReporte) {
-    if (typeof showCustomConfirm !== 'function') return;
     showCustomConfirm({
       title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender vendedor',
       message: `¿Deseas suspender a "${nombre}"? Podrás reactivarlo en cualquier momento.`,
@@ -278,7 +256,7 @@
       onConfirm: async (razon) => {
         try {
           const razonFinal = combinarRazonReporte(motivoReporte, razon);
-          const data = await _gasPost({ action: 'suspenderVendedor', uid, token: _getToken(), razon: razonFinal });
+          const data = await _gasPost({ action: 'suspenderVendedor', uid, token: getAdminToken(), razon: razonFinal });
           if (!data.ok) throw new Error(data.error);
           _msg('Vendedor suspendido', 'success');
           loadVendors();
@@ -308,7 +286,7 @@
     const prods = document.getElementById('vstats-products');
     grid.innerHTML = '<p style="color:#aaa;text-align:center;grid-column:span 2">Cargando...</p>';
     prods.innerHTML = '';
-    _gasGet({ action: 'listarTodoComunidad', token: _getToken() })
+    _gasGet({ action: 'listarTodoComunidad', token: getAdminToken() })
       .then(data => {
         const all       = (data.products || []).filter(p => p.vendedor_uid === uid);
         const totalStock = all.reduce((s, p) => s + (Number(p.stock) || 0), 0);
@@ -321,14 +299,14 @@
           <div class="vstat-card"><span class="vstat-val">${pendientes}</span><span class="vstat-lbl">Pendientes</span></div>`;
         prods.innerHTML = all.length ? all.map(p => `
           <div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #eee;">
-            <img src="${p.imagen1 || ''}" style="width:44px;height:44px;object-fit:contain;border-radius:8px;background:#f5f5f8;" onerror="this.src=''">
+            <img src="${escapeAttr(p.imagen1 || '')}" style="width:44px;height:44px;object-fit:contain;border-radius:8px;background:#f5f5f8;" data-fb="clear">
             <div style="flex:1;min-width:0;">
-              <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.nombre || '—'}</div>
-              <div style="font-size:11px;color:#888;">$${Number(p.precio||0).toLocaleString()} · Stock: ${p.stock||0} · <span style="color:${p.estado==='aprobado'?'#2e7d32':'#f57f17'}">${p.estado||''}</span></div>
+              <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.nombre || '—')}</div>
+              <div style="font-size:11px;color:#888;">$${Number(p.precio||0).toLocaleString()} · Stock: ${Number(p.stock)||0} · <span style="color:${p.estado==='aprobado'?'#2e7d32':'#f57f17'}">${escapeHtml(p.estado||'')}</span></div>
             </div>
           </div>`).join('') : '<p style="color:#aaa;text-align:center;font-size:13px;">Sin productos publicados</p>';
       })
-      .catch(err => { grid.innerHTML = `<p style="color:#ef4444;grid-column:span 2">Error: ${_escapeHtml(err.message)}</p>`; });
+      .catch(err => { grid.innerHTML = `<p style="color:#ef4444;grid-column:span 2">Error: ${escapeHtml(err.message)}</p>`; });
   }
 
   
@@ -337,7 +315,7 @@
     if (!container) return;
     container.innerHTML = window.znrSkeletonRows(3);
     try {
-      const data = await _gasGet({ action: 'productosPendientes', token: _getToken() });
+      const data = await _gasGet({ action: 'productosPendientes', token: getAdminToken() });
       if (!data.ok) throw new Error(data.error);
       const products = data.products || [];
       if (!products.length) {
@@ -345,12 +323,12 @@
         return;
       }
       container.innerHTML = products.map(p => `
-        <div class="pending-product-row" id="prow-${p.id}">
-          <img src="${_escapeHtml(p.imagen1 ? _optimizeDriveUrl(p.imagen1, 80) : '')}" alt="${_escapeHtml(p.nombre)}" onerror="this.style.display='none'">
+        <div class="pending-product-row" id="prow-${escapeAttr(p.id)}">
+          <img src="${escapeHtml(p.imagen1 ? _optimizeDriveUrl(p.imagen1, 80) : '')}" alt="${escapeHtml(p.nombre)}" data-fb="hide">
           <div class="info">
-            <strong>${_escapeHtml(p.nombre)}</strong>
-            <span>$${Number(p.precio).toLocaleString()} · Stock: ${p.stock} · ${_escapeHtml(p.categoria || '')}</span><br>
-            <span> ${_escapeHtml(p.vendedor_nombre || '')} ·  ${_escapeHtml(p.vendedor_tel || '')}</span><br>
+            <strong>${escapeHtml(p.nombre)}</strong>
+            <span>$${Number(p.precio).toLocaleString()} · Stock: ${Number(p.stock) || 0} · ${escapeHtml(p.categoria || '')}</span><br>
+            <span> ${escapeHtml(p.vendedor_nombre || '')} ·  ${escapeHtml(p.vendedor_tel || '')}</span><br>
             <label style="font-size:11px;color:#666;display:flex;align-items:center;gap:6px;margin-top:6px;">
               <span>Aprobación futura:</span>
               <select id="confiable-sel-${p.id}" style="font-size:11px;border-radius:8px;border:1px solid #ddd;padding:2px 6px;">
@@ -360,13 +338,13 @@
             </label>
           </div>
           <div class="actions">
-            <button class="btn-approve" onclick="AdminComunidad.aprobarProducto('${p.id}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> Aprobar</button>
-            <button class="btn-reject"  onclick="AdminComunidad.rechazarProducto('${p.id}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-x"/></svg> Rechazar</button>
+            <button class="btn-approve" data-click="AdminComunidad.aprobarProducto" data-args="${dargs(p.id, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> Aprobar</button>
+            <button class="btn-reject"  data-click="AdminComunidad.rechazarProducto" data-args="${dargs(p.id, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-x"/></svg> Rechazar</button>
           </div>
         </div>`).join('');
       if (typeof window._updateNotifTabBadge === 'function') window._updateNotifTabBadge('pending', products.length);
     } catch (err) {
-      container.innerHTML = `<p style="color:#ef4444">Error: ${_escapeHtml(err.message)}</p>`;
+      container.innerHTML = `<p style="color:#ef4444">Error: ${escapeHtml(err.message)}</p>`;
     }
   }
 
@@ -379,7 +357,7 @@
   async function _productAction(id, action, msg, confiable, btn, loadingText) {
     const runFn = async () => {
     try {
-      const payload = { action, id, token: _getToken() };
+      const payload = { action, id, token: getAdminToken() };
       if (confiable !== null && confiable !== undefined) payload.confiable = confiable;
       const data = await _gasPost(payload);
       if (!data.ok) throw new Error(data.error);
@@ -411,7 +389,7 @@
   if (!container) return;
   container.innerHTML = window.znrSkeletonRows(3);
   try {
-    const data = await _gasGet({ action: 'obtenerReportes', token: _getToken() });
+    const data = await _gasGet({ action: 'obtenerReportes', token: getAdminToken() });
     if (!data.ok) throw new Error(data.error);
     const reportes = data.reportes || [];
     updateReportesBadge(reportes.length);
@@ -424,30 +402,32 @@
     container.innerHTML = reportes.map(r => {
       const imgSrc       = r.imagen1 || r.imagen || '';
       const imgOpt       = imgSrc ? _optimizeDriveUrl(imgSrc, 160) : '';
-      const vendorUid    = _escapeHtml(r.vendedor_uid    || r.vendedorUid    || '');
-      const vendorNombre = _escapeHtml(r.vendedor_nombre || r.nombreVendedor || r.vendedorNombre || '');
-      const vendorTel    = _escapeHtml(r.vendedor_tel    || r.telefonoVendedor || '');
-      const productId    = _escapeHtml(String(r.productId || ''));
-      const reporteId    = _escapeHtml(String(r.reporteId || r.id || ''));
-      const nombre       = _escapeHtml(r.nombreProducto || '—');
+      // Valores crudos para data-args (dargs ya escapa para atributo); las variables siguientes van escapadas para HTML.
+      const raw = { vendorUid: r.vendedor_uid || r.vendedorUid || '', vendorNombre: r.vendedor_nombre || r.nombreVendedor || r.vendedorNombre || '', productId: String(r.productId || ''), reporteId: String(r.reporteId || r.id || ''), nombre: r.nombreProducto || '—' };
+      const vendorUid    = escapeHtml(raw.vendorUid);
+      const vendorNombre = escapeHtml(raw.vendorNombre);
+      const vendorTel    = escapeHtml(r.vendedor_tel    || r.telefonoVendedor || '');
+      const productId    = escapeHtml(raw.productId);
+      const reporteId    = escapeHtml(raw.reporteId);
+      const nombre       = escapeHtml(raw.nombre);
       const precio       = r.precio ? '$' + Number(r.precio).toLocaleString() : '';
-      const categoria    = _escapeHtml(r.categoria || '');
+      const categoria    = escapeHtml(r.categoria || '');
       const descripcion  = r.descripcion || '';
       return `
         <div class="reporte-card" id="rrow-${reporteId}">
           <div class="reporte-card-top">
-            ${imgSrc ? `<img src="${_escapeHtml(imgOpt)}" class="reporte-card-img" onerror="this.src=''" loading="lazy" onclick="window.open('${_escapeHtml(imgSrc)}','_blank')">` : '<div class="reporte-card-img-placeholder"></div>'}
+            ${imgSrc ? `<img src="${escapeHtml(imgOpt)}" class="reporte-card-img" data-fb="clear" loading="lazy" data-open="${escapeAttr(imgSrc)}">` : '<div class="reporte-card-img-placeholder"></div>'}
             <div class="reporte-card-info">
               <div class="reporte-card-nombre">${nombre}</div>
               <div class="reporte-card-meta">
                 ${precio    ? `<span class="rmeta-chip price">${precio}</span>` : ''}
                 ${categoria ? `<span class="rmeta-chip">${categoria}</span>` : ''}
-                <span class="rmeta-chip motivo"> ${_escapeHtml(r.motivo || '—')}</span>
+                <span class="rmeta-chip motivo"> ${escapeHtml(r.motivo || '—')}</span>
               </div>
               ${vendorNombre ? `<div class="reporte-card-vendedor"><span> <strong>${vendorNombre}</strong></span>${vendorTel ? `<a href="https://wa.me/${vendorTel.replace(/\D/g,'')}" target="_blank" rel="noopener" style="color:#25d366;font-size:12px;"> ${vendorTel}</a>` : ''}</div>` : ''}
               <div style="font-size:11px;color:#aaa;margin-top:4px;">
                  ${r.timestamp ? new Date(r.timestamp).toLocaleString() : '—'}
-                ${r.telefonoUsuario ? ` ·  Reportó: ${_escapeHtml(r.telefonoUsuario)}` : ''}
+                ${r.telefonoUsuario ? ` ·  Reportó: ${escapeHtml(r.telefonoUsuario)}` : ''}
               </div>
             </div>
           </div>
@@ -458,15 +438,15 @@
   data-nombre="${nombre}"
   data-precio="${Number(r.precio) || 0}"
   data-categoria="${categoria}"
-  data-descripcion="${_escapeHtml(descripcion)}"
-  data-imagen1="${_escapeHtml(imgSrc)}"
+  data-descripcion="${escapeHtml(descripcion)}"
+  data-imagen1="${escapeHtml(imgSrc)}"
   data-vendedor-uid="${vendorUid}"
   data-vendedor-nombre="${vendorNombre}"
   data-vendedor-tel="${vendorTel}"
 >Ver</button>
-            ${vendorUid ? `<button class="btn-suspend" data-motivo="${_escapeHtml(r.motivo || '')}" onclick="AdminComunidad.suspenderVendedor('${vendorUid}','${vendorNombre}', this.dataset.motivo)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender</button>` : ''}
-            <button class="btn-del-desde-reporte" data-motivo="${_escapeHtml(r.motivo || '')}" onclick="AdminComunidad.eliminarProductoDesdeReporte('${productId}','${nombre}','${reporteId}', this.dataset.motivo)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg> Eliminar producto</button>
-            <button class="btn-marcar-revisado" data-motivo="${_escapeHtml(r.motivo || '')}" onclick="AdminComunidad.marcarReporteRevisado('${reporteId}', this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Revisado</button>
+            ${vendorUid ? `<button class="btn-suspend" data-motivo="${escapeHtml(r.motivo || '')}" data-click="AdminComunidad.suspenderVendedor" data-args="${dargs(raw.vendorUid, raw.vendorNombre, ARG.data('motivo'))}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender</button>` : ''}
+            <button class="btn-del-desde-reporte" data-motivo="${escapeHtml(r.motivo || '')}" data-click="AdminComunidad.eliminarProductoDesdeReporte" data-args="${dargs(raw.productId, raw.nombre, raw.reporteId, ARG.data('motivo'))}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg> Eliminar producto</button>
+            <button class="btn-marcar-revisado" data-motivo="${escapeHtml(r.motivo || '')}" data-click="AdminComunidad.marcarReporteRevisado" data-args="${dargs(raw.reporteId, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Revisado</button>
           </div>
         </div>`;
     }).join('');
@@ -492,7 +472,7 @@
 });
 
   } catch (err) {
-    container.innerHTML = `<p style="color:#ef4444">Error: ${_escapeHtml(err.message)}</p>`;
+    container.innerHTML = `<p style="color:#ef4444">Error: ${escapeHtml(err.message)}</p>`;
   }
 }
 
@@ -503,7 +483,6 @@
   }
 
   async function eliminarProductoDesdeReporte(productId, nombreProducto, reporteId, motivoReporte) {
-    if (typeof showCustomConfirm !== 'function') return;
     showCustomConfirm({
       title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg> Eliminar producto',
       message: `¿Eliminar "${nombreProducto}" y marcar todos sus reportes como revisados?`,
@@ -513,7 +492,7 @@
       onConfirm: async (razon) => {
         try {
           const razonFinal = combinarRazonReporte(motivoReporte, razon);
-          const data = await _gasPost({ action: 'deleteComunidad', id: String(productId), token: _getToken(), razon: razonFinal });
+          const data = await _gasPost({ action: 'deleteComunidad', id: String(productId), token: getAdminToken(), razon: razonFinal });
           if (!data.ok) throw new Error(data.error);
           _msg(' Producto eliminado', 'success');
           loadReportes();
@@ -524,7 +503,6 @@
 
   async function marcarReporteRevisado(reporteId, btn) {
     const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
-    if (typeof showCustomConfirm !== 'function') return;
     showCustomConfirm({
       title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Marcar revisado',
       message: '¿Marcar este reporte como revisado? El producto se queda como está.',
@@ -535,7 +513,7 @@
         const runFn = async () => {
         try {
           const razonFinal = combinarRazonReporte(motivoReporte, razon);
-          const data = await _gasPost({ action: 'marcarReporteRevisado', reporteId: String(reporteId), token: _getToken(), razon: razonFinal });
+          const data = await _gasPost({ action: 'marcarReporteRevisado', reporteId: String(reporteId), token: getAdminToken(), razon: razonFinal });
           if (!data.ok) throw new Error(data.error);
           _msg(' Reporte archivado', 'success');
           const row = document.getElementById(`rrow-${reporteId}`);
@@ -652,7 +630,7 @@ function verProductoDesdeReporte(reporte) {
   async function resetPasswordComprador(telefono, btn, descartar) {
     const runFn = async () => {
       try {
-        const data = await _gasPost({ action: 'resetPasswordComprador', telefono, ...(descartar && { descartar: 1 }), token: _getToken() });
+        const data = await _gasPost({ action: 'resetPasswordComprador', telefono, ...(descartar && { descartar: 1 }), token: getAdminToken() });
         if (!data.ok) throw new Error(data.error);
         if (data.codigo) {
           await showCustomAlert({
@@ -695,16 +673,11 @@ function verProductoDesdeReporte(reporte) {
   };
 
   
+  // Los scripts van con defer: al llegar DOMContentLoaded ya existen common.js y notifications-optimized.js, no hace falta esperar.
   document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      init();
-      const rvBtn = document.getElementById('refresh-vendors-btn');
-      if (rvBtn) rvBtn.addEventListener('click', () => loadVendors());
-      const rpBtn = document.getElementById('refresh-pending-btn');
-      if (rpBtn) rpBtn.addEventListener('click', () => loadPendingProducts());
-      const rrBtn = document.getElementById('refresh-reportes-btn');
-      if (rrBtn) rrBtn.addEventListener('click', () => loadReportes());
-    }, 400);
+    init();
+    [['refresh-vendors-btn', loadVendors], ['refresh-pending-btn', loadPendingProducts], ['refresh-reportes-btn', loadReportes]]
+      .forEach(([id, fn]) => document.getElementById(id)?.addEventListener('click', () => fn()));
   });
 
 })();

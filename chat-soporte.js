@@ -9,9 +9,9 @@ import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebase
 import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
 (async function () {
-  if (!sessionStorage.getItem("admin_token")) return;
+  if (!getAdminToken()) return;
 
-  const API = "https://admin-api-1038143238323.us-central1.run.app";
+  const API = window.ADMIN_API_URL;
   const app = initializeApp({
     apiKey: "AIzaSyAaOe_lxLdQtTFCtw2BDR8KZRSafEMkkes",
     authDomain: "znr-live.firebaseapp.com",
@@ -21,14 +21,13 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
   const db = getDatabase(app);
 
   async function api(action, extra) {
-    const body = Object.assign({ action, token: sessionStorage.getItem("admin_token") }, extra || {});
+    const body = Object.assign({ action, token: getAdminToken() }, extra || {});
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 25000);
     const t0 = Date.now();
     try {
       const res = await fetch(API, { method: "POST", signal: ctrl.signal, headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body).toString() });
       const j = await res.json();
-      console.log("[chat-soporte] " + action + " → " + (Date.now() - t0) + "ms", j);
       return j;
     } catch (e) {
       reportar(action, e);
@@ -56,7 +55,6 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
   let rtdbConectado = false;
   onValue(ref(db, ".info/connected"), (s) => {
     rtdbConectado = s.val() === true;
-    console.log("[chat-soporte] RTDB conectado:", rtdbConectado);
     if (rtdbConectado && statusEl.textContent.indexOf("RTDB sin conexión") !== -1) estado("");
   });
   setTimeout(() => {

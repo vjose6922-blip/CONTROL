@@ -167,7 +167,6 @@ const ZR_ICONS = {
 
   // ===== Ubicación / logística =====
   // ubicación / dirección
-  'map-pin': { attrs: 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"', body: `<path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>` },
   // entrega / envío
   'truck': { attrs: 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"', body: `<path d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25h5.379c.621 0 1.152.462 1.216 1.08L21 15h-1.5m-9.75 0h5.25M5.25 9.75V6a1.5 1.5 0 011.5-1.5h10.5a1.5 1.5 0 011.5 1.5v.75"/>` },
   // fecha / calendario

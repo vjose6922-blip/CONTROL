@@ -34,7 +34,6 @@ localStorage.removeItem(CACHE_KEYS.PRODUCTS);
 return null;
 }
 if (version !== '1.0') return null;
-console.log(`📦 Productos desde caché (${source})`);
 return data;
 } catch(e) {
 console.warn('Error leyendo caché de productos:', e);
@@ -73,7 +72,6 @@ if (!pageUrl) return;
 if (navigator.connection && (navigator.connection.saveData ||
 navigator.connection.effectiveType === 'slow-2g' ||
 navigator.connection.effectiveType === '2g')) {
-console.log('📡 Conexión lenta, omitiendo prefetch');
 return;
 }
 const link = document.createElement('link');
@@ -82,7 +80,6 @@ link.href = pageUrl;
 link.as = 'document';
 document.head.appendChild(link);
 const scriptMap = {
-'index.html': 'script.js',
 'looks.html': 'looks.js',
 'index.html': 'admin.js',
 'notificaciones.html': null

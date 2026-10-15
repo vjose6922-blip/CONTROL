@@ -1,5 +1,5 @@
-const CACHE_NAME    = 'zr-admin-cache-v14';
-const DYNAMIC_CACHE = 'zr-admin-dynamic-v14';
+const CACHE_NAME    = 'zr-admin-cache-v15';
+const DYNAMIC_CACHE = 'zr-admin-dynamic-v15';
 
 const STATIC_ASSETS = [
   './',
@@ -7,6 +7,7 @@ const STATIC_ASSETS = [
   'notificaciones.html',
   'Tools.html',
   'styles.css',
+  'image-modal.css',
   'api-config.js',
   'common.js',
   'admin.js',
@@ -22,6 +23,14 @@ const STATIC_ASSETS = [
   'fcm-init.js',
   'chat-soporte.js',
   'icons.js',
+  'ciudades.js',
+  'theme-boot.js',
+  'sw-register.js',
+  'index-push.js',
+  'notif-guard.js',
+  'notif-ui.js',
+  'notif-plus.js',
+  'tools-page.js',
   'manifest.json',
   'logo.svg',
 ];

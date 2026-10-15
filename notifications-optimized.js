@@ -1,20 +1,13 @@
 const _icCheck  = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-check"/></svg>';
 const _icX      = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-x"/></svg>';
 const _icClock  = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
-const _icMoney  = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 11.219 12.768 11 12 11c-.768 0-1.536-.219-2.121-.659a2.25 2.25 0 010-3.182c.585-.44 1.353-.659 2.121-.659.768 0 1.536.219 2.121.659M12 6v1m0 12v-1"/></svg>';
 const _icTrash  = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-trash"/></svg>';
-const BENEFICIARIOS_API_URL_NOTIF = "https://beneficiarios-api-1038143238323.us-central1.run.app"; // TODO: pegar la URL real tras el deploy
-const LIVE_API_URL_NOTIF = "https://live-api-1038143238323.us-central1.run.app"; // TODO: pegar la URL real tras el deploy
-const TIENDA_ZNR_API_URL_NOTIF = "https://tienda-znr-api-1038143238323.us-central1.run.app";
-const _icStar   = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#f0a500" viewBox="0 0 24 24"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>';
-const _icStarO  = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>';
+const BENEFICIARIOS_API_URL_NOTIF = window.BENEFICIARIOS_API_URL; // TODO: pegar la URL real tras el deploy
+const LIVE_API_URL_NOTIF = window.LIVE_API_URL; // TODO: pegar la URL real tras el deploy
+const TIENDA_ZNR_API_URL_NOTIF = window.TIENDA_ZNR_API_URL;
 const _icCal    = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>';
 const _icPhone  = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3"/></svg>';
-const _icId     = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z"/></svg>';
-const _icSize   = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.595.33a18.095 18.095 0 005.223-5.223c.542-.815.369-1.896-.33-2.595L9.568 3z"/></svg>';
-const _icBox    = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>';
 const _icList   = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-catalog"/></svg>';
-const _icWarn   = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-error"/></svg>';
 const NOTIF_CACHE_KEY = 'zr_notifications_v2';
 const NOTIF_CACHE_TTL = 30000;
 
@@ -24,7 +17,7 @@ const NOTIF_CACHE_TTL = 30000;
 // mismo estilo visual de .vendor-row/.pending-product-row.
 window.znrSkeletonRows = function(count) {
   count = count || 3;
-  var row = '<div class="zr-skel-card">' +
+  let row = '<div class="zr-skel-card">' +
     '<div class="zr-skel-avatar zr-skel-shimmer"></div>' +
     '<div class="zr-skel-lines">' +
       '<div class="zr-skel-line w70 zr-skel-shimmer"></div>' +
@@ -40,17 +33,6 @@ const CLOCK = _icClock;
 const CHECK = _icCheck;
 const X_ICO = _icX;
 
-if (typeof escapeHtml !== 'function') {
-  window.escapeHtml = function(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
-  };
-}
 
 let currentPage = 1;
 let totalPages = 1;
@@ -234,7 +216,7 @@ async function loadNotificationsOptimized(forceRefresh = false) {
   if (!hasCached) showSkeletonNotifications();
 
   try {
-    const token = sessionStorage.getItem("admin_token") || "";
+    const token = getAdminToken();
     if (!token) throw new Error("No token");
 
     const params = new URLSearchParams({
@@ -361,7 +343,7 @@ function createOptimizedNotificationCard(group) {
                  data-src="${escapeHtml(getOptimizedThumbnail(notif.imagen))}"
                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f8'/%3E%3C/svg%3E"
                  alt="${escapeHtml(notif.nombre)}"
-                 onerror="this.src='https://via.placeholder.com/90?text=No+img'">
+                 data-fb="src" data-fb-src="https://via.placeholder.com/90?text=No+img">
           </div>
           <div class="request-product-info">
             <div class="request-product-name">${escapeHtml(notif.nombre)}</div>
@@ -409,14 +391,12 @@ if (document.hidden) {
 refreshTimeout = setTimeout(() => refreshInBackground(), 5000);
 return;
 }
-console.log("🔄 Actualización en background...");
 try {
 const url = `${TIENDA_ZNR_API_URL_NOTIF}?action=notificationsBatch&page=1&pageSize=100&noCache=true`;
 const response = await fetch(url);
 const result = await response.json();
 if (result.ok && result.groups) {
 if (JSON.stringify(result.groups) !== JSON.stringify(allGroups)) {
-console.log("✨ Cambios detectados, actualizando vista");
 setCachedNotifications(result);
 allGroups = result.groups;
 allGroups.sort((a, b) => new Date(b.firstDate) - new Date(a.firstDate));
@@ -427,7 +407,7 @@ showTemporaryMessage("Solicitudes actualizadas", "info");
 }
 }
 } catch (err) {
-console.log("Background refresh falló:", err);
+reportError('notifications-bg', err);
 }
 }, 5000);
 }
@@ -538,11 +518,7 @@ onCancel: () => resolve(null)
 if (razon === null) return;
 if (typeof showLoader === 'function') showLoader("Eliminando...");
 try {
-const response = await fetch(TIENDA_ZNR_API_URL_NOTIF, {
-method: "POST",
-headers: { "Content-Type": "application/x-www-form-urlencoded" },
-body: new URLSearchParams({ action: "removeOutOfStockNotifications", requestId: requestId, token: sessionStorage.getItem("admin_token") || "", razon: razon }).toString()
-});
+const response = await apiFetch(TIENDA_ZNR_API_URL_NOTIF, { action: "removeOutOfStockNotifications", requestId: requestId, token: getAdminToken(), razon: razon }, true);
 const data = await response.json();
 if (data.ok) {
 showCustomAlert({ title: "Listo", message: `Eliminados ${data.removedCount} producto(s) sin stock`, icon: "", confirmText: "Aceptar" });
@@ -604,7 +580,7 @@ async function confirmGroupPurchase(requestId) {
     const data = await fetchConReintento(TIENDA_ZNR_API_URL_NOTIF, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ action: "confirmGroupPurchase", requestId: requestId, token: sessionStorage.getItem("admin_token") || "", razon: razon }).toString()
+      body: new URLSearchParams({ action: "confirmGroupPurchase", requestId: requestId, token: getAdminToken(), razon: razon }).toString()
     });
 
     if (!data.ok) throw new Error(data.error || "Error al confirmar");
@@ -675,11 +651,7 @@ onCancel: () => resolve(null)
 if (razon === null) return;
 if (typeof showLoader === 'function') showLoader("Cancelando...");
 try {
-const response = await fetch(TIENDA_ZNR_API_URL_NOTIF, {
-method: "POST",
-headers: { "Content-Type": "application/x-www-form-urlencoded" },
-body: new URLSearchParams({ action: "cancelGroupPurchase", requestId: requestId, token: sessionStorage.getItem("admin_token") || "", razon: razon }).toString()
-});
+const response = await apiFetch(TIENDA_ZNR_API_URL_NOTIF, { action: "cancelGroupPurchase", requestId: requestId, token: getAdminToken(), razon: razon }, true);
 const data = await response.json();
 if (data.ok) {
 showCustomAlert({ title: "Solicitud cancelada", message: `Se cancelaron ${data.cancelledCount} producto(s).`, icon: "", confirmText: "Aceptar" });
@@ -694,44 +666,6 @@ throw new Error(data.error || "Error");
 showCustomAlert({ title: "Error", message: "Ocurrió un error. Intenta nuevamente.", icon: "", confirmText: "Aceptar" });
 } finally {
 if (typeof hideLoader === 'function') hideLoader();
-}
-}
-async function toggleProductoConfiable(productId, nuevoValor, btn) {
-const token = sessionStorage.getItem('admin_token') || '';
-try {
-btn.disabled = true;
-btn.innerHTML = _icClock;
-const params = new URLSearchParams({
-action:    'marcarProductoConfiable',
-productId: productId,
-confiable: nuevoValor,
-token:     token
-});
-const res  = await fetch("https://catalogo-api-1038143238323.us-central1.run.app", {
-method:  'POST',
-headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-body:    params.toString()
-});
-const data = await res.json();
-if (!data.ok) throw new Error(data.error);
-btn.dataset.confiable = nuevoValor ? 'true' : 'false';
-btn.innerHTML         = nuevoValor ? _icStar : _icStarO;
-btn.classList.toggle('is-confiable', nuevoValor);
-btn.title = nuevoValor
-? 'Marcado como confiable (click para quitar)'
-: 'Marcar producto como confiable';
-if (typeof showTemporaryMessage === 'function') {
-showTemporaryMessage(
-nuevoValor ? 'Producto marcado como confiable' : 'Confiable removido',
-'success'
-);
-}
-} catch (err) {
-btn.disabled = false;
-btn.innerHTML = nuevoValor ? _icStarO : _icStar;
-if (typeof showTemporaryMessage === 'function') {
-showTemporaryMessage(err.message, 'error');
-}
 }
 }
 
@@ -779,10 +713,10 @@ window.loadBeneficiarios = async function(force) {
   if (!list) return;
   list.innerHTML = window.znrSkeletonRows(3);
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF + '?' + new URLSearchParams({ action:'obtenerBeneficiarios', estado:'pendiente', token }));
+    const token = getAdminToken();
+    const res   = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action:'obtenerBeneficiarios', estado:'pendiente', token });
     const data  = await res.json();
-    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${data.error}</p>`; return; }
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${escapeHtml(data.error)}</p>`; return; }
     const bens  = data.beneficiarios || [];
     window._benCache = window._benCache || {};
     bens.forEach(b => { window._benCache[b.id] = b; });
@@ -797,24 +731,23 @@ window.loadBeneficiarios = async function(force) {
     const benBadgeNuevas = document.getElementById('ben-badge-nuevas');
     if (benBadgeNuevas) benBadgeNuevas.textContent = bens.length;
     if (bens.length === 0) { list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay solicitudes pendientes.</p>'; return; }
-    const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     list.innerHTML = bens.map(b => `
       <div class="vendor-card" style="border-left:4px solid #f97316;">
         <div style="display:flex;align-items:flex-start;gap:10px;padding:14px 16px;">
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:700;font-size:.9rem;margin-bottom:2px;">${esc(b.nombre)}</div>
-            ${b.organizacion ? `<div style="font-size:.75rem;color:#888;">${esc(b.organizacion)}</div>` : ''}
-            <div style="font-size:.75rem;color:#888;margin-top:2px;">${Icon('map-pin',{size:13})} ${esc(b.ubicacion)} · ${_icPhone} ${esc(b.telefono)}</div>
-            <div style="font-size:.78rem;margin-top:6px;color:#555;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(b.historia)}</div>
+            <div style="font-weight:700;font-size:.9rem;margin-bottom:2px;">${escapeHtml(b.nombre)}</div>
+            ${b.organizacion ? `<div style="font-size:.75rem;color:#888;">${escapeHtml(b.organizacion)}</div>` : ''}
+            <div style="font-size:.75rem;color:#888;margin-top:2px;">${Icon('map-pin',{size:13})} ${escapeHtml(b.ubicacion)} · ${_icPhone} ${escapeHtml(b.telefono)}</div>
+            <div style="font-size:.78rem;margin-top:6px;color:#555;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(b.historia)}</div>
             <div style="font-size:.72rem;color:#aaa;margin-top:4px;">
-              ${b.facebook ? `<a href="${esc(b.facebook)}" target="_blank" rel="noopener" style="color:#1877f2;">Facebook</a> · ` : ''}
+              ${b.facebook ? `<a href="${escapeHtml(b.facebook)}" target="_blank" rel="noopener" style="color:#1877f2;">Facebook</a> · ` : ''}
               ${new Date(b.fecha_registro).toLocaleDateString('es-MX')}
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-            <button onclick="adminAprobarBeneficiario('${esc(b.id)}', this)" style="padding:7px 12px;border:none;border-radius:20px;background:#22c55e;color:#fff;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Aprobar</button>
-            <button onclick="window.openBeneficiarioModal && window.openBeneficiarioModal('${esc(b.id)}')" style="padding:7px 12px;border:none;border-radius:20px;background:#e0e7ff;color:#3730a3;font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver</button>
-            <button onclick="adminRechazarBeneficiario('${esc(b.id)}', this)" style="padding:7px 12px;border:none;border-radius:20px;background:#fee2e2;color:#b91c1c;font-weight:700;font-size:.75rem;cursor:pointer;">${_icX} Rechazar</button>
+            <button data-click="adminAprobarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" style="padding:7px 12px;border:none;border-radius:20px;background:#22c55e;color:#fff;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Aprobar</button>
+            <button data-click="openBeneficiarioModal" data-args="${dargs(b.id)}" style="padding:7px 12px;border:none;border-radius:20px;background:#e0e7ff;color:#3730a3;font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver</button>
+            <button data-click="adminRechazarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" style="padding:7px 12px;border:none;border-radius:20px;background:#fee2e2;color:#b91c1c;font-weight:700;font-size:.75rem;cursor:pointer;">${_icX} Rechazar</button>
           </div>
         </div>
       </div>`).join('');
@@ -830,7 +763,6 @@ window.openBeneficiarioModal = function(id) {
   const b = (window._benCache || {})[id];
   const old = document.getElementById('ben-detail-modal');
   if (old) old.remove();
-  const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   const modal = document.createElement('div');
   modal.id = 'ben-detail-modal';
@@ -839,7 +771,7 @@ window.openBeneficiarioModal = function(id) {
   if (!b) {
     modal.innerHTML = `<div style="background:#1e1e2e;border-radius:14px;padding:24px;max-width:380px;width:100%;color:#fff;text-align:center;border:1px solid rgba(249,115,22,.4);">
       <p style="color:#f87171;margin:0 0 14px;">No se encontró la información de esta solicitud. Refresca la lista e intenta de nuevo.</p>
-      <button onclick="document.getElementById('ben-detail-modal').remove()" style="padding:8px 16px;border-radius:8px;border:1px solid #555;background:transparent;color:#aaa;cursor:pointer;">Cerrar</button>
+      <button data-remove="ben-detail-modal" style="padding:8px 16px;border-radius:8px;border:1px solid #555;background:transparent;color:#aaa;cursor:pointer;">Cerrar</button>
     </div>`;
     document.body.appendChild(modal);
     return;
@@ -849,31 +781,31 @@ window.openBeneficiarioModal = function(id) {
   modal.innerHTML = `
     <div style="background:#1e1e2e;border-radius:14px;padding:22px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;border:1px solid rgba(249,115,22,.4);color:#fff;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-        <h3 style="margin:0;color:#f97316;font-size:1.05rem;">${esc(b.nombre)}</h3>
-        <button onclick="document.getElementById('ben-detail-modal').remove()" style="background:none;border:none;font-size:20px;color:#888;cursor:pointer;line-height:1;">×</button>
+        <h3 style="margin:0;color:#f97316;font-size:1.05rem;">${escapeHtml(b.nombre)}</h3>
+        <button data-remove="ben-detail-modal" style="background:none;border:none;font-size:20px;color:#888;cursor:pointer;line-height:1;">×</button>
       </div>
-      ${b.organizacion ? `<p style="color:#aaa;font-size:.82rem;margin:2px 0 0;">${esc(b.organizacion)}</p>` : ''}
+      ${b.organizacion ? `<p style="color:#aaa;font-size:.82rem;margin:2px 0 0;">${escapeHtml(b.organizacion)}</p>` : ''}
       <div style="margin-top:14px;font-size:.82rem;color:#ccc;line-height:1.7;">
-        <div><strong style="color:#fff;">Ubicación:</strong> ${esc(b.ubicacion) || '—'}</div>
-        <div><strong style="color:#fff;">Teléfono:</strong> ${esc(b.telefono) || '—'}</div>
-        ${b.cuenta_bancaria ? `<div><strong style="color:#fff;">Cuenta bancaria:</strong> ${esc(b.cuenta_bancaria)}</div>` : ''}
-        ${b.facebook ? `<div><strong style="color:#fff;">Facebook:</strong> <a href="${esc(b.facebook)}" target="_blank" rel="noopener" style="color:#1877f2;">${esc(b.facebook)}</a></div>` : ''}
+        <div><strong style="color:#fff;">Ubicación:</strong> ${escapeHtml(b.ubicacion) || '—'}</div>
+        <div><strong style="color:#fff;">Teléfono:</strong> ${escapeHtml(b.telefono) || '—'}</div>
+        ${b.cuenta_bancaria ? `<div><strong style="color:#fff;">Cuenta bancaria:</strong> ${escapeHtml(b.cuenta_bancaria)}</div>` : ''}
+        ${b.facebook ? `<div><strong style="color:#fff;">Facebook:</strong> <a href="${escapeHtml(b.facebook)}" target="_blank" rel="noopener" style="color:#1877f2;">${escapeHtml(b.facebook)}</a></div>` : ''}
         <div><strong style="color:#fff;">Solicitado:</strong> ${b.fecha_registro ? new Date(b.fecha_registro).toLocaleDateString('es-MX') : '—'}</div>
       </div>
       <div style="margin-top:14px;">
         <div style="font-size:.72rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Historia</div>
-        <p style="font-size:.85rem;color:#ddd;line-height:1.6;white-space:pre-wrap;margin:0;">${esc(b.historia) || '—'}</p>
+        <p style="font-size:.85rem;color:#ddd;line-height:1.6;white-space:pre-wrap;margin:0;">${escapeHtml(b.historia) || '—'}</p>
       </div>
       ${fotos.length ? `
       <div style="margin-top:14px;">
         <div style="font-size:.72rem;color:#888;text-transform:uppercase;margin-bottom:6px;">Fotos</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${fotos.map(url => `<img src="${esc(url)}" loading="lazy" style="width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.1);cursor:pointer;" onclick="window.open('${esc(url)}','_blank')">`).join('')}
+          ${fotos.map(url => `<img src="${escapeHtml(url)}" loading="lazy" style="width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.1);cursor:pointer;" data-open="${escapeAttr(url)}">`).join('')}
         </div>
       </div>` : ''}
       <div style="display:flex;gap:8px;margin-top:18px;">
-        <button onclick="adminRechazarBeneficiario('${esc(b.id)}', this); document.getElementById('ben-detail-modal').remove();" style="flex:1;padding:9px;border:none;border-radius:8px;background:#fee2e2;color:#b91c1c;font-weight:700;font-size:.8rem;cursor:pointer;">${_icX} Rechazar</button>
-        <button onclick="adminAprobarBeneficiario('${esc(b.id)}', this); document.getElementById('ben-detail-modal').remove();" style="flex:1;padding:9px;border:none;border-radius:8px;background:#22c55e;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;">${_icCheck} Aprobar</button>
+        <button data-click="adminRechazarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" data-remove="ben-detail-modal" style="flex:1;padding:9px;border:none;border-radius:8px;background:#fee2e2;color:#b91c1c;font-weight:700;font-size:.8rem;cursor:pointer;">${_icX} Rechazar</button>
+        <button data-click="adminAprobarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" data-remove="ben-detail-modal" style="flex:1;padding:9px;border:none;border-radius:8px;background:#22c55e;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;">${_icCheck} Aprobar</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -881,35 +813,35 @@ window.openBeneficiarioModal = function(id) {
 };
 
 window.adminAprobarBeneficiario = async function(id, btn) {
-  if (!confirm('¿Aprobar esta solicitud? Se creará una cuenta de vendedor si no existe.')) return;
+  if (!await askConfirm('¿Aprobar esta solicitud? Se creará una cuenta de vendedor si no existe.')) return;
   const runFn = async () => {
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'aprobarBeneficiario', id_beneficiario: id, token }).toString() });
+    const token = getAdminToken();
+    const res   = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action:'aprobarBeneficiario', id_beneficiario: id, token }, true);
     const data  = await res.json();
-    if (!data.ok) { alert('Error: ' + data.error); return; }
+    if (!data.ok) { askAlert('Error: ' + data.error); return; }
     if (data.codigo && data.telefono) {
       const urlVendedor = 'https://znrcommunity.com/vendedor.html';
       const msg = `¡Felicidades ${data.nombre || ''}! 🎉\n\nTu solicitud de beneficiario en Z&R fue *aprobada*.\n\nTu contraseña temporal:\n*${data.codigo}*\n\nIngresa en:\n${urlVendedor}\n\nUsa tu número de WhatsApp como usuario.`;
       window.open(`https://wa.me/52${data.telefono}?text=${encodeURIComponent(msg)}`, '_blank');
     }
     loadBeneficiarios(true);
-  } catch(err) { alert('Error de conexión.'); }
+  } catch(err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Aprobando…');
   else await runFn();
 };
 
 window.adminRechazarBeneficiario = async function(id, btn) {
-  if (!confirm('¿Rechazar esta solicitud?')) return;
+  if (!await askConfirm('¿Rechazar esta solicitud?')) return;
   const runFn = async () => {
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'rechazarBeneficiario', id_beneficiario: id, token }).toString() });
+    const token = getAdminToken();
+    const res   = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action:'rechazarBeneficiario', id_beneficiario: id, token }, true);
     const data  = await res.json();
-    if (!data.ok) { alert('Error: ' + data.error); return; }
+    if (!data.ok) { askAlert('Error: ' + data.error); return; }
     loadBeneficiarios(true);
-  } catch(err) { alert('Error de conexión.'); }
+  } catch(err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Rechazando…');
   else await runFn();
@@ -921,10 +853,10 @@ window.loadSolicitudesBeneficiario = async function(force) {
   if (!list) return;
   list.innerHTML = window.znrSkeletonRows(3);
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF + '?' + new URLSearchParams({ action:'obtenerSolicitudesBeneficiario', token }));
+    const token = getAdminToken();
+    const res   = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action:'obtenerSolicitudesBeneficiario', token });
     const data  = await res.json();
-    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${data.error}</p>`; return; }
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${escapeHtml(data.error)}</p>`; return; }
     const sols = data.solicitudes || [];
     const cnt = document.getElementById('sc-solicitudes-ben');
     if (cnt) cnt.textContent = sols.length;
@@ -932,18 +864,17 @@ window.loadSolicitudesBeneficiario = async function(force) {
     if (benBadgeEdiciones) benBadgeEdiciones.textContent = sols.length;
     if (sols.length === 0) { list.innerHTML = '<p style="color:#aaa;text-align:center;padding:20px;">No hay solicitudes de edición o eliminación.</p>'; return; }
 
-    const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const campo = (label, actual, nuevo) => {
       const cambio = String(actual||'') !== String(nuevo||'');
       return `<div style="margin-bottom:6px;">
         <div style="font-size:.68rem;color:#888;text-transform:uppercase;">${label}</div>
-        <div style="font-size:.8rem;${cambio?'color:#888;text-decoration:line-through;':''}">${esc(actual)||'—'}</div>
-        ${cambio ? `<div style="font-size:.8rem;color:#16a34a;font-weight:700;">${Icon('arrow-right',{size:12})} ${esc(nuevo)||'—'}</div>` : ''}
+        <div style="font-size:.8rem;${cambio?'color:#888;text-decoration:line-through;':''}">${escapeHtml(actual)||'—'}</div>
+        ${cambio ? `<div style="font-size:.8rem;color:#16a34a;font-weight:700;">${Icon('arrow-right',{size:12})} ${escapeHtml(nuevo)||'—'}</div>` : ''}
       </div>`;
     };
     // Miniatura simple (para la tarjeta de eliminación, o cuando no hay cambio de foto)
     const thumb = url => url
-      ? `<img src="${esc(url)}" loading="lazy" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.1);">`
+      ? `<img src="${escapeHtml(url)}" loading="lazy" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.1);">`
       : `<div style="width:56px;height:56px;border-radius:8px;background:#26262f;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">—</div>`;
     // Comparación actual → nueva para un slot de foto (imagen1/2/3)
     const campoImg = (label, urlActual, urlNueva) => {
@@ -964,12 +895,12 @@ window.loadSolicitudesBeneficiario = async function(force) {
         return `<div class="vendor-card" style="border-left:4px solid #ef4444;">
           <div style="padding:14px 16px;">
             <div style="font-weight:700;font-size:.9rem;color:#dc2626;">${_icTrash} Solicitud de eliminación</div>
-            <div style="font-size:.82rem;margin-top:4px;">${esc(s.actual ? s.actual.nombre : s.id_beneficiario)}</div>
+            <div style="font-size:.82rem;margin-top:4px;">${escapeHtml(s.actual ? s.actual.nombre : s.id_beneficiario)}</div>
             <div style="font-size:.72rem;color:#888;margin-top:2px;">${s.fecha ? new Date(s.fecha).toLocaleDateString('es-MX') : ''}</div>
             ${fotosActuales.length ? `<div style="display:flex;gap:6px;margin-top:8px;">${fotosActuales.map(thumb).join('')}</div>` : ''}
             <div style="display:flex;gap:8px;margin-top:10px;">
-              <button onclick="adminAprobarSolicitudBeneficiario('${esc(s.id)}', this)" style="flex:1;padding:7px;border:none;border-radius:8px;background:#ef4444;color:#fff;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Confirmar eliminación</button>
-              <button onclick="adminRechazarSolicitudBeneficiario('${esc(s.id)}', this)" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icX} Rechazar</button>
+              <button data-click="adminAprobarSolicitudBeneficiario" data-args="${dargs(s.id, ARG.THIS)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#ef4444;color:#fff;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Confirmar eliminación</button>
+              <button data-click="adminRechazarSolicitudBeneficiario" data-args="${dargs(s.id, ARG.THIS)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icX} Rechazar</button>
             </div>
           </div>
         </div>`;
@@ -991,8 +922,8 @@ window.loadSolicitudesBeneficiario = async function(force) {
             ? `<div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;">${campoImg('Foto 1', actual.imagen1, nuevo.imagen1)}${campoImg('Foto 2', actual.imagen2, nuevo.imagen2)}${campoImg('Foto 3', actual.imagen3, nuevo.imagen3)}</div>`
             : ''}
           <div style="display:flex;gap:8px;margin-top:10px;">
-            <button onclick="adminAprobarSolicitudBeneficiario('${esc(s.id)}', this)" style="flex:1;padding:7px;border:none;border-radius:8px;background:#22c55e;color:#fff;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Aplicar cambios</button>
-            <button onclick="adminRechazarSolicitudBeneficiario('${esc(s.id)}', this)" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icX} Rechazar</button>
+            <button data-click="adminAprobarSolicitudBeneficiario" data-args="${dargs(s.id, ARG.THIS)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#22c55e;color:#fff;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Aplicar cambios</button>
+            <button data-click="adminRechazarSolicitudBeneficiario" data-args="${dargs(s.id, ARG.THIS)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icX} Rechazar</button>
           </div>
         </div>
       </div>`;
@@ -1003,31 +934,31 @@ window.loadSolicitudesBeneficiario = async function(force) {
 };
 
 window.adminAprobarSolicitudBeneficiario = async function(id, btn) {
-  if (!confirm('¿Aplicar esta solicitud?')) return;
+  if (!await askConfirm('¿Aplicar esta solicitud?')) return;
   const runFn = async () => {
     try {
-      const token = sessionStorage.getItem('admin_token') || '';
-      const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'aprobarSolicitudBeneficiario', id, token }).toString() });
+      const token = getAdminToken();
+      const res   = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action:'aprobarSolicitudBeneficiario', id, token }, true);
       const data  = await res.json();
-      if (!data.ok) { alert('Error: ' + data.error); return; }
+      if (!data.ok) { askAlert('Error: ' + data.error); return; }
       loadSolicitudesBeneficiario(true);
       loadBeneficiarios(true);
-    } catch(err) { alert('Error de conexión.'); }
+    } catch(err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Aplicando…');
   else await runFn();
 };
 
 window.adminRechazarSolicitudBeneficiario = async function(id, btn) {
-  if (!confirm('¿Rechazar esta solicitud?')) return;
+  if (!await askConfirm('¿Rechazar esta solicitud?')) return;
   const runFn = async () => {
     try {
-      const token = sessionStorage.getItem('admin_token') || '';
-      const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'rechazarSolicitudBeneficiario', id, token }).toString() });
+      const token = getAdminToken();
+      const res   = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action:'rechazarSolicitudBeneficiario', id, token }, true);
       const data  = await res.json();
-      if (!data.ok) { alert('Error: ' + data.error); return; }
+      if (!data.ok) { askAlert('Error: ' + data.error); return; }
       loadSolicitudesBeneficiario(true);
-    } catch(err) { alert('Error de conexión.'); }
+    } catch(err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Rechazando…');
   else await runFn();
@@ -1039,26 +970,25 @@ window.loadReportesBeneficiarios = async function(force) {
   if (!list) return;
   list.innerHTML = window.znrSkeletonRows(2);
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF + '?' + new URLSearchParams({ action:'obtenerReportesBeneficiarios', token }));
+    const token = getAdminToken();
+    const res   = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action:'obtenerReportesBeneficiarios', token });
     const data  = await res.json();
-    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${data.error}</p>`; return; }
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${escapeHtml(data.error)}</p>`; return; }
     const reportes = data.reportes || [];
     const badge = document.getElementById('ben-badge-reportes');
     if (badge) badge.textContent = reportes.length;
     if (reportes.length === 0) { list.innerHTML = '<p style="color:#aaa;text-align:center;padding:24px;">No hay reportes pendientes de revisar.</p>'; return; }
 
-    const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     reportes.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
     list.innerHTML = reportes.map(r => `
       <div class="vendor-card" style="border-left:4px solid #ef4444;">
         <div style="padding:14px 16px;">
-          <div style="font-weight:700;font-size:.9rem;">${Icon('flag',{size:13})} ${esc(r.nombre_beneficiario || r.beneficiario_id)}</div>
-          <div style="font-size:.72rem;color:#888;margin-top:2px;">${r.fecha ? new Date(r.fecha).toLocaleString('es-MX') : ''}${r.telefono_usuario ? ' · ' + _icPhone + ' ' + esc(r.telefono_usuario) : ''}</div>
-          <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${esc(r.motivo)}</div>
+          <div style="font-weight:700;font-size:.9rem;">${Icon('flag',{size:13})} ${escapeHtml(r.nombre_beneficiario || r.beneficiario_id)}</div>
+          <div style="font-size:.72rem;color:#888;margin-top:2px;">${r.fecha ? new Date(r.fecha).toLocaleString('es-MX') : ''}${r.telefono_usuario ? ' · ' + _icPhone + ' ' + escapeHtml(r.telefono_usuario) : ''}</div>
+          <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${escapeHtml(r.motivo)}</div>
           <div style="display:flex;gap:8px;margin-top:10px;">
-            <button onclick="verBeneficiarioDesdeReporte('${esc(r.beneficiario_id)}')" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e0e7ff;color:#3730a3;font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver beneficiario</button>
-            <button data-motivo="${esc(r.motivo || '')}" onclick="adminMarcarReporteBeneficiarioRevisado('${esc(r.id)}', this)" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Marcar revisado</button>
+            <button data-click="verBeneficiarioDesdeReporte" data-args="${dargs(r.beneficiario_id)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e0e7ff;color:#3730a3;font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver beneficiario</button>
+            <button data-motivo="${escapeHtml(r.motivo || '')}" data-click="adminMarcarReporteBeneficiarioRevisado" data-args="${dargs(r.id, ARG.THIS)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Marcar revisado</button>
           </div>
         </div>
       </div>`).join('');
@@ -1069,18 +999,18 @@ window.loadReportesBeneficiarios = async function(force) {
 
 window.verBeneficiarioDesdeReporte = async function(id) {
   try {
-    const res  = await fetch(BENEFICIARIOS_API_URL_NOTIF + '?' + new URLSearchParams({ action:'obtenerBeneficiario', id }));
+    const res  = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action:'obtenerBeneficiario', id });
     const data = await res.json();
-    if (!data.ok || !data.beneficiario) { alert('No se pudo cargar el beneficiario (puede que ya no exista).'); return; }
+    if (!data.ok || !data.beneficiario) { askAlert('No se pudo cargar el beneficiario (puede que ya no exista).'); return; }
     window._benCache = window._benCache || {};
     window._benCache[id] = { ...data.beneficiario, id };
     window.openBeneficiarioModal(id);
-  } catch(err) { alert('Error de conexión.'); }
+  } catch(err) { askAlert('Error de conexión.'); }
 };
 
 window.adminMarcarReporteBeneficiarioRevisado = async function(id, btn) {
   const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
-  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+  const razon = await new Promise(resolve => {
     showCustomConfirm({
       title: 'Marcar revisado',
       message: '¿Marcar este reporte como revisado? El beneficiario se queda como está.',
@@ -1090,17 +1020,17 @@ window.adminMarcarReporteBeneficiarioRevisado = async function(id, btn) {
       onConfirm: (r) => resolve(r === undefined ? '' : r),
       onCancel: () => resolve(null)
     });
-  }) : (confirm('¿Marcar este reporte como revisado?') ? '' : null);
+  });
   if (razon === null) return;
   const runFn = async () => {
     try {
-      const token = sessionStorage.getItem('admin_token') || '';
-      const razonFinal = _combinarRazonReporte(motivoReporte, razon);
-      const res   = await fetch(BENEFICIARIOS_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'marcarReporteBeneficiarioRevisado', id, token, razon: razonFinal }).toString() });
+      const token = getAdminToken();
+      const razonFinal = combinarRazonReporte(motivoReporte, razon);
+      const res   = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action:'marcarReporteBeneficiarioRevisado', id, token, razon: razonFinal }, true);
       const data  = await res.json();
-      if (!data.ok) { alert('Error: ' + data.error); return; }
+      if (!data.ok) { askAlert('Error: ' + data.error); return; }
       loadReportesBeneficiarios(true);
-    } catch(err) { alert('Error de conexión.'); }
+    } catch(err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Marcando…');
   else await runFn();
@@ -1112,10 +1042,10 @@ window.loadReportesLive = async function() {
   if (!list) return;
   list.innerHTML = window.znrSkeletonRows(3);
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res   = await fetch(LIVE_API_URL_NOTIF + '?' + new URLSearchParams({ action:'obtenerReportesLive', token }));
+    const token = getAdminToken();
+    const res   = await apiFetch(LIVE_API_URL_NOTIF, { action:'obtenerReportesLive', token });
     const data  = await res.json();
-    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${data.error}</p>`; return; }
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${escapeHtml(data.error)}</p>`; return; }
     const reportes = data.reportes || [];
 
     const badge = document.getElementById('tab-badge-reportes_live');
@@ -1131,21 +1061,20 @@ window.loadReportesLive = async function() {
       return;
     }
 
-    const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     reportes.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     list.innerHTML = reportes.map(r => `
-      <div class="reporte-row" data-reporte-id="${esc(r.reporteId)}">
+      <div class="reporte-row" data-reporte-id="${escapeHtml(r.reporteId)}">
         <div class="info">
-          <strong>${Icon('tv',{size:14})} ${esc(r.liveTitulo || 'Transmisión sin título')}</strong>
-          <span>Vendedor: ${esc(r.vendedorNombre || r.vendedorUid || 'Desconocido')}</span><br>
-          <span>${new Date(r.timestamp).toLocaleString('es-MX')}${r.telefonoUsuario ? ' · ' + _icPhone + ' ' + esc(r.telefonoUsuario) : ''}</span>
-          <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${esc(r.motivo)}</div>
+          <strong>${Icon('tv',{size:14})} ${escapeHtml(r.liveTitulo || 'Transmisión sin título')}</strong>
+          <span>Vendedor: ${escapeHtml(r.vendedorNombre || r.vendedorUid || 'Desconocido')}</span><br>
+          <span>${new Date(r.timestamp).toLocaleString('es-MX')}${r.telefonoUsuario ? ' · ' + _icPhone + ' ' + escapeHtml(r.telefonoUsuario) : ''}</span>
+          <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${escapeHtml(r.motivo)}</div>
         </div>
         <div class="actions">
           ${_accionClipLive(r)}
-          <button class="btn-suspend" data-motivo="${esc(r.motivo || '')}" onclick="adminSuspenderVendedorDesdeReporte('${esc(r.vendedorUid)}','${esc(r.reporteId)}', this)">${Icon('ban',{size:13})} Suspender cuenta</button>
-          <button class="btn-marcar-revisado" data-motivo="${esc(r.motivo || '')}" onclick="adminMarcarReporteLiveRevisado('${esc(r.reporteId)}', this)">${_icCheck} Marcar revisado</button>
+          <button class="btn-suspend" data-motivo="${escapeHtml(r.motivo || '')}" data-click="adminSuspenderVendedorDesdeReporte" data-args="${dargs(r.vendedorUid, r.reporteId, ARG.THIS)}">${Icon('ban',{size:13})} Suspender cuenta</button>
+          <button class="btn-marcar-revisado" data-motivo="${escapeHtml(r.motivo || '')}" data-click="adminMarcarReporteLiveRevisado" data-args="${dargs(r.reporteId, ARG.THIS)}">${_icCheck} Marcar revisado</button>
         </div>
       </div>`).join('');
   } catch(err) {
@@ -1157,12 +1086,11 @@ window.loadReportesLive = async function() {
 // El backend arma el clip (≈2 min antes y 2 min después del reporte) a
 // partir de segmentos de ~30 s. Aquí se reproducen en orden, con el chat
 // de esa ventana al lado; tocar un mensaje salta a ese momento.
-const _escClip = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 function _accionClipLive(r) {
   switch (r.clipEstado) {
     case 'listo':
-      return `<button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" onclick="adminVerClipReporteLive('${_escClip(r.reporteId)}', this)">${Icon('play',{size:13})} Ver clip</button>`;
+      return `<button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" data-click="adminVerClipReporteLive" data-args="${dargs(r.reporteId, ARG.THIS)}">${Icon('play',{size:13})} Ver clip</button>`;
     case 'pendiente':
       return '<span class="clip-nota-fila">Preparando clip… (unos minutos)</span>';
     case 'sin_grabacion':
@@ -1174,7 +1102,7 @@ function _accionClipLive(r) {
     default:
       // Reportes anteriores a la transmisión dentro de ZNR: link de Facebook/YouTube.
       return r.facebookLink
-        ? `<a class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;text-decoration:none;" href="${_escClip(r.facebookLink)}" target="_blank" rel="noopener">${Icon('play',{size:13})} Ver video</a>`
+        ? `<a class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;text-decoration:none;" href="${escapeHtml(r.facebookLink)}" target="_blank" rel="noopener">${Icon('play',{size:13})} Ver video</a>`
         : '';
   }
 }
@@ -1225,7 +1153,7 @@ window.adminVerClipReporteLive = async function(reporteId, btn) {
   overlay.innerHTML = `
     <div class="clip-modal" role="dialog" aria-modal="true">
       <div class="clip-head">
-        <strong>${_escClip(titulo || 'Clip del reporte')}<small id="clip-sub"></small></strong>
+        <strong>${escapeHtml(titulo || 'Clip del reporte')}<small id="clip-sub"></small></strong>
         <button type="button" class="clip-cerrar" id="clip-cerrar" aria-label="Cerrar">${Icon('x',{size:16})}</button>
       </div>
       <div id="clip-body"><p class="clip-nota">Cargando clip…</p></div>
@@ -1244,12 +1172,12 @@ window.adminVerClipReporteLive = async function(reporteId, btn) {
   document.addEventListener('keydown', onKey);
 
   const body = document.getElementById('clip-body');
-  const aviso = (msg) => { body.innerHTML = `<p class="clip-nota">${_escClip(msg)}</p>`; };
+  const aviso = (msg) => { body.innerHTML = `<p class="clip-nota">${escapeHtml(msg)}</p>`; };
 
   let data;
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res = await fetch(LIVE_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'obtenerClipReporteLive', token, reporteId }));
+    const token = getAdminToken();
+    const res = await apiFetch(LIVE_API_URL_NOTIF, { action: 'obtenerClipReporteLive', token, reporteId });
     data = await res.json();
   } catch (err) { aviso('Error de conexión al cargar el clip.'); return; }
   if (!data || !data.ok) { aviso('No se pudo cargar el clip: ' + ((data && data.error) || 'error desconocido')); return; }
@@ -1276,7 +1204,7 @@ window.adminVerClipReporteLive = async function(reporteId, btn) {
   let separado = false;
   chat.forEach((m) => {
     if (!separado && m.ts >= T) { chatHtml.push('<div class="clip-sep">🚩 Momento del reporte</div>'); separado = true; }
-    chatHtml.push(`<div class="clip-msg" data-ts="${Number(m.ts) || 0}"><span class="t">${_fmtRelClip(((m.ts || 0) - T) / 1000)}</span><span><span class="a">${_escClip(m.author)}${m.isVendor ? ' (vendedor)' : ''}:</span> ${_escClip(m.text)}</span></div>`);
+    chatHtml.push(`<div class="clip-msg" data-ts="${Number(m.ts) || 0}"><span class="t">${_fmtRelClip(((m.ts || 0) - T) / 1000)}</span><span><span class="a">${escapeHtml(m.author)}${m.isVendor ? ' (vendedor)' : ''}:</span> ${escapeHtml(m.text)}</span></div>`);
   });
   if (!separado) chatHtml.push('<div class="clip-sep">🚩 Momento del reporte</div>');
 
@@ -1330,28 +1258,19 @@ window.adminVerClipReporteLive = async function(reporteId, btn) {
   irA(Math.max(data.desdeMs, T - 15000)); // arranca unos segundos antes del reporte, no desde el minuto -2
 };
 
-// El motivo que escribió quien reportó nunca debe perderse al archivar o
-// resolver el reporte: si el staff también escribe su propio comentario,
-// se agrega aparte, no lo reemplaza.
-function _combinarRazonReporte(motivoReporte, razonStaff) {
-  const partes = [];
-  if (motivoReporte) partes.push('Reporte: ' + motivoReporte);
-  if (razonStaff) partes.push(razonStaff);
-  return partes.join(' — ');
-}
 
 // Llamada real al endpoint, sin diálogo — la usa tanto el botón "Marcar
 // revisado" (que sí pregunta) como la suspensión desde reporte (que ya
 // preguntó por su propio motivo y archiva el reporte de una vez).
 async function _marcarReporteLiveRevisadoActual(reporteId, razon) {
-  const token = sessionStorage.getItem('admin_token') || '';
-  const res   = await fetch(LIVE_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'marcarReporteLiveRevisado', reporteId, token, razon: razon || '' }).toString() });
+  const token = getAdminToken();
+  const res   = await apiFetch(LIVE_API_URL_NOTIF, { action:'marcarReporteLiveRevisado', reporteId, token, razon: razon || '' }, true);
   return res.json();
 }
 
 window.adminMarcarReporteLiveRevisado = async function(reporteId, btn) {
   const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
-  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+  const razon = await new Promise(resolve => {
     showCustomConfirm({
       title: 'Marcar revisado',
       message: '¿Marcar este reporte como revisado? La transmisión se queda como está. El clip de video y el chat guardados de este reporte se borran.',
@@ -1361,24 +1280,24 @@ window.adminMarcarReporteLiveRevisado = async function(reporteId, btn) {
       onConfirm: (r) => resolve(r === undefined ? '' : r),
       onCancel: () => resolve(null)
     });
-  }) : (confirm('¿Marcar este reporte como revisado?') ? '' : null);
+  });
   if (razon === null) return;
   const runFn = async () => {
   try {
-    const razonFinal = _combinarRazonReporte(motivoReporte, razon);
+    const razonFinal = combinarRazonReporte(motivoReporte, razon);
     const data = await _marcarReporteLiveRevisadoActual(reporteId, razonFinal);
-    if (!data.ok) { alert('Error: ' + data.error); return; }
+    if (!data.ok) { askAlert('Error: ' + data.error); return; }
     loadReportesLive();
-  } catch(err) { alert('Error de conexión.'); }
+  } catch(err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Marcando…');
   else await runFn();
 };
 
 window.adminSuspenderVendedorDesdeReporte = async function(vendedorUid, reporteId, btn) {
-  if (!vendedorUid) { alert('Este reporte no tiene un vendedor asociado.'); return; }
+  if (!vendedorUid) { askAlert('Este reporte no tiene un vendedor asociado.'); return; }
   const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
-  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+  const razon = await new Promise(resolve => {
     showCustomConfirm({
       title: 'Suspender vendedor',
       message: '¿Suspender la cuenta de este vendedor? No va a poder iniciar sesión ni transmitir hasta que la reactives desde "Vendedores". El reporte se archiva y su clip de video se borra.',
@@ -1388,21 +1307,21 @@ window.adminSuspenderVendedorDesdeReporte = async function(vendedorUid, reporteI
       onConfirm: (r) => resolve(r === undefined ? '' : r),
       onCancel: () => resolve(null)
     });
-  }) : (confirm('¿Suspender la cuenta de este vendedor? No va a poder iniciar sesión ni transmitir hasta que la reactives desde "Vendedores".') ? '' : null);
+  });
   if (razon === null) return;
   const runFn = async () => {
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const razonFinal = _combinarRazonReporte(motivoReporte, razon);
-    const VENDEDORES_API_URL_NOTIF = "https://vendedores-api-1038143238323.us-central1.run.app";
-    const res   = await fetch(VENDEDORES_API_URL_NOTIF, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({ action:'suspenderVendedor', uid: vendedorUid, token, razon: razonFinal }).toString() });
+    const token = getAdminToken();
+    const razonFinal = combinarRazonReporte(motivoReporte, razon);
+    const VENDEDORES_API_URL_NOTIF = window.VENDEDORES_API_URL;
+    const res   = await apiFetch(VENDEDORES_API_URL_NOTIF, { action:'suspenderVendedor', uid: vendedorUid, token, razon: razonFinal }, true);
     const data  = await res.json();
-    if (!data.ok) { alert('Error: ' + data.error); return; }
+    if (!data.ok) { askAlert('Error: ' + data.error); return; }
     await _marcarReporteLiveRevisadoActual(reporteId, razonFinal);
     loadReportesLive();
-    alert('Cuenta suspendida.');
+    askAlert('Cuenta suspendida.');
     if (window.AdminComunidad) AdminComunidad.loadVendors();
-  } catch(err) { alert('Error de conexión.'); }
+  } catch(err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Suspendiendo…');
   else await runFn();
@@ -1412,8 +1331,7 @@ window.adminSuspenderVendedorDesdeReporte = async function(vendedorUid, reporteI
 // Cola de reportes que los compradores/vendedores mandan desde el chat de un pedido
 // (pedidos-api). El staff solo ve la conversación de un caso reportado y cada apertura
 // queda registrada (quién, cuándo y por qué). Moderador: sin teléfonos y sin poder cancelar.
-const PEDIDOS_API_URL_NOTIF = "https://pedidos-api-1038143238323.us-central1.run.app";
-const _escPed = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PEDIDOS_API_URL_NOTIF = window.PEDIDOS_API_URL;
 const _ESTADOS_PED_ABIERTOS = ['solicitado', 'cotizado', 'aceptado', 'en_elaboracion', 'listo'];
 const _TEXTO_ESTADO_PED = {
   solicitado: 'Solicitado', cotizado: 'Cotizado', aceptado: 'Aceptado', en_elaboracion: 'En elaboración',
@@ -1421,12 +1339,8 @@ const _TEXTO_ESTADO_PED = {
 };
 
 async function _postPedidosApi(params) {
-  const token = sessionStorage.getItem('admin_token') || '';
-  const res = await fetch(PEDIDOS_API_URL_NOTIF, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ ...params, token }).toString()
-  });
+  const token = getAdminToken();
+  const res = await apiFetch(PEDIDOS_API_URL_NOTIF, { ...params, token }, true);
   return res.json();
 }
 
@@ -1435,11 +1349,11 @@ window.loadReportesPedidos = async function() {
   if (!list) return;
   list.innerHTML = window.znrSkeletonRows(3);
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
+    const token = getAdminToken();
     const rol = sessionStorage.getItem('admin_rol') || 'master';
-    const res = await fetch(PEDIDOS_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'obtenerReportesPedido', token }));
+    const res = await apiFetch(PEDIDOS_API_URL_NOTIF, { action: 'obtenerReportesPedido', token });
     const data = await res.json();
-    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${_escPed(data.error)}</p>`; return; }
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${escapeHtml(data.error)}</p>`; return; }
     const reportes = data.reportes || [];
 
     if (window._updateNotifTabBadge) window._updateNotifTabBadge('reportes_pedidos', reportes.length);
@@ -1461,17 +1375,17 @@ window.loadReportesPedidos = async function() {
       const abierto = _ESTADOS_PED_ABIERTOS.includes(r.estadoPedido);
       const quien = r.reportadoPorRol === 'vendedor' ? 'el vendedor' : 'el cliente';
       return `
-      <div class="reporte-row" data-reporte-id="${_escPed(r.reporteId)}">
+      <div class="reporte-row" data-reporte-id="${escapeHtml(r.reporteId)}">
         <div class="info">
-          <strong>${Icon('flag',{size:14})} ${_escPed(r.productoNombre || 'Pedido personalizado')} · ${_escPed(r.motivoTexto || r.motivo)}</strong>
-          <span>Vendedor: ${_escPed(r.vendedorNombre || '—')} · Cliente: ${_escPed(r.compradorNombre || '—')}${r.compradorTel ? ' · ' + _icPhone + ' ' + _escPed(r.compradorTel) : ''}</span><br>
-          <span>Reportó ${quien} · ${r.timestamp ? new Date(r.timestamp).toLocaleString('es-MX') : ''} · Pedido ${_escPed(_TEXTO_ESTADO_PED[r.estadoPedido] || r.estadoPedido)}${r.ciudad ? ' · ' + _escPed(r.ciudad) : ''}</span>
-          ${r.detalle ? `<div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${_escPed(r.detalle)}</div>` : ''}
+          <strong>${Icon('flag',{size:14})} ${escapeHtml(r.productoNombre || 'Pedido personalizado')} · ${escapeHtml(r.motivoTexto || r.motivo)}</strong>
+          <span>Vendedor: ${escapeHtml(r.vendedorNombre || '—')} · Cliente: ${escapeHtml(r.compradorNombre || '—')}${r.compradorTel ? ' · ' + _icPhone + ' ' + escapeHtml(r.compradorTel) : ''}</span><br>
+          <span>Reportó ${quien} · ${r.timestamp ? new Date(r.timestamp).toLocaleString('es-MX') : ''} · Pedido ${escapeHtml(_TEXTO_ESTADO_PED[r.estadoPedido] || r.estadoPedido)}${r.ciudad ? ' · ' + escapeHtml(r.ciudad) : ''}</span>
+          ${r.detalle ? `<div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${escapeHtml(r.detalle)}</div>` : ''}
         </div>
         <div class="actions">
-          <button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" data-motivo="${_escPed(r.motivoTexto || r.motivo)}" onclick="adminVerConversacionPedido('${_escPed(r.reporteId)}', this)">${Icon('chat-bubble',{size:13})} Ver conversación</button>
-          ${puedeCancelar && abierto ? `<button class="btn-suspend" data-motivo="${_escPed(r.motivoTexto || r.motivo)}" onclick="adminResolverReportePedido('${_escPed(r.reporteId)}', 'cancelar_pedido', this)">${Icon('ban',{size:13})} Cancelar pedido</button>` : ''}
-          <button class="btn-marcar-revisado" data-motivo="${_escPed(r.motivoTexto || r.motivo)}" onclick="adminResolverReportePedido('${_escPed(r.reporteId)}', 'sin_accion', this)">${_icCheck} Marcar revisado</button>
+          <button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" data-motivo="${escapeHtml(r.motivoTexto || r.motivo)}" data-click="adminVerConversacionPedido" data-args="${dargs(r.reporteId, ARG.THIS)}">${Icon('chat-bubble',{size:13})} Ver conversación</button>
+          ${puedeCancelar && abierto ? `<button class="btn-suspend" data-motivo="${escapeHtml(r.motivoTexto || r.motivo)}" data-click="adminResolverReportePedido" data-args="${dargs(r.reporteId, 'cancelar_pedido', ARG.THIS)}">${Icon('ban',{size:13})} Cancelar pedido</button>` : ''}
+          <button class="btn-marcar-revisado" data-motivo="${escapeHtml(r.motivoTexto || r.motivo)}" data-click="adminResolverReportePedido" data-args="${dargs(r.reporteId, 'sin_accion', ARG.THIS)}">${_icCheck} Marcar revisado</button>
         </div>
       </div>`;
     }).join('');
@@ -1525,7 +1439,7 @@ window.adminVerConversacionPedido = async function(reporteId, btn) {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) cerrar(); });
   document.addEventListener('keydown', onKey);
   const body = document.getElementById('ped-body');
-  const aviso = (m) => { body.innerHTML = `<p style="text-align:center;color:#cfd3e0;padding:18px;">${_escPed(m)}</p>`; };
+  const aviso = (m) => { body.innerHTML = `<p style="text-align:center;color:#cfd3e0;padding:18px;">${escapeHtml(m)}</p>`; };
 
   let data;
   try {
@@ -1539,23 +1453,23 @@ window.adminVerConversacionPedido = async function(reporteId, btn) {
   document.getElementById('ped-sub').textContent = `${p.vendedorNombre || 'Vendedor'} ↔ ${p.compradorNombre || 'Cliente'} · ${_TEXTO_ESTADO_PED[p.estado] || p.estado}`;
   const din = n => Number(n || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
   const ac = p.cotizacionAceptada;
-  const pagoTxt = (x, nom) => x ? `${nom} ${din(x.monto)}: ${_escPed(x.estado)}${x.metodo ? ' (' + _escPed(x.metodo) + ')' : ''}` : '';
-  const resumen = [ac ? `Acordado: ${din(ac.precio)} · entrega ${_escPed(ac.fechaEntrega)}` : 'Sin cotización aceptada', pagoTxt(p.pagoAnticipo, 'Anticipo'), pagoTxt(p.pagoRestante, 'Restante')].filter(Boolean).join(' — ');
+  const pagoTxt = (x, nom) => x ? `${nom} ${din(x.monto)}: ${escapeHtml(x.estado)}${x.metodo ? ' (' + escapeHtml(x.metodo) + ')' : ''}` : '';
+  const resumen = [ac ? `Acordado: ${din(ac.precio)} · entrega ${escapeHtml(ac.fechaEntrega)}` : 'Sin cotización aceptada', pagoTxt(p.pagoAnticipo, 'Anticipo'), pagoTxt(p.pagoRestante, 'Restante')].filter(Boolean).join(' — ');
 
   const hora = (iso) => iso ? new Date(iso).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
   const msgs = (data.mensajes || []).map(m => {
-    if (m.tipo === 'sistema') return `<div class="ped-sys">${_escPed(m.contenido)}</div>`;
+    if (m.tipo === 'sistema') return `<div class="ped-sys">${escapeHtml(m.contenido)}</div>`;
     if (m.tipo === 'cotizacion' && m.cotizacion) {
       const c = m.cotizacion;
-      return `<div class="ped-card"><strong>Cotización ${din(c.precio)}</strong>${c.anticipo > 0 ? ' · anticipo ' + din(c.anticipo) : ''} · entrega ${_escPed(c.fechaEntrega)}<br>${_escPed(m.contenido)}<span class="hora">${hora(m.fecha)}</span></div>`;
+      return `<div class="ped-card"><strong>Cotización ${din(c.precio)}</strong>${c.anticipo > 0 ? ' · anticipo ' + din(c.anticipo) : ''} · entrega ${escapeHtml(c.fechaEntrega)}<br>${escapeHtml(m.contenido)}<span class="hora">${hora(m.fecha)}</span></div>`;
     }
     const quien = m.autorRol === 'vendedor' ? 'Vendedor' : 'Cliente';
     let extra = '';
-    if (m.foto) extra += `<img src="${_escPed(m.foto)}" alt="Foto" loading="lazy" onclick="window.open(this.src,'_blank','noopener')">`;
+    if (m.foto) extra += `<img src="${escapeHtml(m.foto)}" alt="Foto" loading="lazy" data-open="">`;
     if (m.tipo === 'pago' && m.pago) {
-      extra = `<strong>Pago de ${_escPed(m.pago.tipo)} ${din(m.pago.monto)} · ${_escPed(m.pago.estado)}</strong>` + (m.pago.comprobante ? `<img src="${_escPed(m.pago.comprobante)}" alt="Comprobante" loading="lazy" onclick="window.open(this.src,'_blank','noopener')">` : '');
+      extra = `<strong>Pago de ${escapeHtml(m.pago.tipo)} ${din(m.pago.monto)} · ${escapeHtml(m.pago.estado)}</strong>` + (m.pago.comprobante ? `<img src="${escapeHtml(m.pago.comprobante)}" alt="Comprobante" loading="lazy" data-open="">` : '');
     }
-    return `<div class="ped-msg ${m.autorRol === 'vendedor' ? 'vendedor' : ''}"><span class="quien">${quien}</span>${_escPed(m.contenido)}${extra}<span class="hora">${hora(m.fecha)}</span></div>`;
+    return `<div class="ped-msg ${m.autorRol === 'vendedor' ? 'vendedor' : ''}"><span class="quien">${quien}</span>${escapeHtml(m.contenido)}${extra}<span class="hora">${hora(m.fecha)}</span></div>`;
   }).join('');
 
   body.innerHTML = `
@@ -1569,7 +1483,7 @@ window.adminVerConversacionPedido = async function(reporteId, btn) {
 window.adminResolverReportePedido = async function(reporteId, accion, btn) {
   const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
   const cancelar = accion === 'cancelar_pedido';
-  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+  const razon = await new Promise(resolve => {
     showCustomConfirm({
       title: cancelar ? 'Cancelar pedido' : 'Marcar revisado',
       message: cancelar
@@ -1581,15 +1495,15 @@ window.adminResolverReportePedido = async function(reporteId, accion, btn) {
       onConfirm: (r) => resolve(r === undefined ? '' : r),
       onCancel: () => resolve(null)
     });
-  }) : (confirm(cancelar ? '¿Cancelar este pedido?' : '¿Marcar este reporte como revisado?') ? '' : null);
+  });
   if (razon === null) return;
   const runFn = async () => {
     try {
-      const data = await _postPedidosApi({ action: 'resolverReportePedido', reporteId, accion, razon: _combinarRazonReporte(motivoReporte, razon) });
-      if (!data.ok) { alert('Error: ' + data.error); return; }
-      if (cancelar && !data.pedidoCancelado) alert('El pedido ya estaba cerrado; se archivó el reporte.');
+      const data = await _postPedidosApi({ action: 'resolverReportePedido', reporteId, accion, razon: combinarRazonReporte(motivoReporte, razon) });
+      if (!data.ok) { askAlert('Error: ' + data.error); return; }
+      if (cancelar && !data.pedidoCancelado) askAlert('El pedido ya estaba cerrado; se archivó el reporte.');
       loadReportesPedidos();
-    } catch (err) { alert('Error de conexión.'); }
+    } catch (err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, cancelar ? 'Cancelando…' : 'Marcando…');
   else await runFn();
@@ -1600,17 +1514,17 @@ window.adminResolverReportePedido = async function(reporteId, accion, btn) {
 // Un renglón por historia reportada (con todos los motivos). Al
 // resolver, el reporte sale de la lista, igual que los demás.
 // ─────────────────────────────────────────────────────────────
-const HISTORIAS_API_URL_NOTIF = "https://historias-api-1038143238323.us-central1.run.app";
+const HISTORIAS_API_URL_NOTIF = window.HISTORIAS_API_URL;
 
 window.loadReportesHistorias = async function() {
   const list = document.getElementById('admin-reportes-historias-list');
   if (!list) return;
   list.innerHTML = window.znrSkeletonRows(3);
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res = await fetch(HISTORIAS_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'obtenerReportesHistorias', token }));
+    const token = getAdminToken();
+    const res = await apiFetch(HISTORIAS_API_URL_NOTIF, { action: 'obtenerReportesHistorias', token });
     const data = await res.json();
-    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${_escPed(data.error)}</p>`; return; }
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${escapeHtml(data.error)}</p>`; return; }
     const reportes = data.reportes || [];
 
     if (window._updateNotifTabBadge) window._updateNotifTabBadge('reportes_historias', reportes.length);
@@ -1629,27 +1543,27 @@ window.loadReportesHistorias = async function() {
     list.innerHTML = reportes.map(r => {
       const media = r.historiaExiste && r.url
         ? (r.tipo === 'video'
-            ? `<video src="${_escPed(r.url)}#t=0.1" controls playsinline preload="metadata" style="width:104px;height:184px;object-fit:cover;border-radius:10px;background:#000;flex-shrink:0;"></video>`
-            : `<img src="${_escPed(r.url)}" alt="Historia reportada" loading="lazy" onclick="window.open(this.src,'_blank','noopener')" style="width:104px;height:184px;object-fit:cover;border-radius:10px;background:#000;flex-shrink:0;cursor:zoom-in;">`)
+            ? `<video src="${escapeHtml(r.url)}#t=0.1" controls playsinline preload="metadata" style="width:104px;height:184px;object-fit:cover;border-radius:10px;background:#000;flex-shrink:0;"></video>`
+            : `<img src="${escapeHtml(r.url)}" alt="Historia reportada" loading="lazy" data-open="" style="width:104px;height:184px;object-fit:cover;border-radius:10px;background:#000;flex-shrink:0;cursor:zoom-in;">`)
         : `<div style="width:104px;height:184px;border-radius:10px;background:rgba(0,0,0,.08);color:#999;font-size:.72rem;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;flex-shrink:0;">Ya no está disponible</div>`;
       const estado = !r.historiaExiste ? 'Ya expiró o fue eliminada' : (r.oculta ? 'Oculta automáticamente' : 'Visible');
       const motivos = (r.motivos || []).slice(0, 5).map(m =>
-        `<li>${_escPed(m.motivo)} <span style="color:#999;">· ${m.fecha ? new Date(m.fecha).toLocaleString('es-MX') : ''}</span></li>`).join('');
+        `<li>${escapeHtml(m.motivo)} <span style="color:#999;">· ${m.fecha ? new Date(m.fecha).toLocaleString('es-MX') : ''}</span></li>`).join('');
       const mas = (r.motivos || []).length > 5 ? `<li style="color:#999;">y ${r.motivos.length - 5} más…</li>` : '';
-      const motivoResumen = _escPed([...new Set((r.motivos || []).map(m => m.motivo))].join(', ').slice(0, 160));
+      const motivoResumen = escapeHtml([...new Set((r.motivos || []).map(m => m.motivo))].join(', ').slice(0, 160));
       return `
-      <div class="reporte-row" data-historia-id="${_escPed(r.historiaId)}">
+      <div class="reporte-row" data-historia-id="${escapeHtml(r.historiaId)}">
         <div class="info" style="display:flex;gap:12px;align-items:flex-start;">
           ${media}
           <div style="min-width:0;">
-            <strong>${Icon('flag',{size:14})} Historia de ${_escPed(r.vendedor || 'vendedor')} · ${r.total} reporte${r.total === 1 ? '' : 's'}</strong>
-            <span>${r.tipo === 'video' ? 'Video' : 'Foto'} · ${_escPed(estado)}${r.ciudad ? ' · ' + _escPed(r.ciudad) : ''}${r.expiraEn && r.historiaExiste ? ' · expira ' + new Date(r.expiraEn).toLocaleString('es-MX') : ''}</span>
+            <strong>${Icon('flag',{size:14})} Historia de ${escapeHtml(r.vendedor || 'vendedor')} · ${r.total} reporte${r.total === 1 ? '' : 's'}</strong>
+            <span>${r.tipo === 'video' ? 'Video' : 'Foto'} · ${escapeHtml(estado)}${r.ciudad ? ' · ' + escapeHtml(r.ciudad) : ''}${r.expiraEn && r.historiaExiste ? ' · expira ' + new Date(r.expiraEn).toLocaleString('es-MX') : ''}</span>
             <ul style="margin:8px 0 0;padding-left:18px;font-size:.82rem;line-height:1.5;">${motivos}${mas}</ul>
           </div>
         </div>
         <div class="actions">
-          ${r.historiaExiste ? `<button class="btn-suspend" data-motivo="${motivoResumen}" onclick="adminResolverReporteHistoria('${_escPed(r.historiaId)}', 'eliminar', this)">${Icon('trash',{size:13})} Eliminar historia</button>` : ''}
-          <button class="btn-marcar-revisado" data-motivo="${motivoResumen}" onclick="adminResolverReporteHistoria('${_escPed(r.historiaId)}', 'sin_accion', this)">${_icCheck} ${r.historiaExiste ? (r.oculta ? 'Revisada: que se vea' : 'Marcar revisado') : 'Archivar reporte'}</button>
+          ${r.historiaExiste ? `<button class="btn-suspend" data-motivo="${motivoResumen}" data-click="adminResolverReporteHistoria" data-args="${dargs(r.historiaId, 'eliminar', ARG.THIS)}">${Icon('trash',{size:13})} Eliminar historia</button>` : ''}
+          <button class="btn-marcar-revisado" data-motivo="${motivoResumen}" data-click="adminResolverReporteHistoria" data-args="${dargs(r.historiaId, 'sin_accion', ARG.THIS)}">${_icCheck} ${r.historiaExiste ? (r.oculta ? 'Revisada: que se vea' : 'Marcar revisado') : 'Archivar reporte'}</button>
         </div>
       </div>`;
     }).join('');
@@ -1661,7 +1575,7 @@ window.loadReportesHistorias = async function() {
 window.adminResolverReporteHistoria = async function(historiaId, accion, btn) {
   const eliminar = accion === 'eliminar';
   const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
-  const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+  const razon = await new Promise(resolve => {
     showCustomConfirm({
       title: eliminar ? 'Eliminar historia' : 'Marcar revisado',
       message: eliminar
@@ -1673,21 +1587,17 @@ window.adminResolverReporteHistoria = async function(historiaId, accion, btn) {
       onConfirm: (r) => resolve(r === undefined ? '' : r),
       onCancel: () => resolve(null)
     });
-  }) : (confirm(eliminar ? '¿Eliminar esta historia?' : '¿Marcar este reporte como revisado?') ? '' : null);
+  });
   if (razon === null) return;
   const runFn = async () => {
     try {
-      const token = sessionStorage.getItem('admin_token') || '';
-      const res = await fetch(HISTORIAS_API_URL_NOTIF, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ action: 'resolverReporteHistoria', historiaId, accion, token, razon: _combinarRazonReporte(motivoReporte, razon) }).toString()
-      });
+      const token = getAdminToken();
+      const res = await apiFetch(HISTORIAS_API_URL_NOTIF, { action: 'resolverReporteHistoria', historiaId, accion, token, razon: combinarRazonReporte(motivoReporte, razon) }, true);
       const data = await res.json();
-      if (!data.ok) { alert('Error: ' + data.error); return; }
+      if (!data.ok) { askAlert('Error: ' + data.error); return; }
       loadReportesHistorias();
       if (typeof checkNotifications === 'function') checkNotifications();
-    } catch (err) { alert('Error de conexión.'); }
+    } catch (err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, eliminar ? 'Eliminando…' : 'Marcando…');
   else await runFn();
@@ -1698,16 +1608,12 @@ window.adminResolverReporteHistoria = async function(historiaId, accion, btn) {
 // Lista los reportes abiertos (nuevo / en revisión); al resolver o
 // descartar salen de la lista, igual que los demás reportes.
 // ─────────────────────────────────────────────────────────────
-const FEEDBACK_API_URL_NOTIF = "https://ventas-api-1038143238323.us-central1.run.app";
+const FEEDBACK_API_URL_NOTIF = window.VENTAS_API_URL;
 const _FB_TIPOS = { error: 'Error', inesperado: 'No funciona como esperaba', sugerencia: 'Sugerencia', otro: 'Otro' };
 
 async function _postFeedbackApi(params) {
-  const token = sessionStorage.getItem('admin_token') || '';
-  const res = await fetch(FEEDBACK_API_URL_NOTIF, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ ...params, token }).toString()
-  });
+  const token = getAdminToken();
+  const res = await apiFetch(FEEDBACK_API_URL_NOTIF, { ...params, token }, true);
   return res.json();
 }
 
@@ -1716,10 +1622,10 @@ window.loadFeedbackReportes = async function() {
   if (!list) return;
   list.innerHTML = window.znrSkeletonRows(3);
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res = await fetch(FEEDBACK_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'listarFeedback', estado: 'abiertos', token }));
+    const token = getAdminToken();
+    const res = await apiFetch(FEEDBACK_API_URL_NOTIF, { action: 'listarFeedback', estado: 'abiertos', token });
     const data = await res.json();
-    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${_escPed(data.error)}</p>`; return; }
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${escapeHtml(data.error)}</p>`; return; }
     const items = data.items || [];
 
     if (window._updateNotifTabBadge) window._updateNotifTabBadge('feedback', items.length);
@@ -1739,20 +1645,20 @@ window.loadFeedbackReportes = async function() {
     list.innerHTML = items.map(r => {
       const quien = (r.reporter && (r.reporter.nombre || (r.reporter.telefono ? '+' + r.reporter.telefono : ''))) || 'Anónimo';
       const rolTxt = r.rol === 'vendedor' ? 'Vendedor' : 'Comprador';
-      const id = _escPed(r.id);
+      const id = escapeHtml(r.id);
       return `
       <div class="reporte-row" data-feedback-id="${id}">
         <div class="info">
-          <strong>${Icon('flag',{size:14})} ${_escPed(_FB_TIPOS[r.tipo] || r.tipo)}${r.area ? ' · ' + _escPed(r.area) : ''}${r.estado === 'en_revision' ? ' · En revisión' : ''}${r.tieneCaptura ? ' · con captura' : ''}</strong>
-          <span>${rolTxt}: ${_escPed(quien)}${r.reporter && r.reporter.verificado ? '' : ' (sin verificar)'}</span><br>
-          <span>${r.fecha ? new Date(r.fecha).toLocaleString('es-MX') : ''}${r.pagina ? ' · ' + _escPed(r.pagina) : ''}</span>
-          <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${_escPed(r.mensaje)}</div>
+          <strong>${Icon('flag',{size:14})} ${escapeHtml(_FB_TIPOS[r.tipo] || r.tipo)}${r.area ? ' · ' + escapeHtml(r.area) : ''}${r.estado === 'en_revision' ? ' · En revisión' : ''}${r.tieneCaptura ? ' · con captura' : ''}</strong>
+          <span>${rolTxt}: ${escapeHtml(quien)}${r.reporter && r.reporter.verificado ? '' : ' (sin verificar)'}</span><br>
+          <span>${r.fecha ? new Date(r.fecha).toLocaleString('es-MX') : ''}${r.pagina ? ' · ' + escapeHtml(r.pagina) : ''}</span>
+          <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${escapeHtml(r.mensaje)}</div>
         </div>
         <div class="actions">
-          <button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" onclick="adminVerFeedback('${id}')">${Icon('chat-bubble',{size:13})} Ver detalle</button>
-          ${r.estado === 'nuevo' ? `<button class="btn-marcar-revisado" onclick="adminActualizarFeedback('${id}', 'en_revision', this)">${Icon('clock',{size:13})} En revisión</button>` : ''}
-          <button class="btn-marcar-revisado" onclick="adminActualizarFeedback('${id}', 'resuelto', this)">${_icCheck} Resuelto</button>
-          <button class="btn-suspend" onclick="adminActualizarFeedback('${id}', 'descartado', this)">${Icon('ban',{size:13})} Descartar</button>
+          <button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" data-click="adminVerFeedback" data-args="${dargs(id)}">${Icon('chat-bubble',{size:13})} Ver detalle</button>
+          ${r.estado === 'nuevo' ? `<button class="btn-marcar-revisado" data-click="adminActualizarFeedback" data-args="${dargs(id, 'en_revision', ARG.THIS)}">${Icon('clock',{size:13})} En revisión</button>` : ''}
+          <button class="btn-marcar-revisado" data-click="adminActualizarFeedback" data-args="${dargs(id, 'resuelto', ARG.THIS)}">${_icCheck} Resuelto</button>
+          <button class="btn-suspend" data-click="adminActualizarFeedback" data-args="${dargs(id, 'descartado', ARG.THIS)}">${Icon('ban',{size:13})} Descartar</button>
         </div>
       </div>`;
     }).join('');
@@ -1815,29 +1721,29 @@ window.adminVerFeedback = async function(id) {
 
   let data;
   try {
-    const token = sessionStorage.getItem('admin_token') || '';
-    const res = await fetch(FEEDBACK_API_URL_NOTIF + '?' + new URLSearchParams({ action: 'obtenerFeedback', id, token }));
+    const token = getAdminToken();
+    const res = await apiFetch(FEEDBACK_API_URL_NOTIF, { action: 'obtenerFeedback', id, token });
     data = await res.json();
   } catch (e) { body.innerHTML = '<p style="text-align:center;color:#cfd3e0;padding:18px;">Error de conexión.</p>'; return; }
-  if (!data || !data.ok) { body.innerHTML = `<p style="text-align:center;color:#cfd3e0;padding:18px;">${_escPed((data && data.error) || 'No se pudo abrir')}</p>`; return; }
+  if (!data || !data.ok) { body.innerHTML = `<p style="text-align:center;color:#cfd3e0;padding:18px;">${escapeHtml((data && data.error) || 'No se pudo abrir')}</p>`; return; }
 
   const i = data.item;
   const r = i.reporter || {};
   document.getElementById('fb-titulo').textContent = _FB_TIPOS[i.tipo] || 'Reporte de feedback';
   body.innerHTML = `
-    <div class="fb-sec"><h5>Quién reporta</h5>${i.rol === 'vendedor' ? 'Vendedor' : 'Comprador'} · ${_escPed(r.nombre || 'Sin nombre')}${r.telefono ? ' · +' + _escPed(r.telefono) : ''} ${r.verificado ? '(verificado)' : '(teléfono sin verificar)'}\n${i.fecha ? new Date(i.fecha).toLocaleString('es-MX') : ''} · página: ${_escPed(i.pagina || '-')} · área: ${_escPed(i.area || '-')}</div>
-    <div class="fb-sec"><h5>Qué pasó</h5>${_escPed(i.mensaje)}</div>
-    ${i.pasos ? `<div class="fb-sec"><h5>Pasos para repetirlo</h5>${_escPed(i.pasos)}</div>` : ''}
-    ${i.esperado ? `<div class="fb-sec"><h5>Qué esperaba</h5>${_escPed(i.esperado)}</div>` : ''}
-    ${i.captura ? `<div class="fb-sec"><h5>Captura</h5><img id="fb-captura" src="${_escPed(i.captura)}" alt="Captura del usuario"></div>` : ''}
-    <div class="fb-sec"><h5>Información técnica</h5><pre>${_escPed(JSON.stringify(i.tecnico || {}, null, 2))}</pre></div>
-    ${i.notaAdmin ? `<div class="fb-sec"><h5>Nota del admin</h5>${_escPed(i.notaAdmin)}</div>` : ''}
+    <div class="fb-sec"><h5>Quién reporta</h5>${i.rol === 'vendedor' ? 'Vendedor' : 'Comprador'} · ${escapeHtml(r.nombre || 'Sin nombre')}${r.telefono ? ' · +' + escapeHtml(r.telefono) : ''} ${r.verificado ? '(verificado)' : '(teléfono sin verificar)'}\n${i.fecha ? new Date(i.fecha).toLocaleString('es-MX') : ''} · página: ${escapeHtml(i.pagina || '-')} · área: ${escapeHtml(i.area || '-')}</div>
+    <div class="fb-sec"><h5>Qué pasó</h5>${escapeHtml(i.mensaje)}</div>
+    ${i.pasos ? `<div class="fb-sec"><h5>Pasos para repetirlo</h5>${escapeHtml(i.pasos)}</div>` : ''}
+    ${i.esperado ? `<div class="fb-sec"><h5>Qué esperaba</h5>${escapeHtml(i.esperado)}</div>` : ''}
+    ${i.captura ? `<div class="fb-sec"><h5>Captura</h5><img id="fb-captura" src="${escapeHtml(i.captura)}" alt="Captura del usuario"></div>` : ''}
+    <div class="fb-sec"><h5>Información técnica</h5><pre>${escapeHtml(JSON.stringify(i.tecnico || {}, null, 2))}</pre></div>
+    ${i.notaAdmin ? `<div class="fb-sec"><h5>Nota del admin</h5>${escapeHtml(i.notaAdmin)}</div>` : ''}
     <div class="fb-acciones"><button type="button" id="fb-copiar">Copiar reporte</button></div>
     <p id="fb-msg" style="text-align:center;font-size:12px;min-height:16px;margin:8px 0 0;color:#cfd3e0;"></p>`;
 
   const cap = document.getElementById('fb-captura');
   if (cap) cap.addEventListener('click', async () => {
-    try { const blob = await (await fetch(i.captura)).blob(); window.open(URL.createObjectURL(blob), '_blank', 'noopener'); } catch (_) {}
+    try { const blob = await (await fetch(i.captura)).blob(); window.open(URL.createObjectURL(blob), '_blank', 'noopener'); } catch (e) { reportError('notifications', e); }
   });
   document.getElementById('fb-copiar').addEventListener('click', async () => {
     const msg = document.getElementById('fb-msg');
@@ -1850,7 +1756,7 @@ window.adminActualizarFeedback = async function(id, estado, btn) {
   let nota = '';
   if (estado !== 'en_revision') {
     const resolver = estado === 'resuelto';
-    const razon = typeof showCustomConfirm === 'function' ? await new Promise(resolve => {
+    const razon = await new Promise(resolve => {
       showCustomConfirm({
         title: resolver ? 'Marcar como resuelto' : 'Descartar reporte',
         message: resolver ? '¿Marcar este reporte como resuelto? Sale de la lista de pendientes.' : '¿Descartar este reporte? Sale de la lista de pendientes.',
@@ -1860,7 +1766,7 @@ window.adminActualizarFeedback = async function(id, estado, btn) {
         onConfirm: (r) => resolve(r === undefined ? '' : r),
         onCancel: () => resolve(null)
       });
-    }) : (confirm(resolver ? '¿Marcar como resuelto?' : '¿Descartar este reporte?') ? '' : null);
+    });
     if (razon === null) return;
     nota = razon || '';
   }
@@ -1869,9 +1775,9 @@ window.adminActualizarFeedback = async function(id, estado, btn) {
       const params = { action: 'actualizarFeedback', id, estado };
       if (nota) params.notaAdmin = nota;
       const data = await _postFeedbackApi(params);
-      if (!data.ok) { alert('Error: ' + data.error); return; }
+      if (!data.ok) { askAlert('Error: ' + data.error); return; }
       loadFeedbackReportes();
-    } catch (err) { alert('Error de conexión.'); }
+    } catch (err) { askAlert('Error de conexión.'); }
   };
   if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Guardando…');
   else await runFn();

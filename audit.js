@@ -1,0 +1,980 @@
+// ── Origen de datos ─────────────────────────────────────────────
+// ADMIN_API_URL_ADMIN ya expone obtenerEstadisticasStaff (datos
+// agregados, es lo que usa la gráfica de Chart.js en index.html).
+// Este panel necesita el detalle fila-por-fila de cada acción, que
+// todavía no se confirmó que exista en Firestore/admin-api. Se
+// intenta primero "obtenerAuditoriaStaff" (nombre propuesto, hay
+// que confirmarlo o crearlo en el backend); si no existe o falla,
+// se cae a los datos de ejemplo de abajo para que el panel siga
+// siendo usable mientras tanto.
+const ADMIN_API_URL_AUDIT = "https://admin-api-1038143238323.us-central1.run.app";
+
+// Mismos nombres legibles que usa admin.js para el campo `tipo` de
+// staff_actividad. Lo que no esté aquí se muestra tal cual llega.
+const TIPO_LABELS = {
+    aprobarVendedor: "Aprobar vendedor", rechazarVendedor: "Rechazar vendedor",
+    resetPasswordVendedor: "Restablecer contraseña", aprobarCambioTelefono: "Aprobar cambio de teléfono",
+    rechazarCambioTelefono: "Rechazar cambio de teléfono", marcarVendedorConfiable: "Marcar vendedor confiable",
+    marcarVendedorPlan: "Cambiar plan de vendedor", ajustarDiasPlanPlus: "Ajustar días Plan Plus",
+    suspenderVendedor: "Suspender vendedor", reactivarVendedor: "Reactivar vendedor",
+    responderSolicitudPlus: "Responder solicitud Plus", recordarInteresPlus: "Recordar interés en Plus",
+    marcarReporteBeneficiarioRevisado: "Marcar reporte de beneficiario revisado",
+    aprobarBeneficiario: "Aprobar beneficiario", rechazarBeneficiario: "Rechazar beneficiario",
+    aprobarSolicitudBeneficiario: "Aprobar solicitud de beneficiario", rechazarSolicitudBeneficiario: "Rechazar solicitud de beneficiario",
+    aprobarProductoComunidad: "Aprobar producto de comunidad", rechazarProductoComunidad: "Rechazar producto de comunidad",
+    marcarReporteRevisado: "Marcar reporte revisado", marcarReporteLiveRevisado: "Marcar reporte de live revisado",
+    verConversacionPedido: "Revisar conversación reportada", resolverReportePedido: "Resolver reporte de pedido personalizado", resolverReporteHistoria: "Resolver reporte de historia",
+    crearAdmin: "Crear admin", desactivarAdmin: "Desactivar admin", reactivarAdmin: "Reactivar admin",
+    iniciarTransicionAdmin: "Iniciar transición de admin", promoverModerador: "Promover moderador a admin",
+    eliminarAdmin: "Eliminar admin", cambiarPasswordAdmin: "Cambiar contraseña de admin",
+    eliminarCuentaVendedor: "Eliminar cuenta de vendedor", asignarCiudadVendedor: "Asignar ciudad a vendedor",
+    asignarCiudadMasivaProductosZNR: "Asignar ciudad masiva (productos ZNR)", crearProductoZNR: "Crear producto ZNR",
+    eliminarProductosDeAdmin: "Eliminar productos ZNR de un admin", actualizarProductoZNR: "Actualizar producto ZNR",
+    eliminarProductoZNR: "Eliminar producto ZNR", deleteProductoComunidadAdmin: "Eliminar producto de comunidad (admin)",
+    marcarProductoConfiable: "Marcar producto confiable", eliminarBeneficiario: "Eliminar beneficiario",
+    guardarDatosBancariosAdmin: "Actualizar datos bancarios", marcarPagoAdminMes: "Marcar pago mensual a admin",
+    sincronizarPlanPlusAdminsExistentes: "Sincronizar Plan Plus retroactivo (admins)",
+    confirmGroupPurchase: "Confirmar compra grupal (tienda)", cancelGroupPurchase: "Cancelar compra grupal (tienda)",
+    removeOutOfStockNotifications: "Quitar productos sin stock (tienda)",
+};
+
+// Etiquetas legibles para el tipo de cola pendiente (distinto de
+// TIPO_LABELS, que es para acciones ya resueltas).
+const PENDIENTE_LABELS = {
+    vendedorNuevo: "Alta de vendedor", cambioTelefono: "Cambio de teléfono",
+    resetPassword: "Reset de contraseña", solicitudPlus: "Solicitud Plan Plus",
+    productoComunidad: "Producto de comunidad", reporteProducto: "Reporte de producto",
+    reporteLive: "Reporte de live", reporteHistoria: "Reporte de historia", beneficiarioNuevo: "Alta de beneficiario",
+    reporteBeneficiario: "Reporte de beneficiario", solicitudBeneficiario: "Solicitud de beneficiario",
+};
+async function obtenerFilasAuditoria(dias) {
+    const token = sessionStorage.getItem("admin_token") || "";
+    const params = new URLSearchParams({ action: "obtenerAuditoriaStaff", dias: dias || 30, token });
+    const res = await fetch(ADMIN_API_URL_AUDIT + "?" + params.toString());
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!data || !data.ok || !Array.isArray(data.registros)) {
+        throw new Error("Respuesta sin 'registros' (revisar contrato del endpoint)");
+    }
+    // staff_actividad no guarda IP ni un texto de "detalle" libre, así
+    // que esa columna del prototipo original no se incluye.
+    // Sí guarda ciudad, refId y (desde el backend actualizado) razón
+    // — esta última opcional: el staff la escribe si quiere al hacer
+    // la acción en admin.js, así que puede venir vacía.
+    const resueltas = data.registros.map((r) => [
+        r.id, r.fecha, r.usuario, r.rol, r.ciudad, TIPO_LABELS[r.accion] || r.accion, r.refId, r.estado, r.razon || ''
+    ]);
+    // Lo pendiente (colas que aún nadie resuelve) no vive en
+    // staff_actividad, así que sale de `pendientesDetalle` — sin
+    // Usuario/Rol asignado todavía (nadie lo ha tomado) y con Estado
+    // "Pendiente", para que se pueda filtrar junto con lo Completado
+    // en la misma columna en vez de verlo aparte en un resumen.
+    // Para los tipos que son un reporte (reporteProducto/reporteLive/reporteHistoria/
+    // reporteBeneficiario), `detalle` trae el motivo que escribió quien
+    // reportó — se muestra en la misma columna Razón que usan las
+    // acciones ya resueltas, aunque acá no la escribió el staff.
+    const pendientesDetalle = Array.isArray(data.pendientesDetalle) ? data.pendientesDetalle : [];
+    const pendientes = pendientesDetalle.map((p) => [
+        'pend_' + p.tipo + '_' + p.refId, p.fecha || '', '', '', p.ciudad, PENDIENTE_LABELS[p.tipo] || p.tipo, p.refId, 'Pendiente', p.detalle || ''
+    ]);
+    const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado', 'Razón'];
+    const filas = [...pendientes, ...resueltas].sort((a, b) => (b[1] || '').localeCompare(a[1] || ''));
+    return [encabezado, ...filas];
+}
+
+const auditRowsEjemplo = [
+
+    ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado', 'Razón'],
+
+    [1001, '2026-09-24 09:15', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Aprobar vendedor', 'vend_8831', 'Completado', ''],
+    [1002, '2026-09-24 10:02', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Marcar reporte revisado', 'rep_2210', 'Completado', ''],
+    [1003, '2026-09-24 11:45', 'ana.torres', 'Admin', 'Reynosa', 'Aprobar beneficiario', 'ben_0456', 'Completado', ''],
+    [1004, '2026-09-24 14:30', 'javier.lopez', 'Moderador', 'Nuevo Laredo', 'Marcar reporte de live revisado', 'live_7781', 'Completado', ''],
+    [1005, '2026-09-25 08:00', 'carlos.mendoza', 'Admin', 'Nuevo Laredo', 'Suspender vendedor', 'vend_5502', 'Completado', 'Múltiples reportes de compradores por producto no entregado'],
+    [1006, '2026-09-25 09:20', 'laura.gomez', 'Moderador', 'Nuevo Laredo', 'Aprobar producto de comunidad', 'prod_1190', 'Completado', ''],
+    ['pend_vendedorNuevo_v_1785838471889', '2026-09-26 07:40', '', '', 'Nuevo Laredo', 'Alta de vendedor', 'v_1785838471889', 'Pendiente', ''],
+    ['pend_reporteProducto_rep_1790760462893_nvfobb', '2026-09-27 12:05', '', '', 'Nuevo Laredo', 'Reporte de producto', 'rep_1790760462893_nvfobb', 'Pendiente', 'Otro: No tiene imagen de referencia']
+
+];
+
+let auditRows = auditRowsEjemplo;
+
+
+/*
+ * =========================================================
+ * DIAGNÓSTICO
+ * =========================================================
+ */
+
+const status =
+    document.getElementById('status');
+
+const errorLog =
+    document.getElementById('error-log');
+
+const debugContent =
+    document.getElementById('debug-content');
+
+
+function debug(
+    message,
+    ok = false
+) {
+
+    const line =
+        document.createElement('div');
+
+    line.textContent =
+        message;
+
+    if (ok) {
+        line.className =
+            'debug-ok';
+    }
+
+    debugContent.appendChild(line);
+
+    console.log(
+        '[UNIVER V4]',
+        message
+    );
+}
+
+
+function showError(
+    message,
+    error
+) {
+
+    errorLog.style.display =
+        'block';
+
+    errorLog.textContent =
+        'Error crítico:\n\n' +
+        message +
+        '\n\n' +
+        (
+            error
+                ? error.message
+                : ''
+        );
+
+    status.textContent =
+        '❌ Univer no pudo iniciar';
+
+    status.style.background =
+        '#f8d7da';
+
+    status.style.color =
+        '#842029';
+
+    status.style.borderColor =
+        '#f1aeb5';
+
+    console.error(
+        message,
+        error
+    );
+
+}
+
+
+/*
+ * =========================================================
+ * INICIALIZACIÓN
+ * =========================================================
+ */
+
+async function iniciarUniver() {
+
+    try {
+
+        debug(
+            'Verificando React...'
+        );
+
+        if (!window.React) {
+
+            throw new Error(
+                'React no está cargado.'
+            );
+
+        }
+
+        debug(
+            '✓ React cargado',
+            true
+        );
+
+
+        debug(
+            'Verificando ReactDOM...'
+        );
+
+        if (!window.ReactDOM) {
+
+            throw new Error(
+                'ReactDOM no está cargado.'
+            );
+
+        }
+
+        debug(
+            '✓ ReactDOM cargado',
+            true
+        );
+
+
+        debug(
+            'Verificando RxJS...'
+        );
+
+        if (!window.rxjs) {
+
+            throw new Error(
+                'RxJS no está cargado. Verifica el CDN.'
+            );
+
+        }
+
+        debug(
+            '✓ RxJS cargado',
+            true
+        );
+
+
+        debug(
+            'Verificando ECharts...'
+        );
+
+        if (!window.echarts) {
+
+            throw new Error(
+                'ECharts no está cargado.'
+            );
+
+        }
+
+        debug(
+            '✓ ECharts cargado',
+            true
+        );
+
+
+        debug(
+            'Verificando UniverPresets...'
+        );
+
+        if (!window.UniverPresets) {
+
+            throw new Error(
+                'UniverPresets no está cargado.'
+            );
+
+        }
+
+        debug(
+            '✓ UniverPresets cargado',
+            true
+        );
+
+
+        debug(
+            'Verificando UniverCore...'
+        );
+
+        if (!window.UniverCore) {
+
+            throw new Error(
+                'UniverCore no está cargado.'
+            );
+
+        }
+
+        debug(
+            '✓ UniverCore cargado',
+            true
+        );
+
+
+        debug(
+            'Verificando UniverDesign...'
+        );
+
+        if (!window.UniverDesign) {
+
+            throw new Error(
+                'UniverDesign no está cargado.'
+            );
+
+        }
+
+        debug(
+            '✓ UniverDesign cargado',
+            true
+        );
+
+
+        debug(
+            'Verificando UniverPresetSheetsCore...'
+        );
+
+        if (!window.UniverPresetSheetsCore) {
+
+            throw new Error(
+                'UniverPresetSheetsCore no está cargado.'
+            );
+
+        }
+
+        debug(
+            '✓ UniverPresetSheetsCore cargado',
+            true
+        );
+
+
+        debug(
+            'Verificando UniverPresetSheetsFilter...'
+        );
+
+        if (!window.UniverPresetSheetsFilter) {
+
+            throw new Error(
+                'UniverPresetSheetsFilter no está cargado.'
+            );
+
+        }
+
+        debug(
+            '✓ UniverPresetSheetsFilter cargado',
+            true
+        );
+
+
+        /*
+         * =================================================
+         * OBTENER APIs
+         * =================================================
+         */
+
+        const {
+            createUniver
+        } = window.UniverPresets;
+
+
+        const {
+            LocaleType,
+            merge
+        } = window.UniverCore;
+
+
+        const {
+            defaultTheme
+        } = window.UniverDesign;
+
+
+        const {
+            UniverSheetsCorePreset
+        } =
+            window.UniverPresetSheetsCore;
+
+
+        const {
+            UniverSheetsFilterPreset
+        } =
+            window.UniverPresetSheetsFilter;
+
+
+        if (
+            typeof createUniver !==
+            'function'
+        ) {
+
+            throw new Error(
+                'createUniver no es una función.'
+            );
+
+        }
+
+
+        if (
+            typeof UniverSheetsCorePreset !==
+            'function'
+        ) {
+
+            throw new Error(
+                'UniverSheetsCorePreset no es una función.'
+            );
+
+        }
+
+
+        debug(
+            '✓ APIs de Univer disponibles',
+            true
+        );
+
+
+        /*
+         * =================================================
+         * CREAR UNIVERS
+         * =================================================
+         */
+
+        debug(
+            'Creando instancia de Univer...'
+        );
+
+
+        const {
+            univerAPI
+        } =
+            createUniver({
+
+                locale:
+                    LocaleType.EN_US,
+
+                locales: {
+
+                    [LocaleType.EN_US]:
+
+                        merge(
+
+                            {},
+
+                            window.UniverPresetSheetsCoreEnUS,
+
+                            window.UniverPresetSheetsFilterEnUS
+
+                        )
+
+                },
+
+                theme:
+                    defaultTheme,
+
+                presets: [
+
+                    UniverSheetsCorePreset({
+
+                        container:
+                            'univer-container',
+
+                        toolbar:
+                            false,
+
+                        footer:
+                            false,
+
+                        contextMenu:
+                            false,
+
+                        disableAutoFocus:
+                            true
+
+                    }),
+
+                    UniverSheetsFilterPreset()
+
+                ]
+
+            });
+
+
+        if (!univerAPI) {
+
+            throw new Error(
+                'createUniver no devolvió univerAPI.'
+            );
+
+        }
+
+
+        debug(
+            '✓ Univer creado correctamente',
+            true
+        );
+
+
+        /*
+         * =================================================
+         * CREAR HOJA
+         * =================================================
+         */
+
+        debug(
+            'Creando hoja de auditoría...'
+        );
+
+
+        const workbook =
+            univerAPI.createUniverSheet({
+
+                name:
+                    'Auditoría de Tareas',
+
+                sheetOrder: [
+                    'sheet-1'
+                ],
+
+                sheets: {
+
+                    'sheet-1': {
+
+                        id:
+                            'sheet-1',
+
+                        name:
+                            'Registro de Actividades',
+
+                        rowCount:
+                            100,
+
+                        columnCount:
+                            10,
+
+                        cellData:
+                            {}
+
+                    }
+
+                }
+
+            });
+
+
+        if (!workbook) {
+
+            throw new Error(
+                'No fue posible crear el workbook.'
+            );
+
+        }
+
+
+        debug(
+            '✓ Workbook creado',
+            true
+        );
+
+
+        /*
+         * =================================================
+         * INSERTAR DATOS
+         * =================================================
+         *
+         * Usamos la API de rangos para colocar los datos
+         * después de crear la hoja.
+         */
+
+        const sheet =
+            workbook.getActiveSheet();
+
+
+        if (!sheet) {
+
+            throw new Error(
+                'No se encontró la hoja activa.'
+            );
+
+        }
+
+
+        debug(
+            'Insertando datos de auditoría...'
+        );
+
+
+        for (
+            let row = 0;
+            row < auditRows.length;
+            row++
+        ) {
+
+            for (
+                let col = 0;
+                col < auditRows[row].length;
+                col++
+            ) {
+
+                const value =
+                    auditRows[row][col];
+
+                const cell =
+                    sheet.getRange(
+                        row,
+                        col
+                    );
+
+                cell.setValue(
+                    value
+                );
+
+            }
+
+        }
+
+
+        debug(
+            '✓ Datos insertados',
+            true
+        );
+
+
+        /*
+         * =================================================
+         * AJUSTES VISUALES
+         * =================================================
+         */
+
+        try {
+
+            const headerRange =
+                sheet.getRange(
+                    0,
+                    0,
+                    1,
+                    auditRows[0].length
+                );
+
+
+            headerRange.setFontWeight(
+                'bold'
+            );
+
+        } catch (
+            formattingError
+        ) {
+
+            console.warn(
+                'No se pudo aplicar formato adicional:',
+                formattingError
+            );
+
+        }
+
+
+        /*
+         * =================================================
+         * FILTRO Y MODO SOLO LECTURA + FILTRO
+         * =================================================
+         *
+         * El panel es únicamente para auditar/consultar,
+         * así que activamos el filtro sobre los datos y
+         * bloqueamos la edición de celdas, permitiendo
+         * filtrar y ordenar.
+         */
+
+        try {
+
+            const dataRange =
+                sheet.getRange(
+                    0,
+                    0,
+                    auditRows.length,
+                    auditRows[0].length
+                );
+
+            const existingFilter =
+                sheet.getFilter();
+
+            if (!existingFilter) {
+
+                await dataRange.createFilter();
+
+            }
+
+            debug(
+                '✓ Filtro activado sobre los datos',
+                true
+            );
+
+        } catch (
+            filterError
+        ) {
+
+            console.warn(
+                'No se pudo activar el filtro:',
+                filterError
+            );
+
+        }
+
+        try {
+
+            await sheet
+                .getWorksheetPermission()
+                .setMode(
+                    'filterOnly'
+                );
+
+            debug(
+                '✓ Hoja en modo solo consulta (filtrar/ordenar sí, editar no)',
+                true
+            );
+
+        } catch (
+            readOnlyError
+        ) {
+
+            console.warn(
+                'No se pudo activar el modo filterOnly:',
+                readOnlyError
+            );
+
+        }
+
+
+        /*
+         * =================================================
+         * SUPRESIÓN DEL TECLADO VIRTUAL EN MÓVIL
+         * =================================================
+         *
+         * El motor de Univer usa un input/textarea oculto
+         * para capturar el foco de celda (navegación con
+         * flechas, copiar, etc.). En celular, cualquier
+         * input que reciba foco abre el teclado del sistema
+         * aunque no se pueda escribir en él. Aquí evitamos
+         * eso marcando esos campos con inputmode="none" en
+         * cuanto aparecen o reciben foco.
+         */
+
+        try {
+
+            const univerContainerEl =
+                document.getElementById(
+                    'univer-container'
+                );
+
+            const silenciarCampo = (
+                campo
+            ) => {
+
+                if (
+                    !campo ||
+                    campo.dataset.kbSilenced
+                ) {
+
+                    return;
+
+                }
+
+                campo.setAttribute(
+                    'inputmode',
+                    'none'
+                );
+
+                campo.dataset.kbSilenced =
+                    'true';
+
+            };
+
+            if (univerContainerEl) {
+
+                univerContainerEl
+                    .querySelectorAll(
+                        'input, textarea'
+                    )
+                    .forEach(
+                        silenciarCampo
+                    );
+
+                const kbObserver =
+                    new MutationObserver(
+                        (
+                            mutations
+                        ) => {
+
+                            mutations.forEach(
+                                (
+                                    mutation
+                                ) => {
+
+                                    mutation.addedNodes.forEach(
+                                        (
+                                            node
+                                        ) => {
+
+                                            if (
+                                                node.nodeType !==
+                                                1
+                                            ) {
+
+                                                return;
+
+                                            }
+
+                                            if (
+                                                node.matches &&
+                                                node.matches(
+                                                    'input, textarea'
+                                                )
+                                            ) {
+
+                                                silenciarCampo(
+                                                    node
+                                                );
+
+                                            }
+
+                                            if (
+                                                node.querySelectorAll
+                                            ) {
+
+                                                node
+                                                    .querySelectorAll(
+                                                        'input, textarea'
+                                                    )
+                                                    .forEach(
+                                                        silenciarCampo
+                                                    );
+
+                                            }
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                kbObserver.observe(
+                    univerContainerEl,
+                    {
+                        childList: true,
+                        subtree: true
+                    }
+                );
+
+                univerContainerEl.addEventListener(
+                    'focus',
+                    (
+                        event
+                    ) => {
+
+                        const target =
+                            event.target;
+
+                        if (
+                            target &&
+                            (target.tagName ===
+                                'INPUT' ||
+                                target.tagName ===
+                                'TEXTAREA')
+                        ) {
+
+                            silenciarCampo(
+                                target
+                            );
+
+                            /*
+                             * Respaldo agresivo: se
+                             * sacrifica la navegación
+                             * con flechas de teclado
+                             * físico a cambio de la
+                             * garantía de que el
+                             * teclado táctil nunca
+                             * aparezca.
+                             */
+
+                            target.blur();
+
+                        }
+
+                    },
+                    true
+                );
+
+            }
+
+            debug(
+                '✓ Supresión de teclado virtual activada',
+                true
+            );
+
+        } catch (
+            kbError
+        ) {
+
+            console.warn(
+                'No se pudo activar la supresión de teclado virtual:',
+                kbError
+            );
+
+        }
+
+
+        /*
+         * =================================================
+         * FINAL
+         * =================================================
+         */
+
+        status.textContent =
+            '✅ Panel de auditoría cargado correctamente';
+
+        status.style.background =
+            '#d1e7dd';
+
+        status.style.color =
+            '#0f5132';
+
+        status.style.borderColor =
+            '#a3cfbb';
+
+
+        debug(
+            '========================================',
+            true
+        );
+
+        debug(
+            '✓ UNIVER V4 INICIALIZADO CORRECTAMENTE',
+            true
+        );
+
+        debug(
+            '========================================',
+            true
+        );
+
+
+    } catch (
+        error
+    ) {
+
+        showError(
+            'No fue posible inicializar Univer.',
+            error
+        );
+
+    }
+
+}
+
+
+/*
+ * =========================================================
+ * EJECUTAR DESPUÉS DE CARGAR LOS SCRIPTS
+ * =========================================================
+ */
+
+async function arrancar() {
+    const subtitle = document.getElementById('audit-subtitle');
+    try {
+        auditRows = await obtenerFilasAuditoria(30);
+        if (subtitle) subtitle.textContent = 'Usuario Master · Registro real de actividad (últimos 30 días)';
+    } catch (err) {
+        console.warn('No se pudo cargar el registro real de auditoría, usando datos de ejemplo:', err);
+        auditRows = auditRowsEjemplo;
+        if (subtitle) {
+            subtitle.textContent = '⚠️ No se encontró el endpoint de auditoría en el backend — mostrando datos de ejemplo';
+            subtitle.style.color = '#b02a37';
+        }
+    }
+    iniciarUniver();
+}
+
+arrancar();
