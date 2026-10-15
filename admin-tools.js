@@ -1484,8 +1484,7 @@ window.loadErrorLog = function() {
     return;
   }
 
-  const url = api + '?' + new URLSearchParams({ action: 'obtenerErrorLog', token }).toString();
-  fetch(url)
+  apiFetch(api, { action: 'obtenerErrorLog', token })
     .then(r => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();

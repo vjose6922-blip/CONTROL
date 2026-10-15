@@ -219,16 +219,7 @@ async function loadNotificationsOptimized(forceRefresh = false) {
     const token = getAdminToken();
     if (!token) throw new Error("No token");
 
-    const params = new URLSearchParams({
-      action: "notificationsBatch",
-      page: "1",
-      pageSize: "100",
-      noCache: forceRefresh ? "true" : "false",
-      token: token
-    });
-    const url = `${TIENDA_ZNR_API_URL_NOTIF}?${params.toString()}`;
-    
-    const response = await fetch(url);
+    const response = await apiFetch(TIENDA_ZNR_API_URL_NOTIF, { action: "notificationsBatch", page: "1", pageSize: "100", noCache: forceRefresh ? "true" : "false", token });
     const result = await response.json();
 
     if (!result || !result.ok) {

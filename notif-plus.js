@@ -5,7 +5,7 @@ async function loadSolicitudesPlus() {
   const listEl = document.getElementById('admin-plus-list');
   if (!listEl) return;
   const API = "https://vendedores-api-1038143238323.us-central1.run.app";
-  const token = sessionStorage.getItem('admin_token') || '';
+  const token = getAdminToken();
   if (!API || !token) return;
 
   if (typeof window.znrSkeletonRows === 'function') listEl.innerHTML = window.znrSkeletonRows(3);
@@ -16,7 +16,7 @@ async function loadSolicitudesPlus() {
   if (refreshBtn) refreshBtn.disabled = true;
 
   try {
-    const res = await fetch(`${API}?action=solicitudesPlus&token=${encodeURIComponent(token)}`);
+    const res = await apiFetch(API, { action: 'solicitudesPlus', token });
     const data = await res.json();
     if (!data.ok) { listEl.innerHTML = `<p style="color:#f87171;text-align:center">${escapeHtml(data.error || 'Error')}</p>`; return; }
 
@@ -56,7 +56,7 @@ async function loadSolicitudesPlus() {
 
 async function recordarInteresPlus(uid, nombre, btn) {
   const API = "https://vendedores-api-1038143238323.us-central1.run.app";
-  const token = sessionStorage.getItem('admin_token') || '';
+  const token = getAdminToken();
   const runFn = async () => {
     const res = await fetch(API, { method:'POST', body: JSON.stringify({ action:'recordarInteresPlus', token, uid }) });
     const data = await res.json();
@@ -86,7 +86,7 @@ async function confirmarRespuestaPlus(respuesta, btn) {
   const errEl = document.getElementById('plus-modal-error');
   errEl.style.display = 'none';
   const API = "https://vendedores-api-1038143238323.us-central1.run.app";
-  const token = sessionStorage.getItem('admin_token') || '';
+  const token = getAdminToken();
   if (!API || !token) return;
 
   const body = {
