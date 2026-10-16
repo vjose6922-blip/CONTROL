@@ -94,7 +94,7 @@ if (document.querySelector('.notifications-filters')) return;
 const filterBar = document.createElement("div");
 filterBar.className = "notifications-filters";
 const filters = [
-{ value: 'all',       label: `${LIST}  Todas`,      color: '#3b1f5f' },
+{ value: 'all',       label: `${LIST}  Todas`,      color: 'var(--notif-dark)' },
 { value: 'pending',   label: `${CLOCK} Pendientes`, color: '#f97316' },
 { value: 'confirmed', label: `${CHECK} Confirmadas`,color: '#22c55e' },
 { value: 'cancelled', label: `${X_ICO} Canceladas`,         color: '#ef4444' },
@@ -737,7 +737,7 @@ window.loadBeneficiarios = async function(force) {
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
             <button data-click="adminAprobarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" style="padding:7px 12px;border:none;border-radius:20px;background:#22c55e;color:#fff;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Aprobar</button>
-            <button data-click="openBeneficiarioModal" data-args="${dargs(b.id)}" style="padding:7px 12px;border:none;border-radius:20px;background:#e0e7ff;color:#3730a3;font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver</button>
+            <button data-click="openBeneficiarioModal" data-args="${dargs(b.id)}" style="padding:7px 12px;border:none;border-radius:20px;background:#e0e7ff;color:var(--notif-dark);font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver</button>
             <button data-click="adminRechazarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" style="padding:7px 12px;border:none;border-radius:20px;background:#fee2e2;color:#b91c1c;font-weight:700;font-size:.75rem;cursor:pointer;">${_icX} Rechazar</button>
           </div>
         </div>
@@ -978,7 +978,7 @@ window.loadReportesBeneficiarios = async function(force) {
           <div style="font-size:.72rem;color:#888;margin-top:2px;">${r.fecha ? new Date(r.fecha).toLocaleString('es-MX') : ''}${r.telefono_usuario ? ' · ' + _icPhone + ' ' + escapeHtml(r.telefono_usuario) : ''}</div>
           <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${escapeHtml(r.motivo)}</div>
           <div style="display:flex;gap:8px;margin-top:10px;">
-            <button data-click="verBeneficiarioDesdeReporte" data-args="${dargs(r.beneficiario_id)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e0e7ff;color:#3730a3;font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver beneficiario</button>
+            <button data-click="verBeneficiarioDesdeReporte" data-args="${dargs(r.beneficiario_id)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e0e7ff;color:var(--notif-dark);font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver beneficiario</button>
             <button data-motivo="${escapeHtml(r.motivo || '')}" data-click="adminMarcarReporteBeneficiarioRevisado" data-args="${dargs(r.id, ARG.THIS)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Marcar revisado</button>
           </div>
         </div>
@@ -1399,12 +1399,12 @@ function _inyectarEstilosPedido() {
     .ped-resumen { font-size:12px; color:#cfd3e0; background:rgba(255,255,255,.06); border-radius:10px; padding:8px 10px; margin-bottom:8px; }
     .ped-chat { overflow:auto; display:flex; flex-direction:column; gap:6px; padding:4px; }
     .ped-msg { max-width:84%; padding:7px 10px; border-radius:12px; font-size:13px; line-height:1.35; white-space:pre-wrap; word-break:break-word; background:rgba(255,255,255,.1); align-self:flex-start; }
-    .ped-msg.vendedor { align-self:flex-end; background:#6d28d9; }
+    .ped-msg.vendedor { align-self:flex-end; background:var(--notif-accent); }
     .ped-msg .quien { display:block; font-size:10px; font-weight:700; opacity:.7; margin-bottom:2px; }
     .ped-msg .hora { display:block; font-size:10px; opacity:.55; margin-top:3px; text-align:right; }
     .ped-msg img { display:block; max-width:100%; max-height:220px; border-radius:8px; margin-top:4px; cursor:zoom-in; }
     .ped-sys { align-self:center; text-align:center; font-size:11px; color:#aab; background:rgba(255,255,255,.06); padding:4px 12px; border-radius:999px; max-width:92%; }
-    .ped-card { align-self:stretch; border:1.5px solid #a855f7; border-radius:12px; padding:8px 10px; font-size:12.5px; background:rgba(168,85,247,.1); }
+    .ped-card { align-self:stretch; border:1.5px solid var(--notif-light); border-radius:12px; padding:8px 10px; font-size:12.5px; background:color-mix(in srgb, var(--notif-accent) 10%, transparent); }
     .ped-pie { font-size:10.5px; color:#8c91a3; margin-top:8px; }
   `;
   document.head.appendChild(st);
@@ -1673,7 +1673,7 @@ function _inyectarEstilosFeedback() {
     .fb-sec pre { margin:0; font-size:11px; white-space:pre-wrap; word-break:break-word; color:#cfd3e0; }
     .fb-sec img { max-width:100%; border-radius:8px; cursor:zoom-in; display:block; }
     .fb-acciones { display:flex; gap:8px; margin-top:6px; }
-    .fb-acciones button { flex:1; padding:9px; border-radius:10px; border:none; font-weight:700; cursor:pointer; background:#6d28d9; color:#fff; }
+    .fb-acciones button { flex:1; padding:9px; border-radius:10px; border:none; font-weight:700; cursor:pointer; background:var(--notif-accent); color:#fff; }
   `;
   document.head.appendChild(st);
 }

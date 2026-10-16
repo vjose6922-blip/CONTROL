@@ -40,7 +40,7 @@ async function loadSolicitudesPlus() {
           <button data-click="openPlusModal" data-args="${dargs(v.uid, v.nombre, 'denied')}"
             style="padding:6px 14px;border-radius:8px;border:none;background:#dc2626;color:#fff;cursor:pointer;font-size:.8rem;font-weight:600;">${Icon('x')} Denegar</button>
           <button data-click="openPlusModal" data-args="${dargs(v.uid, v.nombre, 'approved')}"
-            style="padding:6px 14px;border-radius:8px;border:none;background:#7c3aed;color:#fff;cursor:pointer;font-size:.8rem;font-weight:600;">${Icon('check')} Aprobar</button>
+            style="padding:6px 14px;border-radius:8px;border:none;background:var(--notif-accent);color:#fff;cursor:pointer;font-size:.8rem;font-weight:600;">${Icon('check')} Aprobar</button>
           <button data-click="recordarInteresPlus" data-args="${dargs(v.uid, v.nombre, ARG.THIS)}"
             style="padding:6px 14px;border-radius:8px;border:none;background:#0ea5e9;color:#fff;cursor:pointer;font-size:.8rem;font-weight:600;">${Icon('bell')} Recordar</button>
         </div>

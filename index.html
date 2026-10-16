@@ -137,7 +137,6 @@ body[data-rol="moderador"] #product-form select {
    <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
  </button>
  <button class="icon-button" id="admin-refresh-btn" style="background: rgba(255,255,255,0.1);" title="Actualizar lista de productos"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" aria-hidden="true"><use href="#ic-refresh"/></svg></button>
- <button class="icon-button" id="admin-autostart-toggle" style="background: rgba(255,255,255,0.1);" title="Abrir siempre aquí al iniciar la app"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" aria-hidden="true"><use href="#ic-settings"/></svg></button>
  <button class="icon-button" id="admin-logout-btn" style="background: rgba(255,255,255,0.1);" title="Cerrar sesión"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" aria-hidden="true"><use href="#ic-logout"/></svg></button>
  </div>
  </header>
@@ -147,9 +146,9 @@ body[data-rol="moderador"] #product-form select {
  <h2 id="login-view-title">Admin / Moderador</h2>
  <p style="color: rgba(255,255,255,0.8); margin-top: 8px;">Ingresa tus credenciales para continuar</p>
  </div>
- <div id="login-role-switch" style="display:flex;border-radius:12px;overflow:hidden;border:1.5px solid rgba(255,255,255,.18);margin-bottom:18px;">
- <button type="button" id="login-switch-cuenta" class="login-switch-btn" data-role="cuenta" style="flex:1;padding:9px 6px;border:none;background:rgba(255,255,255,.14);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer;">Admin / Moderador</button>
- <button type="button" id="login-switch-master" class="login-switch-btn" data-role="master" style="flex:1;padding:9px 6px;border:none;background:transparent;color:rgba(255,255,255,.6);font-weight:700;font-size:.82rem;cursor:pointer;">Master</button>
+ <div id="login-role-switch" class="login-switch">
+ <button type="button" id="login-switch-cuenta" class="login-switch-btn is-active" data-role="cuenta">Admin / Moderador</button>
+ <button type="button" id="login-switch-master" class="login-switch-btn" data-role="master">Master</button>
  </div>
  <form id="admin-login-form-cuenta" class="form-vertical">
  <div class="form-row">
@@ -206,7 +205,6 @@ body[data-rol="moderador"] #product-form select {
  <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-stats-tile","stats-body"]'>
  <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-settings"/></svg></span>
  <h2 class="tile-title">Desempeño</h2>
- <span class="tile-subtitle">Notificaciones y herramientas resueltas por persona</span>
  <div class="tile-actions">
  <button type="button" class="tile-close-btn" aria-label="Cerrar" data-stop data-click="closeGridTile" data-args='["admin-stats-tile","stats-body"]'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
  </div>
@@ -254,7 +252,6 @@ body[data-rol="moderador"] #product-form select {
  <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-cambiar-password-section","cambiar-password-body"]'>
  <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-lock"/></svg></span>
  <h2 class="tile-title">Cambiar contraseña</h2>
- <span class="tile-subtitle">Actualiza tu contraseña de acceso</span>
  <div class="tile-actions">
  <button type="button" class="tile-close-btn" aria-label="Cerrar" data-stop data-click="closeGridTile" data-args='["admin-cambiar-password-section","cambiar-password-body"]'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
  </div>
@@ -282,7 +279,6 @@ body[data-rol="moderador"] #product-form select {
  <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-datos-bancarios-section","datos-bancarios-body"]'>
  <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-star"/></svg></span>
  <h2 class="tile-title">Datos bancarios</h2>
- <span class="tile-subtitle">Para que te paguen tu porcentaje mensual</span>
  <div class="tile-actions">
  <button type="button" class="tile-close-btn" aria-label="Cerrar" data-stop data-click="closeGridTile" data-args='["admin-datos-bancarios-section","datos-bancarios-body"]'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
  </div>
@@ -359,7 +355,7 @@ body[data-rol="moderador"] #product-form select {
  <span class="amc-badge" id="notif-panel-plus-count">—</span>
  </a>
  <a href="notificaciones.html#beneficiarios" class="admin-mini-card" id="npi-beneficiarios">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-heart-fill"/></svg></span>
+ <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-heart"/></svg></span>
  <span class="amc-label">Beneficiarios pendientes</span>
  <span class="amc-badge" id="notif-panel-beneficiarios-count">—</span>
  </a>
@@ -432,62 +428,11 @@ body[data-rol="moderador"] #product-form select {
  <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-settings"/></svg></span> Herramientas</h2>
  </div>
  <div class="admin-cards-grid">
- <a class="admin-mini-card" href="Tools.html?tool=inspector" data-tool="inspector">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-community"/></svg></span>
- <span class="amc-label">Modo Inspector (Comunidad)</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=confiable" data-tool="confiable">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-lock"/></svg></span>
- <span class="amc-label">Sugerencias: Vendedor confiable</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=vendorstats" data-tool="vendorstats">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-stats"/></svg></span>
- <span class="amc-label">Estadísticas de Vendedores</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=analytics" data-tool="analytics">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-stats"/></svg></span>
- <span class="amc-label">Gráficas y Estadísticas</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=donaciones" data-tool="donaciones">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-heart-fill"/></svg></span>
- <span class="amc-label">Estadísticas de Donaciones</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=planplus" data-tool="planplus">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-star"/></svg></span>
- <span class="amc-label">Resumen Plan Plus (MRR)</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=errores" data-tool="errores">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-error"/></svg></span>
- <span class="amc-label">Monitor de Errores</span>
- </a>
+ <span data-tools-grid="link" style="display:contents"></span>
  <button type="button" class="admin-mini-card" id="offline-status-btn">
  <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-refresh"/></svg></span>
  <span class="amc-label">Pendientes por cargar</span>
  </button>
- <a class="admin-mini-card" href="Tools.html?tool=reentrenar" data-tool="reentrenar">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-sparkles"/></svg></span>
- <span class="amc-label">Reentrenar modelo IA (categorías)</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=syncvendedor" data-tool="syncvendedor">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-refresh"/></svg></span>
- <span class="amc-label">Sincronizar productos de vendedor</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=algolia" data-tool="algolia">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-refresh"/></svg></span>
- <span class="amc-label">Resincronizar todo Comunidad con Algolia</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=sinciudad" data-tool="sinciudad">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-community"/></svg></span>
- <span class="amc-label">Vendedores sin ciudad</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=backfillcomunidad" data-tool="backfillcomunidad">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-refresh"/></svg></span>
- <span class="amc-label">Asignar ciudad retroactiva (Comunidad)</span>
- </a>
- <a class="admin-mini-card" href="Tools.html?tool=backfillznr" data-tool="backfillznr">
- <span class="amc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true"><use href="#ic-refresh"/></svg></span>
- <span class="amc-label">Asignar ciudad retroactiva (Z&amp;R)</span>
- </a>
  </div>
  </section>
 <div id="upload-log" style="position:fixed; bottom:10px; right:10px; background:#333; color:#0f0; padding:8px 12px; border-radius:8px; font-size:12px; max-width:300px; z-index:9999; display:none;"></div>
@@ -501,7 +446,6 @@ body[data-rol="moderador"] #product-form select {
  <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-create-section","create-product-body"]'>
  <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-plus"/></svg></span>
  <h2 id="product-form-title" class="tile-title">Crear Producto</h2>
- <span class="tile-subtitle">Agregar nuevo artículo al catálogo</span>
  <div class="tile-actions">
  <button id="reset-form-btn" class="text-button" data-stop><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-plus"/></svg> Nuevo</button>
  <button type="button" class="tile-close-btn" aria-label="Cerrar" data-stop data-click="closeGridTile" data-args='["admin-create-section","create-product-body"]'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
@@ -664,6 +608,7 @@ body[data-rol="moderador"] #product-form select {
  <script type="module" src="chat-soporte.js"></script>
  <script src="icons.js" defer></script>
  <script src="common.js" defer></script>
+<script src="tools-list.js" defer></script>
  <script src="znr-devconsole.js" defer></script>
 <script src="cache-manager.js" defer></script>
 <script src="offline-manager.js" defer></script>

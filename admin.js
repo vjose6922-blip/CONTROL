@@ -56,18 +56,6 @@ let notificationInterval = null;
 // Fuente única de verdad para la UI. Si cambia acá, cambia en toda
 // la app. El backend (catalogo-api / vendedores-api) valida lo mismo
 // por su lado — esto es solo la capa de presentación.
-const ROL_PERMISOS = {
-  master:    ["notif", "admins", "stats", "tools", "productos", "productos-escribir"],
-  admin:     ["notif", "admins", "tools", "productos", "productos-escribir"],
-  moderador: ["notif", "productos"],
-};
-
-function tienePermiso(permiso) {
-  const rol = sessionStorage.getItem("admin_rol") || "master";
-  const set = ROL_PERMISOS[rol] || ROL_PERMISOS.moderador;
-  return set.includes(permiso);
-}
-window.tienePermiso = tienePermiso;
   
 async function apiRequest(method, body) {
 try {
@@ -1646,16 +1634,6 @@ function stopNotificationMonitoring() {
 function openNotifications() {
 window.location.href = "notificaciones.html";
 }
-// Refleja visualmente si el "abrir siempre aquí" está activo o no,
-// para que el botón no dependa de memoria — se ve con solo mirarlo.
-function actualizarEstadoAutostart(btn) {
-  const activo = localStorage.getItem("ui_render_mode") === "rm-8823-x";
-  btn.style.background = activo ? "rgba(139, 92, 246, 0.55)" : "rgba(255,255,255,0.1)";
-  btn.title = activo
-    ? "Activado: la app abre aquí siempre. Toca para desactivar."
-    : "Abrir siempre aquí al iniciar la app";
-}
-
 document.addEventListener("DOMContentLoaded", () => {
 const loginForm = document.getElementById("admin-login-form");
 if (loginForm) loginForm.addEventListener("submit", handleAdminLogin);
@@ -1669,10 +1647,8 @@ function _mostrarLogin(rolElegido) {
 const esMaster = rolElegido === "master";
 loginForm.style.display = esMaster ? "" : "none";
 loginFormCuenta.style.display = esMaster ? "none" : "";
-switchMaster.style.background = esMaster ? "rgba(255,255,255,.14)" : "transparent";
-switchMaster.style.color = esMaster ? "#fff" : "rgba(255,255,255,.6)";
-switchCuenta.style.background = esMaster ? "transparent" : "rgba(255,255,255,.14)";
-switchCuenta.style.color = esMaster ? "rgba(255,255,255,.6)" : "#fff";
+switchMaster.classList.toggle("is-active", esMaster);
+switchCuenta.classList.toggle("is-active", !esMaster);
 if (loginTitle) loginTitle.textContent = esMaster ? "Master" : "Admin / Moderador";
 }
 switchCuenta.addEventListener("click", () => _mostrarLogin("cuenta"));
@@ -1761,23 +1737,6 @@ const resetBtn = document.getElementById("reset-form-btn");
 if (resetBtn) resetBtn.addEventListener("click", resetProductForm);
 const refreshBtn = document.getElementById("admin-refresh-btn");
 if (refreshBtn) refreshBtn.addEventListener("click", loadAdminProducts);
-const autostartBtn = document.getElementById("admin-autostart-toggle");
-if (autostartBtn) {
-  actualizarEstadoAutostart(autostartBtn);
-  autostartBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const activo = localStorage.getItem("ui_render_mode") === "rm-8823-x";
-    if (activo) {
-      localStorage.removeItem("ui_render_mode");
-      if (window.showTemporaryMessage) window.showTemporaryMessage("La app abrirá la tienda normal", "info");
-    } else {
-      localStorage.setItem("ui_render_mode", "rm-8823-x");
-      if (window.showTemporaryMessage) window.showTemporaryMessage("La app abrirá siempre aquí", "success");
-    }
-    actualizarEstadoAutostart(autostartBtn);
-  });
-}
 const adminSearch = document.getElementById("admin-search-input");
 const adminCategory = document.getElementById("admin-category-filter");
 const adminStock = document.getElementById("admin-stock-filter");
@@ -1812,6 +1771,7 @@ const hasSession = sessionStorage.getItem("admin_session");
 const savedToken = getAdminToken();
 const savedRol = sessionStorage.getItem("admin_rol") || "master";
 function _forceAdminLogout() {
+document.documentElement.classList.remove("has-session");
 _imageUploadsInitialized = false;
 sessionStorage.removeItem("admin_session");
 sessionStorage.removeItem("admin_token");

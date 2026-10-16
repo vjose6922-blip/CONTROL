@@ -2884,3 +2884,13 @@ button > svg:only-child, .icon-button svg { margin-right: 0; }
   60%  { box-shadow: 0 0 0 5px rgba(255,79,129,.30); }
   100% { box-shadow: 0 0 0 0 rgba(255,79,129,0); }
 }
+
+/* Login: selector de rol legible en claro y oscuro; sin parpadeo del formulario si ya hay sesión guardada */
+.login-switch { display: flex; border-radius: 12px; overflow: hidden; border: 1.5px solid #7a4fc9; margin-bottom: 18px; }
+.login-switch-btn { flex: 1; padding: 9px 6px; border: 0; background: transparent; color: #7a4fc9; font-weight: 700; font-size: .82rem; cursor: pointer; }
+.login-switch-btn.is-active { background: #7a4fc9; color: #fff; }
+html.has-session #login-forms-card { display: none; }
+
+.admin-mini-card[hidden] { display: none !important; }
+/* Sin sesión no hay nada que actualizar ni cerrar */
+body:not([data-rol]) #admin-refresh-btn, body:not([data-rol]) #admin-logout-btn { display: none; }

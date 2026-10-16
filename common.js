@@ -3516,3 +3516,11 @@ window.getModalImageUrl = getModalImageUrl;
 window.intervalConJitter = intervalConJitter;
 
 })();
+
+// Permisos por rol del panel (los usan index.html, Tools.html y los [data-role] del HTML).
+const ROL_PERMISOS = {
+  master:    ["notif", "admins", "stats", "tools", "tools-master", "productos", "productos-escribir"],
+  admin:     ["notif", "admins", "tools", "productos", "productos-escribir"],
+  moderador: ["notif", "productos"],
+};
+window.tienePermiso = (permiso) => (ROL_PERMISOS[sessionStorage.getItem("admin_rol") || "master"] || ROL_PERMISOS.moderador).includes(permiso);

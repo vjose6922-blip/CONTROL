@@ -336,11 +336,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  font-size: 14px !important;
  margin: 0 !important;
  }
- .tile-subtitle {
- font-size: 11px;
- font-weight: 500;
- opacity: 0.85;
- }
+ .tile-subtitle { display: none; }
  .tile-actions {
  display: flex;
  align-items: center;
@@ -768,7 +764,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 
 /* ===== notificaciones.html: es claro por defecto, esto lo oscurece ===== */
 [data-theme="dark"] body { background: #0b0714; color: #eee; }
-[data-theme="dark"] .notif-section-header { background: linear-gradient(135deg, #1a1030, #2a1b4a); }
+[data-theme="dark"] .notif-section-header { background: linear-gradient(135deg, color-mix(in srgb, var(--notif-dark) 45%, #000), color-mix(in srgb, var(--notif-dark) 75%, #000)); }
 [data-theme="dark"] .request-card,
 [data-theme="dark"] .request-summary,
 [data-theme="dark"] .notifications-filters,
@@ -795,7 +791,7 @@ async function openDonacionesStatsModal() {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center;';
   modal.innerHTML = `<div style="background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:0 0 32px;color:var(--modal-text);">
     <div style="position:sticky;top:0;background:var(--modal-bg);padding:18px 20px 14px;border-bottom:1px solid var(--modal-border);display:flex;align-items:center;justify-content:space-between;">
-      <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('heart-fill')} Estadísticas de Donaciones</h2>
+      <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('heart')} Estadísticas de Donaciones</h2>
       <button id="btn-close-don-stats" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
     </div>
     <div id="don-stats-body" style="padding:20px;">Cargando…</div>
@@ -895,7 +891,7 @@ async function openDonacionesStatsModal() {
         return `
         <div style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <div style="display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:.85rem;font-weight:600;">${Icon('heart-fill')} ${escapeHtml(label)}</span>
+            <span style="font-size:.85rem;font-weight:600;">${Icon('heart')} ${escapeHtml(label)}</span>
             <span style="background:#f97316;color:#fff;border-radius:20px;padding:2px 10px;font-size:.78rem;font-weight:700;">${info.count}</span>
           </div>
           <div style="font-size:.72rem;color:#aaa;margin-top:4px;">${fmtMoney(info.valor)} · donado por ${escapeHtml(vendsLabel || '—')}</div>

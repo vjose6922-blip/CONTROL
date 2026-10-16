@@ -44,8 +44,8 @@ function stripModal(el) {
     maxHeight: 'none', overflowY: 'visible', borderRadius: '16px'
   });
   el.querySelectorAll('button').forEach(b => {
-    if ((b.id || '').startsWith('btn-close') || (b.getAttribute('onclick') || '').includes("display='none'")) {
-      b.removeAttribute('onclick');
+    if ((b.id || '').startsWith('btn-close') || b.hasAttribute('data-hide')) {
+      b.removeAttribute('data-hide');
       b.onclick = () => runTool('');
       b.title = 'Volver a herramientas';
     }
@@ -78,6 +78,8 @@ function claimModal(id, tries = 90) {
 }
 
 function runTool(name, push = true) {
+  const t = window.ZNR_TOOLS.find((x) => x[0] === name);
+  if (t && !tienePermiso(t[3])) name = '';
   closeAllTools();
   if (push) history.pushState({ tool: name }, '', name ? `Tools.html?tool=${name}` : 'Tools.html');
   document.getElementById('tools-menu').hidden = !!EMBED_TOOLS[name];
@@ -106,6 +108,7 @@ document.getElementById('tools-back').addEventListener('click', () => runTool(''
 window.addEventListener('popstate', e => runTool(e.state?.tool || new URLSearchParams(location.search).get('tool') || '', false));
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (!tienePermiso('tools')) return void (location.href = 'index.html');
   const initial = new URLSearchParams(location.search).get('tool');
   if (initial) runTool(initial, false);
 });

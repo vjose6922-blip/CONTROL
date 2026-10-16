@@ -16,7 +16,7 @@
 .btn-approve { padding:6px 14px;border:none;border-radius:20px;background:#e8f5e9;color:#2e7d32;font-size:12px;font-weight:600;cursor:pointer; }
 .btn-reject  { padding:6px 14px;border:none;border-radius:20px;background:#ffebee;color:#c62828;font-size:12px;font-weight:600;cursor:pointer; }
 .btn-suspend { padding:6px 14px;border:none;border-radius:20px;background:#fff3e0;color:#e65100;font-size:12px;font-weight:600;cursor:pointer; }
-.btn-stats   { padding:6px 14px;border:none;border-radius:20px;background:#e8e8ff;color:#3b1f5f;font-size:12px;font-weight:600;cursor:pointer; }
+.btn-stats   { padding:6px 14px;border:none;border-radius:20px;background:#e8e8ff;color:var(--notif-dark);font-size:12px;font-weight:600;cursor:pointer; }
 #vendor-stats-modal {
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
   backdrop-filter:blur(4px);z-index:10000;align-items:center;justify-content:center;
@@ -26,7 +26,7 @@
 .vendor-stats-box h3 { margin:0 0 16px;font-size:18px; }
 .vstats-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px; }
 .vstat-card { background:#f5f5f8;border-radius:12px;padding:12px;text-align:center; }
-.vstat-val { font-size:22px;font-weight:800;color:#3b1f5f;display:block; }
+.vstat-val { font-size:22px;font-weight:800;color:var(--notif-dark);display:block; }
 .vstat-lbl { font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.04em; }
 .pending-product-row img { width:56px;height:56px;object-fit:contain;border-radius:10px;background:#fff;flex-shrink:0; }
 .vest-pendiente  { display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#fff8e1;color:#f57f17; }
@@ -38,7 +38,7 @@
 .reporte-row .info strong { display:block;font-size:13px; }
 .reporte-row .info span { font-size:12px;color:#888; }
 .reporte-row .actions { display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0; }
-.btn-ver-producto { padding:6px 14px;border:none;border-radius:20px;background:#e8e8ff;color:#3b1f5f;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center; }
+.btn-ver-producto { padding:6px 14px;border:none;border-radius:20px;background:#e8e8ff;color:var(--notif-dark);font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center; }
 .btn-del-desde-reporte { padding:6px 14px;border:none;border-radius:20px;background:#ffebee;color:#c62828;font-size:12px;font-weight:600;cursor:pointer; }
 .btn-marcar-revisado { padding:6px 14px;border:none;border-radius:20px;background:#e8f5e9;color:#2e7d32;font-size:12px;font-weight:600;cursor:pointer; }
 #reportes-badge { display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle; }
