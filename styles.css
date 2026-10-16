@@ -2895,11 +2895,9 @@ html.has-session #login-forms-card { display: none; }
 /* Sin sesión no hay nada que actualizar ni cerrar */
 body:not([data-rol]) #admin-refresh-btn { display: none; }
 
-/* Barra de acción (Cerrar sesión, Ver todas las notificaciones) */
-.admin-cta-bar { display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 16px; margin-top:14px; border-radius:14px; font:600 14px inherit; color:inherit; text-decoration:none; background:rgba(127,127,127,.14); border:1px solid rgba(127,127,127,.28); }
-.admin-cta-bar:hover { background:rgba(127,127,127,.24); }
-#admin-logout-btn { color:#e5484d; }
-
+/* Cerrar sesión (Mi cuenta) */
+.logout-bar { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px 16px; margin-top:14px; border-radius:14px; font:600 14px inherit; color:#e5484d; cursor:pointer; background:rgba(229,72,77,.1); border:1px solid rgba(229,72,77,.4); }
+.logout-bar:hover { background:rgba(229,72,77,.2); }
 /* Tarjeta bancaria */
 .bank-card { border-radius:18px; padding:18px; margin-bottom:14px; color:#fff; background:linear-gradient(135deg,#1e3a8a,#7c3aed); box-shadow:0 6px 18px rgba(0,0,0,.25); }
 .bk-top { display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:13px; opacity:.95; }
@@ -2923,3 +2921,7 @@ body:not([data-rol]) #admin-refresh-btn { display: none; }
 .cred-row { display:flex; flex-direction:column; } .cred-row small { opacity:.7; font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
 .cred-pass { font:700 20px ui-monospace,monospace; letter-spacing:.12em; }
 .wa-btn { background:#25d366; color:#052e16; font-weight:700; font-size:12px; padding:6px 14px; border-radius:20px; text-decoration:none; }
+
+/* Contador con alerta (errores repetidos más de 10 veces) */
+.admin-mini-card .amc-badge.alerta { background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.35); animation:amcAlerta 1.4s ease-in-out infinite; }
+@keyframes amcAlerta { 50% { box-shadow:0 0 0 6px rgba(220,38,38,0); } }

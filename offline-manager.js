@@ -83,7 +83,7 @@ syncing = false;
 let pendingBadge = null;
 function updatePendingBadge() {
 const count = pendingActions.length;
-document.querySelectorAll('[data-tool="pendientescarga"]').forEach(c => { const b = c.querySelector('.amc-badge') || c.appendChild(Object.assign(document.createElement('span'), { className: 'amc-badge' })); b.textContent = count; b.style.display = count ? '' : 'none'; });
+document.querySelectorAll('[data-tool="pendientescarga"]').forEach(c => { const b = c.querySelector('.amc-badge') || c.appendChild(Object.assign(document.createElement('span'), { className: 'amc-badge' })); b.textContent = count; b.classList.toggle('zero', !count); });
 if (!pendingBadge && count > 0) {
 pendingBadge = document.createElement('div');
 pendingBadge.id = 'pending-badge';

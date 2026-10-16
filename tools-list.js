@@ -28,3 +28,33 @@ document.querySelectorAll('[data-tools-grid]').forEach((el) => {
     return link ? `<a ${attrs} href="Tools.html?tool=${id}">${inner}</a>` : `<button type="button" ${attrs}>${inner}</button>`;
   }).join('');
 });
+
+// Agrupa errores iguales (mismo nivel, mensaje, archivo y línea). `list` va de más nuevo a más viejo.
+window.znrGrupoErrores = (list) => {
+  const m = new Map();
+  list.forEach((e) => {
+    const k = [e.level, (e.message || '').slice(0, 200), e.filename, e.lineno].join('|');
+    m.has(k) ? m.get(k).n++ : m.set(k, { e, n: 1 });
+  });
+  return [...m.values()];
+};
+window.ZNR_MAX_REPETIDOS = 10;
+// Contadores de las herramientas que dejan pendientes: errores (todos; alerta si alguno se repite >10 veces) y vendedores confiables sugeridos.
+const pintarContador = (tool, n, alerta) => document.querySelectorAll(`[data-tool="${tool}"]`).forEach((c) => {
+  const b = c.querySelector('.amc-badge') || c.appendChild(Object.assign(document.createElement('span'), { className: 'amc-badge' }));
+  b.textContent = n; b.classList.toggle('zero', !n); b.classList.toggle('alerta', !!alerta);
+});
+window.actualizarContadoresHerramientas = () => {
+  const token = getAdminToken();
+  if (!token) return;
+  const get = (api, action) => apiFetch(api, { action, token }).then((r) => r.json()).catch(() => null);
+  if (tienePermiso('tools-master')) get(window.ADMIN_API_URL, 'obtenerErrorLog').then((d) => {
+    if (!d?.ok) return;
+    const lista = (d.errors || []).map((e) => ({ level: e.nivel, message: e.mensaje, filename: e.filename, lineno: e.lineno }));
+    pintarContador('errores', lista.length, znrGrupoErrores(lista).some((g) => g.n > ZNR_MAX_REPETIDOS));
+  });
+  get(window.VENDEDORES_API_URL, 'obtenerSugerenciasConfiable').then((d) => d?.ok && pintarContador('confiable', (d.sugerencias || []).length));
+};
+actualizarContadoresHerramientas();
+setInterval(actualizarContadoresHerramientas, 180000);
+window.addEventListener('znr:nueva-notificacion', actualizarContadoresHerramientas);

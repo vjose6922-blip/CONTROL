@@ -1531,7 +1531,8 @@ window.renderErrorLog = function() {
     return;
   }
   const colorMap = { 'CRÍTICO':'#ef4444', 'ERROR':'#f97316', 'WARN':'#eab308' };
-  list.innerHTML = errors.map(e => {
+  const grupos = znrGrupoErrores(errors), rep = grupos.filter(g => g.n > ZNR_MAX_REPETIDOS).length;
+  list.innerHTML = `<p style="color:#aaa;font-size:12px;margin:0 0 10px;">${errors.length} error${errors.length === 1 ? '' : 'es'} · ${grupos.length} distinto${grupos.length === 1 ? '' : 's'}${rep ? ` · <b style="color:#ef4444;">${rep} repetido${rep === 1 ? '' : 's'} más de ${ZNR_MAX_REPETIDOS} veces</b>` : ''}</p>` + grupos.map(({ e, n }) => {
     const fecha = e.ts ? new Date(e.ts).toLocaleString('es-MX', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '–';
     const c     = colorMap[e.level] || '#aaa';
     const src   = escapeHtml(e.source || (e.filename||'').split('/').pop() || '?');
@@ -1542,7 +1543,7 @@ window.renderErrorLog = function() {
     const stk   = escapeHtml(e.stack  || '');
     return `<div style="background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px;margin-bottom:10px;border-left:3px solid ${c};">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
-        <span style="color:${c};font-weight:700;font-size:11px;">${escapeHtml(e.level||'?')} &bull; ${src}</span>
+        <span style="color:${c};font-weight:700;font-size:11px;">${escapeHtml(e.level||'?')} &bull; ${src}${n > 1 ? ` <b style="background:${n > ZNR_MAX_REPETIDOS ? '#dc2626' : 'rgba(127,127,127,.4)'};color:#fff;border-radius:10px;padding:1px 7px;margin-left:4px;">×${n}${n > ZNR_MAX_REPETIDOS ? ' ⚠' : ''}</b>` : ''}</span>
         <span style="color:#666;font-size:11px;">${fecha}</span>
       </div>
       <div style="color:#ddd;font-size:12px;word-break:break-word;">${msg}</div>

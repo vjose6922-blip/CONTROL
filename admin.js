@@ -1640,6 +1640,7 @@ async function checkNotifications() {
     setBadge('notif-panel-reportes-pedidos-count', data.reportesPedidos);
     setBadge('notif-panel-reportes-historias-count', data.reportesHistorias);
     setBadge('notif-panel-feedback-count', data.feedback);
+    window.actualizarContadoresHerramientas?.();
  
   } catch(err) {
     reportError('admin-badges', err);
