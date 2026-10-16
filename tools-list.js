@@ -39,7 +39,7 @@ window.znrGrupoErrores = (list) => {
   return [...m.values()];
 };
 window.ZNR_MAX_REPETIDOS = 10;
-// Contadores de las herramientas que dejan pendientes: errores (todos; alerta si alguno se repite >10 veces) y vendedores confiables sugeridos.
+// Contadores: errores (todos; alerta si alguno se repite >10 veces), vendedores confiables sugeridos, vendedores sin ciudad y Plan Plus que vencen en 7 días (alerta si hay).
 const pintarContador = (tool, n, alerta) => document.querySelectorAll(`[data-tool="${tool}"]`).forEach((c) => {
   const b = c.querySelector('.amc-badge') || c.appendChild(Object.assign(document.createElement('span'), { className: 'amc-badge' }));
   b.textContent = n; b.classList.toggle('zero', !n); b.classList.toggle('alerta', !!alerta);
@@ -53,6 +53,10 @@ window.actualizarContadoresHerramientas = () => {
     const lista = (d.errors || []).map((e) => ({ level: e.nivel, message: e.mensaje, filename: e.filename, lineno: e.lineno }));
     pintarContador('errores', lista.length, znrGrupoErrores(lista).some((g) => g.n > ZNR_MAX_REPETIDOS));
   });
+  if (tienePermiso('tools')) {
+    get(window.VENDEDORES_API_URL, 'listarVendedoresSinCiudad').then((d) => d?.ok && pintarContador('sinciudad', (d.vendors || []).length));
+    get(window.VENDEDORES_API_URL, 'obtenerResumenPlanPlus').then((d) => d?.ok && pintarContador('planplus', d.vencenEn7dias || 0, (d.vencenEn7dias || 0) > 0));
+  }
   get(window.VENDEDORES_API_URL, 'obtenerSugerenciasConfiable').then((d) => d?.ok && pintarContador('confiable', (d.sugerencias || []).length));
 };
 actualizarContadoresHerramientas();
