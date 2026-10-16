@@ -22,10 +22,11 @@
   props.WHATSAPP_NUMBER = { get: () => _w.join(''), configurable: false, enumerable: false };
   Object.defineProperties(window, props);
 
-  // true = acciones de lectura por POST (token en el body, no en la URL). Activar cuando el backend lo acepte.
-  const TOKEN_EN_BODY = false;
+  // Lecturas por POST (token en el body, no en la URL) solo para los backends que ya lo aceptan.
+  // auth, live, pedidos e historias siguen por GET hasta confirmar que también lo aceptan.
+  const LECTURAS_POST = new Set(['catalogo', 'vendedores', 'admin', 'beneficiarios', 'tienda-znr', 'ventas'].map(run));
   window.getAdminToken = () => sessionStorage.getItem('admin_token') || '';
-  window.apiFetch = (base, params, post = TOKEN_EN_BODY) => {
+  window.apiFetch = (base, params, post = LECTURAS_POST.has(base)) => {
     const p = new URLSearchParams(params);
     return post
       ? fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: p.toString() })

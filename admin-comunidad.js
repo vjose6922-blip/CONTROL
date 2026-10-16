@@ -286,9 +286,9 @@
     const prods = document.getElementById('vstats-products');
     grid.innerHTML = '<p style="color:#aaa;text-align:center;grid-column:span 2">Cargando...</p>';
     prods.innerHTML = '';
-    _gasGet({ action: 'listarTodoComunidad', token: getAdminToken() })
+    _gasGet({ action: 'listarTodoComunidad', token: getAdminToken(), vendedor_uid: uid })
       .then(data => {
-        const all       = (data.products || []).filter(p => p.vendedor_uid === uid);
+        const all       = data.products || [];
         const totalStock = all.reduce((s, p) => s + (Number(p.stock) || 0), 0);
         const pendientes = all.filter(p => p.estado === 'pendiente').length;
         const aprobados  = all.filter(p => p.estado === 'aprobado').length;

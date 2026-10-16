@@ -804,7 +804,7 @@ async function openDonacionesStatsModal() {
     // Cargar vendedores, productos comunidad, beneficiarios y el historial de donaciones
     const [vRes, prodRes, benRes, donRes] = await Promise.all([
       apiFetch(vendedoresApi, { action:'vendedoresAdmin', token }).then(r=>r.json()).catch(()=>({})),
-      apiFetch(catalogoApi, { action:'listarTodoComunidad', token }).then(r=>r.json()).catch(()=>({})),
+      apiFetch(catalogoApi, { action:'listarTodoComunidad', token, donado:'true' }).then(r=>r.json()).catch(()=>({})),
       apiFetch(beneficiariosApi, { action:'obtenerBeneficiarios', token }).then(r=>r.json()).catch(()=>({})),
       apiFetch(beneficiariosApi, { action:'obtenerDonaciones', token }).then(r=>r.json()).catch(()=>({})),
     ]);
@@ -814,7 +814,7 @@ async function openDonacionesStatsModal() {
     const donaciones = donRes.donaciones || [];
 
     const donados   = products.filter(p => p.donado === true || p.donado === 'TRUE' || p.donado === 'true');
-    const sinAsig   = products.filter(p => !p.donado || p.donado === 'FALSE' || p.donado === false);
+    const sinAsig   = Math.max(0, (prodRes.total ?? products.length) - donados.length);
     const bensAprov = bens.filter(b => b.estado === 'aprobado');
     const bensPend  = bens.filter(b => b.estado === 'pendiente');
 
@@ -873,7 +873,7 @@ async function openDonacionesStatsModal() {
           <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Beneficiarios pendientes</div>
         </div>
         <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:14px;padding:14px;text-align:center;">
-          <div style="font-size:1.6rem;font-weight:900;color:#818cf8;">${sinAsig.length}</div>
+          <div style="font-size:1.6rem;font-weight:900;color:#818cf8;">${sinAsig}</div>
           <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Productos sin asignar</div>
         </div>
         <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22);border-radius:14px;padding:14px;text-align:center;">
@@ -1879,10 +1879,10 @@ window.openVendorStatsGlobal = async function() {
   try {
     const [vRes, pRes] = await Promise.all([
       apiFetch(vendedoresApi, { action: "vendedoresAdmin", token: token }).then(r=>r.json()).catch(()=>({})),
-      apiFetch(catalogoApi, { action: "listarTodoComunidad", token: token }).then(r=>r.json()).catch(()=>({}))
+      apiFetch(catalogoApi, { action: "listarTodoComunidad", token: token, resumen: "vendedores" }).then(r=>r.json()).catch(()=>({}))
     ]);
     const vendors  = vRes.vendors  || [];
-    const products = pRes.products || pRes.pendientes || [];
+    const resumen = pRes.resumen || {};
     const activos  = vendors.filter(v=>v.estado==='activo').length;
     const pendientes = vendors.filter(v=>v.estado==='pendiente').length;
     const suspendidos= vendors.filter(v=>v.estado==='suspendido'||v.estado==='rechazado').length;
@@ -1901,7 +1901,7 @@ window.openVendorStatsGlobal = async function() {
       </div>`;
 
     // Guardamos los datos crudos para poder re-filtrar sin volver a pedirlos.
-    window._gvsData = { vendors, products };
+    window._gvsData = { vendors, resumen };
 
     const searchEl = document.getElementById('gvs-search');
     const estadoEl = document.getElementById('gvs-filter-estado');
@@ -1919,7 +1919,7 @@ window.openVendorStatsGlobal = async function() {
 window._renderVendorStatsList = function() {
   const menuElPrev = document.getElementById('gvs-action-menu');
   if (menuElPrev) menuElPrev.style.display = 'none';
-  const { vendors, products } = window._gvsData || { vendors: [], products: [] };
+  const { vendors, resumen } = window._gvsData || { vendors: [], resumen: {} };
   const listEl = document.getElementById('gvs-list');
   if (!listEl) return;
   if (!vendors.length) { listEl.innerHTML = '<p style="color:#aaa;text-align:center;">Sin vendedores</p>'; return; }
@@ -1950,13 +1950,10 @@ window._renderVendorStatsList = function() {
   if (!filtrados.length) { listEl.innerHTML = '<p style="color:#aaa;text-align:center;padding:16px 0;">Ningún vendedor coincide con el filtro.</p>'; return; }
 
   listEl.innerHTML = filtrados.map(v => {
-      const myProds = products.filter(p=>p.vendedor_uid===v.uid);
-      const aprobados = myProds.filter(p=>p.estado==='aprobado').length;
-      const pendProd  = myProds.filter(p=>p.estado==='pendiente').length;
-      const stock = myProds.reduce((s,p)=>s+(Number(p.stock)||0),0);
+      const { aprobados = 0, pendientes: pendProd = 0, stock = 0, total = 0 } = resumen[v.uid] || {};
       const esPlus    = v.plan === 'plus';
       const limite    = v.limite != null ? v.limite : (esPlus ? 200 : 2);
-      const actuales  = v.productosActuales != null ? v.productosActuales : myProds.length;
+      const actuales  = v.productosActuales != null ? v.productosActuales : total;
       const diasRestantes = v.planVence ? Math.ceil((new Date(v.planVence) - new Date()) / 86400000) : null;
       const puedeSuspender = v.estado==='activo' && typeof AdminComunidad!=='undefined';
       const planBadge = esPlus
