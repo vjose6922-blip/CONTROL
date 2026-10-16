@@ -336,6 +336,12 @@ function aplicarVisibilidadPorRol() {
     if (el) el.style.display = rol === "master" ? "none" : "";
   });
   if (rol !== "master") cargarDatosBancarios();
+  // Cabecera de perfil de "Mi cuenta"
+  const nombre = sessionStorage.getItem("admin_nombre") || (rol === "master" ? "Master" : "Mi cuenta");
+  const ciudad = sessionStorage.getItem("admin_ciudad");
+  document.getElementById("mi-perfil-av").textContent = nombre.trim().charAt(0).toUpperCase();
+  document.getElementById("mi-perfil-nombre").textContent = nombre;
+  document.getElementById("mi-perfil-meta").textContent = `${rol[0].toUpperCase() + rol.slice(1)} · ${!ciudad || ciudad === "*" ? "Todas las ciudades" : ciudad}`;
 
   // 3) Ciudad de publicación en el form de producto Z&R: solo el Master
   // la elige (admin/moderador de ciudad la tienen fija en el backend).

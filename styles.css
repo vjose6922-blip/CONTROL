@@ -2925,3 +2925,8 @@ body:not([data-rol]) #admin-refresh-btn { display: none; }
 /* Contador con alerta (errores repetidos más de 10 veces) */
 .admin-mini-card .amc-badge.alerta { background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.35); animation:amcAlerta 1.4s ease-in-out infinite; }
 @keyframes amcAlerta { 50% { box-shadow:0 0 0 6px rgba(220,38,38,0); } }
+
+/* Cabecera de perfil en Mi cuenta */
+.mi-perfil { display:flex; align-items:center; gap:14px; padding:14px; margin-bottom:12px; border-radius:16px; background:var(--color-surface, #fff); border:1px solid var(--color-border-subtle, #e2e4ea); }
+.mp-av { flex:none; width:52px; height:52px; border-radius:50%; display:grid; place-items:center; font:800 22px inherit; color:#fff; background:linear-gradient(135deg,#7c3aed,#e11d6a); }
+.mp-name { font-weight:800; font-size:16px; } .mp-meta { font-size:12.5px; color:var(--color-text-soft); margin-top:2px; }

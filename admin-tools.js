@@ -199,37 +199,43 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  }
  }
  .admin-mini-card {
- background: rgba(255, 255, 255, 0.98);
- border-radius: 14px;
+ background: var(--color-surface, #fff);
+ border: 1px solid var(--color-border-subtle, #e2e4ea);
+ border-radius: 16px;
  padding: 14px 12px;
  display: flex;
  flex-direction: column;
- gap: 6px;
+ gap: 10px;
  text-decoration: none;
- color: #2a2140;
+ color: var(--color-text-main, #111318);
  cursor: pointer;
- border: none;
- box-shadow: 0 2px 8px rgba(0,0,0,0.15);
- transition: transform 0.15s ease, box-shadow 0.15s ease;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+ transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
  position: relative;
- min-height: 78px;
+ min-height: 96px;
  font-family: inherit;
  text-align: left;
  }
  .admin-mini-card:hover {
  transform: translateY(-2px);
- box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+ border-color: var(--color-primary-soft, #8b5cf6);
+ box-shadow: 0 8px 20px rgba(0,0,0,0.18);
  }
+ .admin-mini-card:active { transform: scale(0.97); }
  .admin-mini-card .amc-icon {
- font-size: 18px;
- line-height: 1;
- color: #7a4fc9;
+ width: 36px;
+ height: 36px;
+ border-radius: 12px;
+ display: grid;
+ place-items: center;
+ background: rgba(139, 92, 246, 0.16);
+ color: var(--color-primary, #6d28d9);
  }
  .admin-mini-card .amc-label {
- font-size: 12px;
+ font-size: 12.5px;
  font-weight: 700;
  line-height: 1.25;
- padding-right: 30px;
+ padding-right: 4px;
  }
  .admin-mini-card .amc-badge {
  position: absolute;
@@ -891,7 +897,7 @@ async function openDonacionesStatsModal() {
         const label = ben ? (ben.nombre + (ben.organizacion ? ' — ' + ben.organizacion : '')) : 'Sin asignar';
         const vendsLabel = [...info.vendedores].slice(0, 3).join(', ') + (info.vendedores.size > 3 ? '…' : '');
         return `
-        <div style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="padding:11px 0;border-bottom:1px solid rgba(127,127,127,.22);">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <span style="font-size:.85rem;font-weight:600;">${Icon('heart')} ${escapeHtml(label)}</span>
             <span style="background:#f97316;color:#fff;border-radius:20px;padding:2px 10px;font-size:.78rem;font-weight:700;">${info.count}</span>
@@ -903,7 +909,7 @@ async function openDonacionesStatsModal() {
       ${topVendedores.length > 0 ? `
       <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Top vendedores donadores</p>
       ${topVendedores.map((v, i) => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(127,127,127,.22);">
           <span style="font-size:.82rem;">${['🥇','🥈','🥉'][i] || '•'} ${escapeHtml(v.nombre)}</span>
           <span style="font-size:.75rem;color:var(--modal-soft);">${v.count} prod · ${fmtMoney(v.valor)}</span>
         </div>`).join('')}` : ''}
@@ -915,7 +921,7 @@ async function openDonacionesStatsModal() {
         const ben     = benMap[d.beneficiario_id] || {};
         const vNombre = prod.vendedor_nombre || vendorNameMap[d.vendedor_uid] || 'Vendedor';
         return `
-        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem;color:var(--modal-text);">
+        <div style="padding:8px 0;border-bottom:1px solid rgba(127,127,127,.22);font-size:.78rem;color:var(--modal-text);">
           <strong style="color:#fff;">${escapeHtml(prod.nombre || 'Producto')}</strong><br>
           ${escapeHtml(vNombre)} ${Icon('arrow-right',{size:12})} ${escapeHtml(ben.nombre || 'beneficiario')} · <span style="color:var(--modal-muted);">${fmtFecha(d.fecha_asignacion)}</span>
         </div>`;
@@ -946,10 +952,10 @@ async function openAnalyticsModal(period, source) {
       <button id="btn-close-analytics" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
     <div style="padding:14px 20px 0;display:flex;gap:6px;">
-      ${['znr','comunidad'].map(s => `<button class="an-source-btn" data-source="${s}" style="flex:1;padding:8px 0;border-radius:30px;border:1px solid ${s===source ? 'transparent' : 'rgba(255,255,255,.12)'};background:${s===source ? 'linear-gradient(135deg,#6366f1,#818cf8)' : 'rgba(255,255,255,.05)'};color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;">${sourceLabels[s]}</button>`).join('')}
+      ${['znr','comunidad'].map(s => `<button class="an-source-btn" data-source="${s}" style="flex:1;padding:8px 0;border-radius:30px;border:1px solid ${s===source ? 'transparent' : 'rgba(127,127,127,.22)'};background:${s===source ? 'linear-gradient(135deg,#6366f1,#818cf8)' : 'rgba(127,127,127,.22)'};color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;">${sourceLabels[s]}</button>`).join('')}
     </div>
     <div style="padding:10px 20px 0;display:flex;gap:6px;">
-      ${['day','week','month','all'].map(p => `<button class="an-period-btn" data-period="${p}" style="flex:1;padding:8px 0;border-radius:30px;border:1px solid ${p===period ? 'transparent' : 'rgba(255,255,255,.12)'};background:${p===period ? 'linear-gradient(135deg,#ff4f81,#ff7a4f)' : 'rgba(255,255,255,.05)'};color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;">${periodLabels[p]}</button>`).join('')}
+      ${['day','week','month','all'].map(p => `<button class="an-period-btn" data-period="${p}" style="flex:1;padding:8px 0;border-radius:30px;border:1px solid ${p===period ? 'transparent' : 'rgba(127,127,127,.22)'};background:${p===period ? 'linear-gradient(135deg,#ff4f81,#ff7a4f)' : 'rgba(127,127,127,.22)'};color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;">${periodLabels[p]}</button>`).join('')}
     </div>
     <div id="an-body" style="padding:18px 20px;">Cargando…</div>
   </div>`;
@@ -1031,7 +1037,7 @@ async function openAnalyticsModal(period, source) {
           <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px;">
             <span style="color:var(--modal-text);">${escapeHtml(p.name)}</span><span style="color:var(--modal-soft);">${p.count}</span>
           </div>
-          <div style="background:rgba(255,255,255,.08);border-radius:20px;height:6px;overflow:hidden;">
+          <div style="background:rgba(127,127,127,.22);border-radius:20px;height:6px;overflow:hidden;">
             <div style="background:#ff4f81;height:100%;width:${(p.count/maxProd)*100}%;"></div>
           </div>
         </div>`).join('')}` : ''}
@@ -1039,7 +1045,7 @@ async function openAnalyticsModal(period, source) {
       ${topVends.length ? `
       <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Top vendedores por ingresos</p>
       ${topVends.map((v, i) => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(127,127,127,.22);">
           <span style="font-size:.82rem;color:var(--modal-text);">${['🥇','🥈','🥉'][i] || '•'} ${escapeHtml(v.nombre)}</span>
           <span style="font-size:.75rem;color:var(--modal-soft);">${v.orders} ped · ${fmtMoney(v.revenue)}</span>
         </div>`).join('')}` : ''}
@@ -1047,7 +1053,7 @@ async function openAnalyticsModal(period, source) {
       ${(source === 'comunidad' && vendorStatus.length) ? `
       <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Entregado / Sin stock por vendedor</p>
       ${vendorStatus.map(v => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.8rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(127,127,127,.22);font-size:.8rem;">
           <span style="color:var(--modal-text);">${escapeHtml(v.nombre)}</span>
           <span style="display:flex;gap:6px;">
             <span title="Entregados" style="background:rgba(34,197,94,.15);color:#22c55e;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">✔ ${v.entregados}</span>
@@ -1060,7 +1066,7 @@ async function openAnalyticsModal(period, source) {
         const visual = STATUS_VISUAL[a.status] || { color:'#f97316', label:'Pendiente' };
         const vendedorTxt = a.vendedor ? escapeHtml(a.vendedor) + ' · ' : '';
         return `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(127,127,127,.22);font-size:.78rem;">
           <span style="color:var(--modal-text);">${vendedorTxt}${a.items} producto${a.items===1?'':'s'} · ${escapeHtml(a.date)}</span>
           <span style="background:${visual.color};color:#fff;border-radius:20px;padding:2px 9px;font-size:.7rem;font-weight:700;">${visual.label}</span>
         </div>`;
@@ -1266,7 +1272,7 @@ async function openPlanPlusResumenModal() {
         <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Pagar a ${admins.length > 1 ? 'los admins de ' + escapeHtml(res.ciudad) : 'el admin de ' + escapeHtml(res.ciudad)}</p>
         ${admins.length > 1 ? `<p style="font-size:.72rem;color:#eab308;margin:0 0 12px;">Hay más de un admin activo en esta ciudad — el monto de arriba es el total de la ciudad, repártanlo entre ustedes.</p>` : ''}
         ${admins.map(a => `
-          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:10px;">
+          <div style="background:rgba(127,127,127,.22);border:1px solid rgba(127,127,127,.22);border-radius:14px;padding:14px;margin-bottom:10px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <span style="font-weight:700;font-size:.88rem;">${escapeHtml(a.nombre)}${a.activo ? '' : ' <span style="color:#ef4444;font-weight:600;font-size:.7rem;">(desactivado)</span>'}</span>
             </div>
@@ -1295,9 +1301,9 @@ async function openPlanPlusResumenModal() {
         ${proximos.map(v => {
           const urgente = v.diasRestantes <= 7;
           return `
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(127,127,127,.22);">
             <span style="font-size:.82rem;color:var(--modal-text);">${escapeHtml(v.nombre)}</span>
-            <span style="background:${urgente ? '#ef4444' : 'rgba(255,255,255,.1)'};color:#fff;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">${v.diasRestantes} día${v.diasRestantes === 1 ? '' : 's'}</span>
+            <span style="background:${urgente ? '#ef4444' : 'rgba(127,127,127,.22)'};color:#fff;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">${v.diasRestantes} día${v.diasRestantes === 1 ? '' : 's'}</span>
           </div>`;
         }).join('')}` : '<p style="color:var(--modal-soft);text-align:center;padding:16px 0;">Nadie vence en los próximos 30 días.</p>'}
       `;
@@ -1445,13 +1451,13 @@ function openErrorMonitorModal() {
     </div>
     <div style="padding:16px 20px;">
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <button data-click="loadErrorLog" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <button data-click="loadErrorLog" style="background:rgba(127,127,127,.22);border:1px solid rgba(127,127,127,.22);color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-refresh"/></svg> Actualizar
         </button>
-        <button data-click="clearErrorLog" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#ef4444;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <button data-click="clearErrorLog" style="background:rgba(127,127,127,.22);border:1px solid rgba(127,127,127,.22);color:#ef4444;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-trash"/></svg> Limpiar log
         </button>
-        <select id="em-filter" data-change="renderErrorLog" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer">
+        <select id="em-filter" data-change="renderErrorLog" style="background:rgba(127,127,127,.22);border:1px solid rgba(127,127,127,.22);color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer">
           <option value="all">Todos</option>
           <option value="CRÍTICO">Solo críticos</option>
           <option value="ERROR">Solo errores</option>
@@ -1543,7 +1549,7 @@ window.renderErrorLog = function() {
     const line  = e.lineno || 0;
     const col   = e.colno  || 0;
     const stk   = escapeHtml(e.stack  || '');
-    return `<div style="background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px;margin-bottom:10px;border-left:3px solid ${c};">
+    return `<div style="background:rgba(127,127,127,.22);border-radius:12px;padding:12px 14px;margin-bottom:10px;border-left:3px solid ${c};">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
         <span style="color:${c};font-weight:700;font-size:11px;">${escapeHtml(e.level||'?')} &bull; ${src}${n > 1 ? ` <b style="background:${n > ZNR_MAX_REPETIDOS ? '#dc2626' : 'rgba(127,127,127,.4)'};color:#fff;border-radius:10px;padding:1px 7px;margin-left:4px;">×${n}${n > ZNR_MAX_REPETIDOS ? ' ⚠' : ''}</b>` : ''}</span>
         <span style="color:var(--modal-muted);font-size:11px;">${fecha}</span>
@@ -1636,7 +1642,7 @@ async function openSugerenciasConfiableModal() {
       <p style="font-size:.78rem;color:var(--modal-soft);margin:0 0 16px;">Vendedores activos con al menos ${res.minVentasRequeridas} pedidos entregados que todavía no están marcados como confiables.</p>
       <div id="sc-list">
         ${sugerencias.length ? sugerencias.map(s => `
-          <div class="sc-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);gap:10px;">
+          <div class="sc-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(127,127,127,.22);gap:10px;">
             <div>
               <div style="font-size:.85rem;color:var(--modal-text);font-weight:600;">${escapeHtml(s.nombre)}</div>
               <div style="font-size:.72rem;color:var(--modal-muted);">${s.ventasEntregadas} pedidos entregados</div>
@@ -1771,7 +1777,7 @@ async function openVendedoresSinCiudadModal() {
       <p style="font-size:.78rem;color:var(--modal-soft);margin:0 0 16px;">${nota}</p>
       <div id="vsc-list">
         ${vendors.length ? vendors.map(v => `
-          <div class="vsc-row" data-uid="${escapeHtml(v.uid)}" style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
+          <div class="vsc-row" data-uid="${escapeHtml(v.uid)}" style="padding:10px 0;border-bottom:1px solid rgba(127,127,127,.22);">
             <div style="font-size:.85rem;color:var(--modal-text);font-weight:600;">${escapeHtml(v.nombre)} · ${escapeHtml(v.telefono)}</div>
             <div style="font-size:.72rem;color:var(--modal-muted);margin:2px 0 8px;">${escapeHtml(v.puntoEntrega) || 'Sin punto de entrega registrado'}</div>
             <div style="display:flex;gap:8px;align-items:center;">
@@ -1836,8 +1842,8 @@ function setBadge(id, count) {
 function openInspectorMode() {
   const token = getAdminToken();
   if (!token) { if (window.showTemporaryMessage) window.showTemporaryMessage('Sin sesión de admin', 'error'); return; }
-  const url = 'https://znrcommunity.com/comunidad.html?inspector=1&token=' + encodeURIComponent(token);
-  window.open(url, '_blank');
+  // Token en el fragmento (#), no en el query: no llega a logs del servidor ni al Referer.
+  window.open('https://znrcommunity.com/comunidad.html?inspector=1#token=' + encodeURIComponent(token), '_blank', 'noopener');
 }
 
 window.openVendorStatsGlobal = async function() {
