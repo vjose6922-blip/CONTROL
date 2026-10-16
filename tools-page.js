@@ -22,7 +22,8 @@ const ACTION_TOOLS = {
   backfillznr: () => window.asignarCiudadMasivaZNRBtn(),
   planplusadmins: () => window.sincronizarPlanPlusAdminsBtn(),
   contactoadmins: () => window.sincronizarContactosAdminsBtn(),
-  migrarciudades: () => window.migrarCiudadesBtn()
+  migrarciudades: () => window.migrarCiudadesBtn(),
+  pendientescarga: () => window.pendientesPorCargarBtn()
 };
 
 function closeAllTools() {

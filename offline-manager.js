@@ -83,6 +83,7 @@ syncing = false;
 let pendingBadge = null;
 function updatePendingBadge() {
 const count = pendingActions.length;
+document.querySelectorAll('[data-tool="pendientescarga"]').forEach(c => { const b = c.querySelector('.amc-badge') || c.appendChild(Object.assign(document.createElement('span'), { className: 'amc-badge' })); b.textContent = count; b.style.display = count ? '' : 'none'; });
 if (!pendingBadge && count > 0) {
 pendingBadge = document.createElement('div');
 pendingBadge.id = 'pending-badge';
@@ -202,3 +203,4 @@ setupInterception();
 if (navigator.onLine && pendingActions.length > 0) {
 setTimeout(() => syncPendingActions(), 3000);
 }
+window.pendientesPorCargarBtn = () => pendingActions.length ? syncPendingActions(true) : showMessage('No hay productos pendientes por cargar', 'success');
