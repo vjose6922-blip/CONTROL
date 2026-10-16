@@ -5,13 +5,15 @@ document.head.insertAdjacentHTML('beforeend', `<style>
   --modal-text: #fff;
   --modal-border: rgba(255,255,255,.08);
   --modal-muted: #999;
+  --modal-soft: #aaa;
   --modal-chip-bg: rgba(255,255,255,.08);
 }
 [data-theme="light"] {
   --modal-bg: #fff;
   --modal-text: #1a1a2e;
   --modal-border: rgba(0,0,0,.1);
-  --modal-muted: #777;
+  --modal-muted: #6b7280;
+  --modal-soft: #5f6672;
   --modal-chip-bg: #f0f0f5;
 }
  * {
@@ -246,8 +248,8 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  justify-content: center;
  }
  .admin-mini-card .amc-badge.zero {
- background: rgba(0,0,0,0.08);
- color: #999;
+ background: rgba(127,127,127,0.18);
+ color: var(--modal-muted);
  }
  .admin-cta-bar {
  display: block;
@@ -792,7 +794,7 @@ async function openDonacionesStatsModal() {
   modal.innerHTML = `<div style="background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:0 0 32px;color:var(--modal-text);">
     <div style="position:sticky;top:0;background:var(--modal-bg);padding:18px 20px 14px;border-bottom:1px solid var(--modal-border);display:flex;align-items:center;justify-content:space-between;">
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('heart')} Estadísticas de Donaciones</h2>
-      <button id="btn-close-don-stats" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+      <button id="btn-close-don-stats" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
     <div id="don-stats-body" style="padding:20px;">Cargando…</div>
   </div>`;
@@ -858,32 +860,32 @@ async function openDonacionesStatsModal() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
         <div style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.6rem;font-weight:900;color:#f97316;">${donados.length}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Productos donados</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Productos donados</div>
         </div>
         <div style="background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.28);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.4rem;font-weight:900;color:#f472b6;">${fmtMoney(valorTotal)}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Valor total donado</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Valor total donado</div>
         </div>
         <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.6rem;font-weight:900;color:#22c55e;">${bensAprov.length}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Beneficiarios activos</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Beneficiarios activos</div>
         </div>
         <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.6rem;font-weight:900;color:#ef4444;">${bensPend.length}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Beneficiarios pendientes</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Beneficiarios pendientes</div>
         </div>
         <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.6rem;font-weight:900;color:#818cf8;">${sinAsig}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Productos sin asignar</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Productos sin asignar</div>
         </div>
         <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.6rem;font-weight:900;color:#38bdf8;">${vendedoresDonadores.size}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Vendedores donadores</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Vendedores donadores</div>
         </div>
       </div>
 
       ${Object.keys(byBen).length > 0 ? `
-      <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Donaciones por beneficiario</p>
+      <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Donaciones por beneficiario</p>
       ${Object.entries(byBen).sort((a,b)=>b[1].count-a[1].count).map(([bid, info]) => {
         const ben = benMap[bid];
         const label = ben ? (ben.nombre + (ben.organizacion ? ' — ' + ben.organizacion : '')) : 'Sin asignar';
@@ -894,28 +896,28 @@ async function openDonacionesStatsModal() {
             <span style="font-size:.85rem;font-weight:600;">${Icon('heart')} ${escapeHtml(label)}</span>
             <span style="background:#f97316;color:#fff;border-radius:20px;padding:2px 10px;font-size:.78rem;font-weight:700;">${info.count}</span>
           </div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:4px;">${fmtMoney(info.valor)} · donado por ${escapeHtml(vendsLabel || '—')}</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:4px;">${fmtMoney(info.valor)} · donado por ${escapeHtml(vendsLabel || '—')}</div>
         </div>`;
-      }).join('')}` : '<p style="color:#aaa;text-align:center;padding:16px 0;">Aún no hay donaciones asignadas.</p>'}
+      }).join('')}` : '<p style="color:var(--modal-soft);text-align:center;padding:16px 0;">Aún no hay donaciones asignadas.</p>'}
 
       ${topVendedores.length > 0 ? `
-      <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Top vendedores donadores</p>
+      <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Top vendedores donadores</p>
       ${topVendedores.map((v, i) => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
           <span style="font-size:.82rem;">${['🥇','🥈','🥉'][i] || '•'} ${escapeHtml(v.nombre)}</span>
-          <span style="font-size:.75rem;color:#aaa;">${v.count} prod · ${fmtMoney(v.valor)}</span>
+          <span style="font-size:.75rem;color:var(--modal-soft);">${v.count} prod · ${fmtMoney(v.valor)}</span>
         </div>`).join('')}` : ''}
 
       ${recientes.length > 0 ? `
-      <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Donaciones recientes</p>
+      <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Donaciones recientes</p>
       ${recientes.map(d => {
         const prod    = productMap[String(d.producto_id)] || {};
         const ben     = benMap[d.beneficiario_id] || {};
         const vNombre = prod.vendedor_nombre || vendorNameMap[d.vendedor_uid] || 'Vendedor';
         return `
-        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem;color:#ccc;">
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem;color:var(--modal-text);">
           <strong style="color:#fff;">${escapeHtml(prod.nombre || 'Producto')}</strong><br>
-          ${escapeHtml(vNombre)} ${Icon('arrow-right',{size:12})} ${escapeHtml(ben.nombre || 'beneficiario')} · <span style="color:#888;">${fmtFecha(d.fecha_asignacion)}</span>
+          ${escapeHtml(vNombre)} ${Icon('arrow-right',{size:12})} ${escapeHtml(ben.nombre || 'beneficiario')} · <span style="color:var(--modal-muted);">${fmtFecha(d.fecha_asignacion)}</span>
         </div>`;
       }).join('')}` : ''}
     `;
@@ -941,7 +943,7 @@ async function openAnalyticsModal(period, source) {
   modal.innerHTML = `<div style="background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:0 0 32px;color:var(--modal-text);">
     <div style="position:sticky;top:0;background:var(--modal-bg);padding:18px 20px 14px;border-bottom:1px solid var(--modal-border);display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2;">
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('stats')} Gráficas y Estadísticas</h2>
-      <button id="btn-close-analytics" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+      <button id="btn-close-analytics" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
     <div style="padding:14px 20px 0;display:flex;gap:6px;">
       ${['znr','comunidad'].map(s => `<button class="an-source-btn" data-source="${s}" style="flex:1;padding:8px 0;border-radius:30px;border:1px solid ${s===source ? 'transparent' : 'rgba(255,255,255,.12)'};background:${s===source ? 'linear-gradient(135deg,#6366f1,#818cf8)' : 'rgba(255,255,255,.05)'};color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;">${sourceLabels[s]}</button>`).join('')}
@@ -996,38 +998,38 @@ async function openAnalyticsModal(period, source) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;">
         <div style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.6rem;font-weight:900;color:#818cf8;">${res.totalRequests}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Solicitudes</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Solicitudes</div>
         </div>
         <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.4rem;font-weight:900;color:#22c55e;">${fmtMoney(res.totalRevenue)}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Ingresos confirmados</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Ingresos confirmados</div>
         </div>
         <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.6rem;font-weight:900;color:#38bdf8;">${res.confirmedOrders}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Confirmados</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Confirmados</div>
         </div>
         <div style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.6rem;font-weight:900;color:#f97316;">${res.pendingOrders}</div>
-          <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Pendientes</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Pendientes</div>
         </div>
       </div>
 
       ${byDay.length ? `
-      <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px;">Solicitudes en el período</p>
+      <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px;">Solicitudes en el período</p>
       <div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-bottom:24px;">
         ${byDay.map(d => `
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:flex-end;height:100%;">
             <div title="${d.count}" style="width:100%;max-width:30px;background:linear-gradient(180deg,#ff7a4f,#ff4f81);border-radius:6px 6px 2px 2px;height:${Math.max(4, (d.count/maxDay)*64)}px;"></div>
-            <span style="font-size:.62rem;color:#888;">${escapeHtml(d.label)}</span>
+            <span style="font-size:.62rem;color:var(--modal-muted);">${escapeHtml(d.label)}</span>
           </div>`).join('')}
-      </div>` : '<p style="color:#aaa;text-align:center;padding:10px 0;">Sin solicitudes en este período.</p>'}
+      </div>` : '<p style="color:var(--modal-soft);text-align:center;padding:10px 0;">Sin solicitudes en este período.</p>'}
 
       ${topProds.length ? `
-      <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Productos más solicitados</p>
+      <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Productos más solicitados</p>
       ${topProds.map(p => `
         <div style="margin-bottom:9px;">
           <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px;">
-            <span style="color:#eee;">${escapeHtml(p.name)}</span><span style="color:#aaa;">${p.count}</span>
+            <span style="color:var(--modal-text);">${escapeHtml(p.name)}</span><span style="color:var(--modal-soft);">${p.count}</span>
           </div>
           <div style="background:rgba(255,255,255,.08);border-radius:20px;height:6px;overflow:hidden;">
             <div style="background:#ff4f81;height:100%;width:${(p.count/maxProd)*100}%;"></div>
@@ -1035,31 +1037,31 @@ async function openAnalyticsModal(period, source) {
         </div>`).join('')}` : ''}
 
       ${topVends.length ? `
-      <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Top vendedores por ingresos</p>
+      <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Top vendedores por ingresos</p>
       ${topVends.map((v, i) => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-          <span style="font-size:.82rem;color:#eee;">${['🥇','🥈','🥉'][i] || '•'} ${escapeHtml(v.nombre)}</span>
-          <span style="font-size:.75rem;color:#aaa;">${v.orders} ped · ${fmtMoney(v.revenue)}</span>
+          <span style="font-size:.82rem;color:var(--modal-text);">${['🥇','🥈','🥉'][i] || '•'} ${escapeHtml(v.nombre)}</span>
+          <span style="font-size:.75rem;color:var(--modal-soft);">${v.orders} ped · ${fmtMoney(v.revenue)}</span>
         </div>`).join('')}` : ''}
 
       ${(source === 'comunidad' && vendorStatus.length) ? `
-      <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Entregado / Sin stock por vendedor</p>
+      <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Entregado / Sin stock por vendedor</p>
       ${vendorStatus.map(v => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.8rem;">
-          <span style="color:#eee;">${escapeHtml(v.nombre)}</span>
+          <span style="color:var(--modal-text);">${escapeHtml(v.nombre)}</span>
           <span style="display:flex;gap:6px;">
             <span title="Entregados" style="background:rgba(34,197,94,.15);color:#22c55e;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">✔ ${v.entregados}</span>
             <span title="Sin stock" style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">✖ ${v.sinStock}</span>
           </span>
         </div>`).join('')}
       ` : (recent.length ? `
-      <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Actividad reciente</p>
+      <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 10px;">Actividad reciente</p>
       ${recent.map(a => {
         const visual = STATUS_VISUAL[a.status] || { color:'#f97316', label:'Pendiente' };
         const vendedorTxt = a.vendedor ? escapeHtml(a.vendedor) + ' · ' : '';
         return `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem;">
-          <span style="color:#ccc;">${vendedorTxt}${a.items} producto${a.items===1?'':'s'} · ${escapeHtml(a.date)}</span>
+          <span style="color:var(--modal-text);">${vendedorTxt}${a.items} producto${a.items===1?'':'s'} · ${escapeHtml(a.date)}</span>
           <span style="background:${visual.color};color:#fff;border-radius:20px;padding:2px 9px;font-size:.7rem;font-weight:700;">${visual.label}</span>
         </div>`;
       }).join('')}` : '')}
@@ -1209,11 +1211,11 @@ async function openPlanPlusResumenModal() {
   modal.innerHTML = `<div style="background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:0 0 32px;color:var(--modal-text);">
     <div style="position:sticky;top:0;background:var(--modal-bg);padding:18px 20px 14px;border-bottom:1px solid var(--modal-border);display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2;">
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('star')} Resumen Plan Plus</h2>
-      <button id="btn-close-plan-plus-resumen" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+      <button id="btn-close-plan-plus-resumen" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
     ${esMaster ? `
     <div style="padding:14px 20px 0;">
-      <label style="font-size:.72rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px;">Ciudad</label>
+      <label style="font-size:.72rem;font-weight:700;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px;">Ciudad</label>
       <select id="ppr-estado-select" style="width:100%;padding:10px;margin-bottom:8px;border-radius:10px;border:1.5px solid var(--modal-border);background:var(--modal-bg);color:var(--modal-text);"></select>
       <select id="ppr-ciudad-select" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--modal-border);background:var(--modal-bg);color:var(--modal-text);"></select>
     </div>` : ''}
@@ -1243,25 +1245,25 @@ async function openPlanPlusResumenModal() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;">
           <div style="grid-column:span 2;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:14px;padding:16px;text-align:center;">
             <div style="font-size:2rem;font-weight:900;color:#22c55e;">${fmtMoney(res.mrr)}</div>
-            <div style="font-size:.75rem;color:#aaa;margin-top:2px;">MRR real${res.ciudad ? ' — ' + escapeHtml(res.ciudad) : ' (global)'} (${res.vendedoresActivos} × ${fmtMoney(res.precioMensual)}/mes)</div>
+            <div style="font-size:.75rem;color:var(--modal-soft);margin-top:2px;">MRR real${res.ciudad ? ' — ' + escapeHtml(res.ciudad) : ' (global)'} (${res.vendedoresActivos} × ${fmtMoney(res.precioMensual)}/mes)</div>
           </div>
           ${esMaster && res.ciudad ? `
           <div style="grid-column:span 2;background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.28);border-radius:14px;padding:16px;text-align:center;">
             <div style="font-size:1.7rem;font-weight:900;color:#eab308;">${fmtMoney(res.montoAdmin)}</div>
-            <div style="font-size:.75rem;color:#aaa;margin-top:2px;">Pago sugerido para el admin de ${escapeHtml(res.ciudad)} (${Math.round(res.porcentajeAdmin * 100)}% del MRR real — no incluye Plan Plus gratis por ser staff, y este monto no se paga solo)</div>
+            <div style="font-size:.75rem;color:var(--modal-soft);margin-top:2px;">Pago sugerido para el admin de ${escapeHtml(res.ciudad)} (${Math.round(res.porcentajeAdmin * 100)}% del MRR real — no incluye Plan Plus gratis por ser staff, y este monto no se paga solo)</div>
           </div>` : ''}
           <div style="background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:14px;text-align:center;">
             <div style="font-size:1.6rem;font-weight:900;color:#818cf8;">${res.vendedoresActivos}</div>
-            <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Vendedores Plus activos</div>
+            <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Vendedores Plus activos</div>
           </div>
           <div style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);border-radius:14px;padding:14px;text-align:center;">
             <div style="font-size:1.6rem;font-weight:900;color:#f97316;">${res.vencenEn7dias}</div>
-            <div style="font-size:.72rem;color:#aaa;margin-top:2px;">Vencen en 7 días</div>
+            <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Vencen en 7 días</div>
           </div>
         </div>
 
         ${esMaster && admins.length ? `
-        <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Pagar a ${admins.length > 1 ? 'los admins de ' + escapeHtml(res.ciudad) : 'el admin de ' + escapeHtml(res.ciudad)}</p>
+        <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Pagar a ${admins.length > 1 ? 'los admins de ' + escapeHtml(res.ciudad) : 'el admin de ' + escapeHtml(res.ciudad)}</p>
         ${admins.length > 1 ? `<p style="font-size:.72rem;color:#eab308;margin:0 0 12px;">Hay más de un admin activo en esta ciudad — el monto de arriba es el total de la ciudad, repártanlo entre ustedes.</p>` : ''}
         ${admins.map(a => `
           <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:10px;">
@@ -1270,15 +1272,15 @@ async function openPlanPlusResumenModal() {
             </div>
             ${a.clabe ? `
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;">
-              <span style="font-size:.78rem;color:#ccc;">CLABE: <b style="font-family:monospace;letter-spacing:.03em;">${escapeHtml(a.clabe)}</b></span>
+              <span style="font-size:.78rem;color:var(--modal-text);">CLABE: <b style="font-family:monospace;letter-spacing:.03em;">${escapeHtml(a.clabe)}</b></span>
               <button type="button" data-copy="${escapeHtml(a.clabe)}" style="background:rgba(99,102,241,.18);border:none;color:#a5b4fc;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copiar</button>
             </div>` : ''}
             ${a.tarjeta ? `
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;">
-              <span style="font-size:.78rem;color:#ccc;">Tarjeta: <b style="font-family:monospace;letter-spacing:.03em;">${escapeHtml(a.tarjeta)}</b></span>
+              <span style="font-size:.78rem;color:var(--modal-text);">Tarjeta: <b style="font-family:monospace;letter-spacing:.03em;">${escapeHtml(a.tarjeta)}</b></span>
               <button type="button" data-copy="${escapeHtml(a.tarjeta)}" style="background:rgba(99,102,241,.18);border:none;color:#a5b4fc;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;">Copiar</button>
             </div>` : ''}
-            ${!a.clabe && !a.tarjeta ? '<p style="font-size:.76rem;color:#888;margin:4px 0;">Todavía no capturó CLABE ni tarjeta.</p>' : ''}
+            ${!a.clabe && !a.tarjeta ? '<p style="font-size:.76rem;color:var(--modal-muted);margin:4px 0;">Todavía no capturó CLABE ni tarjeta.</p>' : ''}
             <button type="button" ${a.pagado ? 'disabled' : `data-marcar-pago="${a.uid}"`}
               style="width:100%;margin-top:10px;border-radius:10px;padding:9px;font-size:.8rem;font-weight:700;cursor:${a.pagado ? 'default' : 'pointer'};border:none;
               background:${a.pagado ? 'rgba(34,197,94,.15)' : '#eab308'};color:${a.pagado ? '#22c55e' : '#1a1a1a'};">
@@ -1289,15 +1291,15 @@ async function openPlanPlusResumenModal() {
         ` : ''}
 
         ${proximos.length ? `
-        <p style="font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Próximos vencimientos</p>
+        <p style="font-size:.75rem;color:var(--modal-muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;">Próximos vencimientos</p>
         ${proximos.map(v => {
           const urgente = v.diasRestantes <= 7;
           return `
           <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-            <span style="font-size:.82rem;color:#eee;">${escapeHtml(v.nombre)}</span>
+            <span style="font-size:.82rem;color:var(--modal-text);">${escapeHtml(v.nombre)}</span>
             <span style="background:${urgente ? '#ef4444' : 'rgba(255,255,255,.1)'};color:#fff;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;">${v.diasRestantes} día${v.diasRestantes === 1 ? '' : 's'}</span>
           </div>`;
-        }).join('')}` : '<p style="color:#aaa;text-align:center;padding:16px 0;">Nadie vence en los próximos 30 días.</p>'}
+        }).join('')}` : '<p style="color:var(--modal-soft);text-align:center;padding:16px 0;">Nadie vence en los próximos 30 días.</p>'}
       `;
     } catch (e) {
       bodyEl.innerHTML = '<p style="color:#ef4444;text-align:center;">Error al cargar el resumen: ' + (e.message || '') + '</p>';
@@ -1359,7 +1361,7 @@ window.openSyncVendedorModal = function() {
       <div style="background:var(--modal-bg);color:var(--modal-text);border-radius:22px;padding:28px;max-width:400px;width:90%;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.3);">
         <button data-hide="sync-vendedor-modal" style="position:absolute;top:14px;right:14px;background:var(--modal-chip-bg);border:none;width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer;color:var(--modal-muted);">${Icon('x')}</button>
         <h3 style="margin:0 0 8px;font-size:18px;">${Icon('refresh')} Sincronizar productos de vendedor</h3>
-        <p style="margin:0 0 18px;font-size:13px;color:#666;">Vuelve a sincronizar todos los productos publicados de un vendedor, según su UID.</p>
+        <p style="margin:0 0 18px;font-size:13px;color:var(--modal-muted);">Vuelve a sincronizar todos los productos publicados de un vendedor, según su UID.</p>
         <label style="font-size:12px;font-weight:700;color:#444;display:block;margin-bottom:6px;">UID del vendedor</label>
         <input type="text" id="sync-vendedor-uid-input" placeholder="Ej: v_1779036431879" style="width:100%;padding:12px;border:1.5px solid #e2e0eb;border-radius:10px;font-size:14px;margin-bottom:16px;box-sizing:border-box;">
         <button type="button" id="sync-vendedor-submit-btn" class="primary-button full-width" style="padding:12px;">Sincronizar</button>
@@ -1439,7 +1441,7 @@ function openErrorMonitorModal() {
   modal.innerHTML = `<div style="background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:0 0 32px;color:var(--modal-text);">
     <div style="position:sticky;top:0;background:var(--modal-bg);padding:18px 20px 14px;border-bottom:1px solid var(--modal-border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
       <h2 style="margin:0;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" aria-hidden="true"><use href="#ic-error"/></svg> Monitor de Errores <span id="em-badge" style="display:none;background:#ef4444;color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700"></span></h2>
-      <button id="btn-close-error-monitor" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+      <button id="btn-close-error-monitor" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
     <div style="padding:16px 20px;">
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
@@ -1456,7 +1458,7 @@ function openErrorMonitorModal() {
         </select>
       </div>
       <div id="em-list" style="font-size:13px;line-height:1.6">
-        <p style="color:#888;text-align:center;padding:20px">Cargando...</p>
+        <p style="color:var(--modal-muted);text-align:center;padding:20px">Cargando...</p>
       </div>
     </div>
   </div>`;
@@ -1471,7 +1473,7 @@ function openErrorMonitorModal() {
 window.loadErrorLog = function() {
   const list = document.getElementById('em-list');
   if (!list) return;
-  list.innerHTML = '<p style="color:#888;text-align:center;padding:20px">' + Icon('clock') + ' Cargando errores...</p>';
+  list.innerHTML = '<p style="color:var(--modal-muted);text-align:center;padding:20px">' + Icon('clock') + ' Cargando errores...</p>';
   const api   = window.ADMIN_API_URL;
   const token = getAdminToken();
 
@@ -1514,7 +1516,7 @@ window.loadErrorLog = function() {
     })
     .catch(err => {
       console.error('[Monitor] Error al obtener errores:', err);
-      list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:20px">${Icon('x')} Error de red: ${escapeHtml(err.message)}.<br><span style="color:#888;font-size:11px;">Revisa la consola para más detalles.</span></p>`;
+      list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:20px">${Icon('x')} Error de red: ${escapeHtml(err.message)}.<br><span style="color:var(--modal-muted);font-size:11px;">Revisa la consola para más detalles.</span></p>`;
     });
 };
 
@@ -1527,12 +1529,12 @@ window.renderErrorLog = function() {
   const badge  = document.getElementById('em-badge');
   if (badge) { badge.textContent = all.length; badge.style.display = all.length ? 'inline' : 'none'; }
   if (!errors.length) {
-    list.innerHTML = '<p style="color:#888;text-align:center;padding:30px">' + Icon('check') + ' Sin errores registrados</p>';
+    list.innerHTML = '<p style="color:var(--modal-muted);text-align:center;padding:30px">' + Icon('check') + ' Sin errores registrados</p>';
     return;
   }
   const colorMap = { 'CRÍTICO':'#ef4444', 'ERROR':'#f97316', 'WARN':'#eab308' };
   const grupos = znrGrupoErrores(errors), rep = grupos.filter(g => g.n > ZNR_MAX_REPETIDOS).length;
-  list.innerHTML = `<p style="color:#aaa;font-size:12px;margin:0 0 10px;">${errors.length} error${errors.length === 1 ? '' : 'es'} · ${grupos.length} distinto${grupos.length === 1 ? '' : 's'}${rep ? ` · <b style="color:#ef4444;">${rep} repetido${rep === 1 ? '' : 's'} más de ${ZNR_MAX_REPETIDOS} veces</b>` : ''}</p>` + grupos.map(({ e, n }) => {
+  list.innerHTML = `<p style="color:var(--modal-soft);font-size:12px;margin:0 0 10px;">${errors.length} error${errors.length === 1 ? '' : 'es'} · ${grupos.length} distinto${grupos.length === 1 ? '' : 's'}${rep ? ` · <b style="color:#ef4444;">${rep} repetido${rep === 1 ? '' : 's'} más de ${ZNR_MAX_REPETIDOS} veces</b>` : ''}</p>` + grupos.map(({ e, n }) => {
     const fecha = e.ts ? new Date(e.ts).toLocaleString('es-MX', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '–';
     const c     = colorMap[e.level] || '#aaa';
     const src   = escapeHtml(e.source || (e.filename||'').split('/').pop() || '?');
@@ -1544,11 +1546,11 @@ window.renderErrorLog = function() {
     return `<div style="background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px;margin-bottom:10px;border-left:3px solid ${c};">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
         <span style="color:${c};font-weight:700;font-size:11px;">${escapeHtml(e.level||'?')} &bull; ${src}${n > 1 ? ` <b style="background:${n > ZNR_MAX_REPETIDOS ? '#dc2626' : 'rgba(127,127,127,.4)'};color:#fff;border-radius:10px;padding:1px 7px;margin-left:4px;">×${n}${n > ZNR_MAX_REPETIDOS ? ' ⚠' : ''}</b>` : ''}</span>
-        <span style="color:#666;font-size:11px;">${fecha}</span>
+        <span style="color:var(--modal-muted);font-size:11px;">${fecha}</span>
       </div>
-      <div style="color:#ddd;font-size:12px;word-break:break-word;">${msg}</div>
-      ${file||line ? `<div style="color:#555;font-size:11px;margin-top:3px;">${file}${line?':'+line+':'+col:''}</div>` : ''}
-      ${stk ? `<details style="margin-top:5px;"><summary style="color:#666;font-size:11px;cursor:pointer;">Stack trace</summary><pre style="color:#888;font-size:10px;margin:4px 0 0;white-space:pre-wrap;word-break:break-all;">${stk}</pre></details>` : ''}
+      <div style="color:var(--modal-text);font-size:12px;word-break:break-word;">${msg}</div>
+      ${file||line ? `<div style="color:var(--modal-muted);font-size:11px;margin-top:3px;">${file}${line?':'+line+':'+col:''}</div>` : ''}
+      ${stk ? `<details style="margin-top:5px;"><summary style="color:var(--modal-muted);font-size:11px;cursor:pointer;">Stack trace</summary><pre style="color:var(--modal-muted);font-size:10px;margin:4px 0 0;white-space:pre-wrap;word-break:break-all;">${stk}</pre></details>` : ''}
     </div>`;
   }).join('');
 };
@@ -1594,7 +1596,7 @@ async function openSugerenciasConfiableModal() {
   modal.innerHTML = `<div style="background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:0 0 32px;color:var(--modal-text);">
     <div style="position:sticky;top:0;background:var(--modal-bg);padding:18px 20px 14px;border-bottom:1px solid var(--modal-border);display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2;">
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('lock')} Sugerencias: Vendedor confiable</h2>
-      <button id="btn-close-sugerencias-confiable" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+      <button id="btn-close-sugerencias-confiable" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
     <div id="sc-body" style="padding:18px 20px;">Cargando…</div>
   </div>`;
@@ -1631,16 +1633,16 @@ async function openSugerenciasConfiableModal() {
 
     const sugerencias = res.sugerencias || [];
     bodyEl.innerHTML = `
-      <p style="font-size:.78rem;color:#aaa;margin:0 0 16px;">Vendedores activos con al menos ${res.minVentasRequeridas} pedidos entregados que todavía no están marcados como confiables.</p>
+      <p style="font-size:.78rem;color:var(--modal-soft);margin:0 0 16px;">Vendedores activos con al menos ${res.minVentasRequeridas} pedidos entregados que todavía no están marcados como confiables.</p>
       <div id="sc-list">
         ${sugerencias.length ? sugerencias.map(s => `
           <div class="sc-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);gap:10px;">
             <div>
-              <div style="font-size:.85rem;color:#eee;font-weight:600;">${escapeHtml(s.nombre)}</div>
-              <div style="font-size:.72rem;color:#888;">${s.ventasEntregadas} pedidos entregados</div>
+              <div style="font-size:.85rem;color:var(--modal-text);font-weight:600;">${escapeHtml(s.nombre)}</div>
+              <div style="font-size:.72rem;color:var(--modal-muted);">${s.ventasEntregadas} pedidos entregados</div>
             </div>
             <button class="sc-marcar-btn" data-uid="${escapeHtml(s.uid)}" style="padding:7px 14px;border:none;border-radius:20px;background:#2563eb;color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;">Marcar confiable</button>
-          </div>`).join('') : '<p style="color:#aaa;text-align:center;padding:20px 0;">No hay vendedores nuevos que sugerir por ahora.</p>'}
+          </div>`).join('') : '<p style="color:var(--modal-soft);text-align:center;padding:20px 0;">No hay vendedores nuevos que sugerir por ahora.</p>'}
       </div>`;
 
     bodyEl.querySelectorAll('.sc-marcar-btn').forEach(btn => {
@@ -1726,7 +1728,7 @@ async function openVendedoresSinCiudadModal() {
   modal.innerHTML = `<div style="background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:0 0 32px;color:var(--modal-text);">
     <div style="position:sticky;top:0;background:var(--modal-bg);padding:18px 20px 14px;border-bottom:1px solid var(--modal-border);display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2;">
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('community')} Vendedores sin ciudad</h2>
-      <button id="btn-close-sinciudad" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">×</button>
+      <button id="btn-close-sinciudad" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
     <div id="vsc-body" style="padding:18px 20px;">Cargando…</div>
   </div>`;
@@ -1766,18 +1768,18 @@ async function openVendedoresSinCiudadModal() {
       ? 'Elige país y ciudad para cada vendedor que reconozcas.'
       : `Solo puedes reclamar vendedores para tu ciudad (${sessionStorage.getItem('admin_ciudad') || ''}).`;
     bodyEl.innerHTML = `
-      <p style="font-size:.78rem;color:#aaa;margin:0 0 16px;">${nota}</p>
+      <p style="font-size:.78rem;color:var(--modal-soft);margin:0 0 16px;">${nota}</p>
       <div id="vsc-list">
         ${vendors.length ? vendors.map(v => `
           <div class="vsc-row" data-uid="${escapeHtml(v.uid)}" style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">
-            <div style="font-size:.85rem;color:#eee;font-weight:600;">${escapeHtml(v.nombre)} · ${escapeHtml(v.telefono)}</div>
-            <div style="font-size:.72rem;color:#888;margin:2px 0 8px;">${escapeHtml(v.puntoEntrega) || 'Sin punto de entrega registrado'}</div>
+            <div style="font-size:.85rem;color:var(--modal-text);font-weight:600;">${escapeHtml(v.nombre)} · ${escapeHtml(v.telefono)}</div>
+            <div style="font-size:.72rem;color:var(--modal-muted);margin:2px 0 8px;">${escapeHtml(v.puntoEntrega) || 'Sin punto de entrega registrado'}</div>
             <div style="display:flex;gap:8px;align-items:center;">
               ${rol === 'master' ? `<select class="vsc-pais" style="flex:1;padding:6px;border-radius:8px;"></select>
               <select class="vsc-ciudad" style="flex:1;padding:6px;border-radius:8px;"></select>` : ''}
               <button class="vsc-asignar-btn" style="padding:7px 14px;border:none;border-radius:20px;background:#2563eb;color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;">Asignar</button>
             </div>
-          </div>`).join('') : '<p style="color:#aaa;text-align:center;padding:20px 0;">No hay vendedores pendientes de asignar.</p>'}
+          </div>`).join('') : '<p style="color:var(--modal-soft);text-align:center;padding:20px 0;">No hay vendedores pendientes de asignar.</p>'}
       </div>`;
 
     bodyEl.querySelectorAll('.vsc-row').forEach(row => {
@@ -1874,7 +1876,7 @@ window.openVendorStatsGlobal = async function() {
     modal.addEventListener('click', e => { if (e.target===modal) { modal.style.display='none'; const m=document.getElementById('gvs-action-menu'); if(m) m.style.display='none'; } });
   }
   modal.style.display = 'flex';
-  document.getElementById('gvs-summary').innerHTML = '<p style="color:#aaa;grid-column:span 3;text-align:center;">Cargando...</p>';
+  document.getElementById('gvs-summary').innerHTML = '<p style="color:var(--modal-soft);grid-column:span 3;text-align:center;">Cargando...</p>';
   document.getElementById('gvs-list').innerHTML = '';
   try {
     const [vRes, pRes] = await Promise.all([
@@ -1889,15 +1891,15 @@ window.openVendorStatsGlobal = async function() {
     document.getElementById('gvs-summary').innerHTML = `
       <div style="background:#f0fff4;border-radius:14px;padding:14px;text-align:center;">
         <div style="font-size:24px;font-weight:800;color:#2e7d32;">${activos}</div>
-        <div style="font-size:11px;color:#555;text-transform:uppercase;">Activos</div>
+        <div style="font-size:11px;color:var(--modal-muted);text-transform:uppercase;">Activos</div>
       </div>
       <div style="background:#fff8e1;border-radius:14px;padding:14px;text-align:center;">
         <div style="font-size:24px;font-weight:800;color:#f57f17;">${pendientes}</div>
-        <div style="font-size:11px;color:#555;text-transform:uppercase;">Pendientes</div>
+        <div style="font-size:11px;color:var(--modal-muted);text-transform:uppercase;">Pendientes</div>
       </div>
       <div style="background:#ffebee;border-radius:14px;padding:14px;text-align:center;">
         <div style="font-size:24px;font-weight:800;color:#c62828;">${suspendidos}</div>
-        <div style="font-size:11px;color:#555;text-transform:uppercase;">Suspendidos</div>
+        <div style="font-size:11px;color:var(--modal-muted);text-transform:uppercase;">Suspendidos</div>
       </div>`;
 
     // Guardamos los datos crudos para poder re-filtrar sin volver a pedirlos.
@@ -1922,7 +1924,7 @@ window._renderVendorStatsList = function() {
   const { vendors, resumen } = window._gvsData || { vendors: [], resumen: {} };
   const listEl = document.getElementById('gvs-list');
   if (!listEl) return;
-  if (!vendors.length) { listEl.innerHTML = '<p style="color:#aaa;text-align:center;">Sin vendedores</p>'; return; }
+  if (!vendors.length) { listEl.innerHTML = '<p style="color:var(--modal-soft);text-align:center;">Sin vendedores</p>'; return; }
 
   const q = (document.getElementById('gvs-search')?.value || '').trim().toLowerCase();
   const filtroEstado = document.getElementById('gvs-filter-estado')?.value || '';
@@ -1947,7 +1949,7 @@ window._renderVendorStatsList = function() {
     return true;
   });
 
-  if (!filtrados.length) { listEl.innerHTML = '<p style="color:#aaa;text-align:center;padding:16px 0;">Ningún vendedor coincide con el filtro.</p>'; return; }
+  if (!filtrados.length) { listEl.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:16px 0;">Ningún vendedor coincide con el filtro.</p>'; return; }
 
   listEl.innerHTML = filtrados.map(v => {
       const { aprobados = 0, pendientes: pendProd = 0, stock = 0, total = 0 } = resumen[v.uid] || {};
@@ -1969,13 +1971,13 @@ window._renderVendorStatsList = function() {
               <span style="font-weight:700;font-size:14px;">${escapeHtml(v.nombre||'—')}</span>
               ${planBadge}
             </div>
-            <div style="font-size:12px;color:#888;margin-top:2px;">${escapeHtml(v.telefono||'—')} · <span style="color:${v.estado==='activo'?'#2e7d32':'#f57f17'}">${escapeHtml(v.estado)}</span></div>
+            <div style="font-size:12px;color:var(--modal-muted);margin-top:2px;">${escapeHtml(v.telefono||'—')} · <span style="color:${v.estado==='activo'?'#2e7d32':'#f57f17'}">${escapeHtml(v.estado)}</span></div>
             ${venceTxt}
           </div>
           <button class="btn-row-menu" data-uid="${escapeAttr(v.uid)}" data-plan="${escapeAttr(v.plan||'free')}" data-nombre="${escapeHtml(v.nombre||'')}" data-dias="${diasRestantes != null ? diasRestantes : 0}" data-suspendible="${puedeSuspender ? '1':'0'}" style="flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid #eee;background:#fafafa;color:#555;font-size:16px;font-weight:700;line-height:1;cursor:pointer;">⋮</button>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:11.5px;color:#888;flex-wrap:wrap;">
-          <span style="font-weight:700;color:#333;">${actuales}/${limite} productos</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:11.5px;color:var(--modal-muted);flex-wrap:wrap;">
+          <span style="font-weight:700;color:var(--modal-text);">${actuales}/${limite} productos</span>
           <span>${aprobados} aprobados · ${Icon('clock',{size:12})} ${pendProd} pend. · Stock: ${stock}</span>
         </div>
       </div>`;
@@ -2120,7 +2122,7 @@ function customPromptModal(mensaje, valorInicial) {
     const msgHtml = String(mensaje).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;padding:22px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.35);">
-        <p style="margin:0 0 14px;font-size:.85rem;color:#333;line-height:1.5;">${msgHtml}</p>
+        <p style="margin:0 0 14px;font-size:.85rem;color:var(--modal-text);line-height:1.5;">${msgHtml}</p>
         <input id="custom-input-field" type="text" inputmode="numeric" value="${String(valorInicial).replace(/"/g,'&quot;')}" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px;font-size:15px;box-sizing:border-box;margin-bottom:14px;">
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button id="custom-input-cancel" style="padding:9px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#555;font-weight:600;cursor:pointer;">Cancelar</button>
@@ -2153,7 +2155,7 @@ function customAlertModal(mensaje) {
     const msgHtml = String(mensaje).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;padding:22px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.35);">
-        <p style="margin:0 0 16px;font-size:.85rem;color:#333;line-height:1.5;">${msgHtml}</p>
+        <p style="margin:0 0 16px;font-size:.85rem;color:var(--modal-text);line-height:1.5;">${msgHtml}</p>
         <div style="display:flex;justify-content:flex-end;">
           <button id="custom-alert-ok" style="padding:9px 16px;border-radius:8px;border:none;background:#7c3aed;color:#fff;font-weight:700;cursor:pointer;">OK</button>
         </div>

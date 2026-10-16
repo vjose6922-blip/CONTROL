@@ -134,11 +134,11 @@ border-radius: 8px;
  .vendor-row, .pending-product-row {
  display: flex; align-items: center; gap: 12px;
  padding: 12px 14px; border-radius: 14px;
- background: #f5f5f8; margin-bottom: 10px; flex-wrap: wrap;
+ background: var(--color-surface-2, #f5f5f8); margin-bottom: 10px; flex-wrap: wrap;
  }
  .vendor-row .info, .pending-product-row .info { flex: 1; min-width: 0; }
  .vendor-row .info strong, .pending-product-row .info strong { display: block; font-size: 14px; }
- .vendor-row .info span, .pending-product-row .info span { font-size: 12px; color: #888; }
+ .vendor-row .info span, .pending-product-row .info span { font-size: 12px; color: var(--color-text-soft, #888); }
  .vendor-row .actions, .pending-product-row .actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
  .pending-product-row img { width: 56px; height: 56px; object-fit: contain; border-radius: 10px; background: #fff; flex-shrink: 0; }
  .vest-pendiente { display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#fff8e1;color:#f57f17; }
@@ -151,10 +151,10 @@ border-radius: 8px;
  .btn-stats  { padding:6px 14px;border:none;border-radius:20px;background:#e8e8ff;color:var(--notif-dark);font-size:12px;font-weight:600;cursor:pointer; }
 
  
- .reporte-row { display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:#f5f5f8;margin-bottom:10px;flex-wrap:wrap; }
+ .reporte-row { display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;background:var(--color-surface-2, #f5f5f8);margin-bottom:10px;flex-wrap:wrap; }
  .reporte-row .info { flex:1;min-width:0; }
  .reporte-row .info strong { display:block;font-size:13px; }
- .reporte-row .info span { font-size:12px;color:#888; }
+ .reporte-row .info span { font-size:12px;color:var(--color-text-soft, #888); }
  .reporte-row .actions { display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0; }
  
  .reporte-card { background:#f8f8fc;border-radius:16px;border:1px solid #e8e8f0;padding:16px;margin-bottom:14px;overflow:hidden; }
@@ -408,7 +408,7 @@ border-radius: 8px;
   </svg></button>
  </div>
  <div class="notif-section-body">
- <div id="admin-reportes-pedidos-list"><p style="color:#aaa;text-align:center;padding:32px;">Abre esta pestaña para cargar los reportes.</p></div>
+ <div id="admin-reportes-pedidos-list"><p style="color:var(--modal-soft);text-align:center;padding:32px;">Abre esta pestaña para cargar los reportes.</p></div>
  </div>
  </div>
 
@@ -420,7 +420,7 @@ border-radius: 8px;
   </svg></button>
  </div>
  <div class="notif-section-body">
- <div id="admin-reportes-historias-list"><p style="color:#aaa;text-align:center;padding:32px;">Abre esta pestaña para cargar los reportes.</p></div>
+ <div id="admin-reportes-historias-list"><p style="color:var(--modal-soft);text-align:center;padding:32px;">Abre esta pestaña para cargar los reportes.</p></div>
  </div>
  </div>
 
@@ -432,7 +432,7 @@ border-radius: 8px;
   </svg></button>
  </div>
  <div class="notif-section-body">
- <div id="admin-feedback-list"><p style="color:#aaa;text-align:center;padding:32px;">Abre esta pestaña para cargar los reportes.</p></div>
+ <div id="admin-feedback-list"><p style="color:var(--modal-soft);text-align:center;padding:32px;">Abre esta pestaña para cargar los reportes.</p></div>
  </div>
  </div>
 

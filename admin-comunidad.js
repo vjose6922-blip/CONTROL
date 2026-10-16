@@ -6,12 +6,12 @@
 .vendor-row, .pending-product-row {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 16px; border-radius: 14px;
-  background: var(--color-bg-secondary, #f5f5f8);
+  background: var(--color-surface-2, #f5f5f8);
   margin-bottom: 10px; flex-wrap: wrap;
 }
 .vendor-row .info, .pending-product-row .info { flex: 1; min-width: 0; }
 .vendor-row .info strong, .pending-product-row .info strong { display: block; font-size: 14px; }
-.vendor-row .info span, .pending-product-row .info span { font-size: 12px; color: #888; }
+.vendor-row .info span, .pending-product-row .info span { font-size: 12px; color: var(--color-text-soft, #888); }
 .vendor-row .actions, .pending-product-row .actions { display: flex; gap: 8px; flex-shrink: 0; }
 .btn-approve { padding:6px 14px;border:none;border-radius:20px;background:#e8f5e9;color:#2e7d32;font-size:12px;font-weight:600;cursor:pointer; }
 .btn-reject  { padding:6px 14px;border:none;border-radius:20px;background:#ffebee;color:#c62828;font-size:12px;font-weight:600;cursor:pointer; }
@@ -22,7 +22,7 @@
   backdrop-filter:blur(4px);z-index:10000;align-items:center;justify-content:center;
 }
 #vendor-stats-modal.open { display:flex; }
-.vendor-stats-box { background:#fff;border-radius:20px;padding:28px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25);position:relative; }
+.vendor-stats-box { background:#fff;color:#1a1a2e;border-radius:20px;padding:28px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25);position:relative; }
 .vendor-stats-box h3 { margin:0 0 16px;font-size:18px; }
 .vstats-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px; }
 .vstat-card { background:#f5f5f8;border-radius:12px;padding:12px;text-align:center; }
@@ -115,7 +115,7 @@
           </div>
         </div>`).join('');
       if (!vendors.length) {
-        container.innerHTML = resetsHtml || '<p style="color:#aaa;text-align:center">No hay vendedores registrados aún.</p>';
+        container.innerHTML = resetsHtml || '<p style="color:var(--modal-soft);text-align:center">No hay vendedores registrados aún.</p>';
         return;
       }
       window._allVendors = vendors;
@@ -125,8 +125,8 @@
             <strong>${escapeHtml(v.nombre)}</strong>
             <span> ${escapeHtml(v.telefono)}</span><br>
             <span class="vest-${escapeHtml(v.estado)}">${escapeHtml(v.estado)}</span>
-            <span style="font-size:11px;color:#aaa;margin-left:8px">${v.fecha ? new Date(v.fecha).toLocaleDateString() : ''}</span>
-            ${v.productos != null ? `<span style="font-size:11px;color:#888;margin-left:8px"> ${v.productos} productos</span>` : ''}
+            <span style="font-size:11px;color:var(--modal-soft);margin-left:8px">${v.fecha ? new Date(v.fecha).toLocaleDateString() : ''}</span>
+            ${v.productos != null ? `<span style="font-size:11px;color:var(--modal-muted);margin-left:8px"> ${v.productos} productos</span>` : ''}
             ${v.resetSolicitado ? `<div style="margin-top:6px;padding:6px 10px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:11.5px;color:#854d0e;display:flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true"><use href="#ic-lock"/></svg> Solicitó recuperar su contraseña${v.telefonoPendiente ? ` y cambiar su número a ${escapeHtml(v.telefonoPendiente)}` : ''}</div>` : ''}
             ${v.telefonoPendiente && !v.resetSolicitado ? `<div style="margin-top:6px;padding:6px 10px;background:#e0f2fe;border:1px solid #7dd3fc;border-radius:8px;font-size:11.5px;color:#075985;display:flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true"><use href="#ic-lock"/></svg> Solicitó cambiar su número a ${escapeHtml(v.telefonoPendiente)}</div>` : ''}
           </div>
@@ -271,9 +271,9 @@
       modal = document.createElement('div');
       modal.id = 'vendor-stats-modal';
       modal.innerHTML = `<div class="vendor-stats-box">
-        <button id="vstats-close" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;"></button>
+        <button id="vstats-close" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--modal-soft);"></button>
         <h3 id="vstats-title">Estadísticas</h3>
-        <div class="vstats-grid" id="vstats-grid"><p style="color:#aaa;text-align:center;grid-column:span 2">Cargando...</p></div>
+        <div class="vstats-grid" id="vstats-grid"><p style="color:var(--modal-soft);text-align:center;grid-column:span 2">Cargando...</p></div>
         <div id="vstats-products" style="margin-top:8px;max-height:260px;overflow-y:auto;"></div>
       </div>`;
       document.body.appendChild(modal);
@@ -284,7 +284,7 @@
     document.getElementById('vstats-title').textContent = ` ${nombre}`;
     const grid  = document.getElementById('vstats-grid');
     const prods = document.getElementById('vstats-products');
-    grid.innerHTML = '<p style="color:#aaa;text-align:center;grid-column:span 2">Cargando...</p>';
+    grid.innerHTML = '<p style="color:var(--modal-soft);text-align:center;grid-column:span 2">Cargando...</p>';
     prods.innerHTML = '';
     _gasGet({ action: 'listarTodoComunidad', token: getAdminToken(), vendedor_uid: uid })
       .then(data => {
@@ -302,9 +302,9 @@
             <img src="${escapeAttr(p.imagen1 || '')}" style="width:44px;height:44px;object-fit:contain;border-radius:8px;background:#f5f5f8;" data-fb="clear">
             <div style="flex:1;min-width:0;">
               <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.nombre || '—')}</div>
-              <div style="font-size:11px;color:#888;">$${Number(p.precio||0).toLocaleString()} · Stock: ${Number(p.stock)||0} · <span style="color:${p.estado==='aprobado'?'#2e7d32':'#f57f17'}">${escapeHtml(p.estado||'')}</span></div>
+              <div style="font-size:11px;color:var(--modal-muted);">$${Number(p.precio||0).toLocaleString()} · Stock: ${Number(p.stock)||0} · <span style="color:${p.estado==='aprobado'?'#2e7d32':'#f57f17'}">${escapeHtml(p.estado||'')}</span></div>
             </div>
-          </div>`).join('') : '<p style="color:#aaa;text-align:center;font-size:13px;">Sin productos publicados</p>';
+          </div>`).join('') : '<p style="color:var(--modal-soft);text-align:center;font-size:13px;">Sin productos publicados</p>';
       })
       .catch(err => { grid.innerHTML = `<p style="color:#ef4444;grid-column:span 2">Error: ${escapeHtml(err.message)}</p>`; });
   }
@@ -319,7 +319,7 @@
       if (!data.ok) throw new Error(data.error);
       const products = data.products || [];
       if (!products.length) {
-        container.innerHTML = '<p style="color:#aaa;text-align:center">Sin productos pendientes </p>';
+        container.innerHTML = '<p style="color:var(--modal-soft);text-align:center">Sin productos pendientes </p>';
         return;
       }
       container.innerHTML = products.map(p => `
@@ -329,7 +329,7 @@
             <strong>${escapeHtml(p.nombre)}</strong>
             <span>$${Number(p.precio).toLocaleString()} · Stock: ${Number(p.stock) || 0} · ${escapeHtml(p.categoria || '')}</span><br>
             <span> ${escapeHtml(p.vendedor_nombre || '')} ·  ${escapeHtml(p.vendedor_tel || '')}</span><br>
-            <label style="font-size:11px;color:#666;display:flex;align-items:center;gap:6px;margin-top:6px;">
+            <label style="font-size:11px;color:var(--modal-muted);display:flex;align-items:center;gap:6px;margin-top:6px;">
               <span>Aprobación futura:</span>
               <select id="confiable-sel-${p.id}" style="font-size:11px;border-radius:8px;border:1px solid #ddd;padding:2px 6px;">
                 <option value="false">Requiere revisión</option>
@@ -372,7 +372,7 @@
           row.remove();
           const container = document.getElementById('admin-pending-list');
           if (container && !container.querySelector('.pending-product-row')) {
-            container.innerHTML = '<p style="color:#aaa;text-align:center">Sin productos pendientes </p>';
+            container.innerHTML = '<p style="color:var(--modal-soft);text-align:center">Sin productos pendientes </p>';
           }
         }, 300);
       }
@@ -395,7 +395,7 @@
     updateReportesBadge(reportes.length);
     if (typeof window._updateNotifTabBadge === 'function') window._updateNotifTabBadge('reportes', reportes.length);
     if (!reportes.length) {
-      container.innerHTML = '<p style="color:#aaa;text-align:center">Sin reportes pendientes</p>';
+      container.innerHTML = '<p style="color:var(--modal-soft);text-align:center">Sin reportes pendientes</p>';
       return;
     }
 
@@ -425,7 +425,7 @@
                 <span class="rmeta-chip motivo"> ${escapeHtml(r.motivo || '—')}</span>
               </div>
               ${vendorNombre ? `<div class="reporte-card-vendedor"><span> <strong>${vendorNombre}</strong></span>${vendorTel ? `<a href="https://wa.me/${vendorTel.replace(/\D/g,'')}" target="_blank" rel="noopener" style="color:#25d366;font-size:12px;"> ${vendorTel}</a>` : ''}</div>` : ''}
-              <div style="font-size:11px;color:#aaa;margin-top:4px;">
+              <div style="font-size:11px;color:var(--modal-soft);margin-top:4px;">
                  ${r.timestamp ? new Date(r.timestamp).toLocaleString() : '—'}
                 ${r.telefonoUsuario ? ` ·  Reportó: ${escapeHtml(r.telefonoUsuario)}` : ''}
               </div>
