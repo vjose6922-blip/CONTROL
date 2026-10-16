@@ -328,10 +328,12 @@ function aplicarVisibilidadPorRol() {
     if (listaTitulo) listaTitulo.textContent = "Cuentas existentes";
   }
 
-  // "Mi cuenta" (cambiar contraseña): oculto para el Master heredado, que
-  // no tiene doc en `admins` y por lo tanto no puede usar cambiarPasswordAdmin.
-  const cuentaSection = document.getElementById("admin-cuenta-section");
-  if (cuentaSection) cuentaSection.hidden = rol === "master";
+  // "Mi cuenta": todos ven Cerrar sesión; contraseña y datos bancarios no aplican al
+  // Master heredado (sin doc en `admins`, no puede usar cambiarPasswordAdmin).
+  ["admin-cambiar-password-section", "admin-datos-bancarios-section"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = rol === "master" ? "none" : "";
+  });
 
   // 3) Ciudad de publicación en el form de producto Z&R: solo el Master
   // la elige (admin/moderador de ciudad la tienen fija en el backend).

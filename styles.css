@@ -2893,4 +2893,9 @@ html.has-session #login-forms-card { display: none; }
 
 .admin-mini-card[hidden] { display: none !important; }
 /* Sin sesión no hay nada que actualizar ni cerrar */
-body:not([data-rol]) #admin-refresh-btn, body:not([data-rol]) #admin-logout-btn { display: none; }
+body:not([data-rol]) #admin-refresh-btn { display: none; }
+
+/* Barra de acción (Cerrar sesión, Ver todas las notificaciones) */
+.admin-cta-bar { display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 16px; margin-top:14px; border-radius:14px; font:600 14px inherit; color:inherit; text-decoration:none; background:rgba(127,127,127,.14); border:1px solid rgba(127,127,127,.28); }
+.admin-cta-bar:hover { background:rgba(127,127,127,.24); }
+#admin-logout-btn { color:#e5484d; }
