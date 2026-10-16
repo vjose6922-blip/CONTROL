@@ -195,53 +195,6 @@ body[data-rol="moderador"] #product-form select {
  <span class="admin-stat-label">Sin Stock</span>
  </div>
  </div>
- <section class="admin-section" id="admin-stats-section" data-role="stats">
- <div class="admin-section-header">
- <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-settings"/></svg></span> Estadísticas de admins y moderadores</h2>
- </div>
- <div class="admin-cards-grid admin-cards-grid-compact">
- <div class="admin-card grid-tile" id="admin-stats-tile">
- <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-stats-tile","stats-body"]'>
- <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-settings"/></svg></span>
- <h2 class="tile-title">Desempeño</h2>
- <div class="tile-actions">
- <button type="button" class="tile-close-btn" aria-label="Cerrar" data-stop data-click="closeGridTile" data-args='["admin-stats-tile","stats-body"]'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
- </div>
- </div>
- <div id="stats-body" style="display:none;">
- <div class="form-row" style="justify-content:space-between; align-items:center;">
- <div>
- <label for="stats-dias-select">Periodo</label>
- <select id="stats-dias-select" data-change="cargarEstadisticasStaff" data-args='[{"$":"value"}]'>
- <option value="7">Últimos 7 días</option>
- <option value="30" selected>Últimos 30 días</option>
- <option value="90">Últimos 90 días</option>
- </select>
- </div>
- <a href="Audit.html" class="text-button" style="white-space:nowrap;">Ver auditoría detallada →</a>
- </div>
- <div class="form-row" style="justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px;">
- <select id="stats-ciudad-select" data-change="setStatsCiudadFiltro" data-args='[{"$":"value"}]'>
- <option value="todas">Todas las ciudades</option>
- </select>
- <span id="stats-master-note" class="stats-master-note"></span>
- </div>
- <div class="stats-chip-row" id="stats-rol-chips">
- <button type="button" class="stats-chip active" data-click="setStatsRolFiltro" data-args='["todos",{"$":"this"}]'>Todos</button>
- <button type="button" class="stats-chip" data-click="setStatsRolFiltro" data-args='["admin",{"$":"this"}]'>Admins</button>
- <button type="button" class="stats-chip" data-click="setStatsRolFiltro" data-args='["moderador",{"$":"this"}]'>Moderadores</button>
- </div>
- <div class="stats-tab-row">
- <button type="button" class="stats-tab active" data-click="setStatsMetrica" data-args='["volumen",{"$":"this"}]'>Acciones resueltas</button>
- <button type="button" class="stats-tab" data-click="setStatsMetrica" data-args='["tiempo",{"$":"this"}]'>Tiempo de respuesta</button>
- <button type="button" class="stats-tab" data-click="setStatsMetrica" data-args='["tipos",{"$":"this"}]'>Por tipo de acción</button>
- </div>
- <div class="chart-box"><canvas id="stats-chart"></canvas></div>
- <div id="stats-staff-list" class="stats-staff-list"></div>
- </div>
- </div>
- </div>
- </section>
  <section class="admin-section" id="admin-cuenta-section">
  <div class="admin-section-header">
  <h2><span class="ash-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-lock"/></svg></span> Mi cuenta</h2>
@@ -420,6 +373,47 @@ body[data-rol="moderador"] #product-form select {
  <div class="admin-products-list" id="admin-cuentas-list">
  <div style="text-align: center; padding: 40px; color: #999;">Cargando cuentas...</div>
  </div>
+ </div>
+ </div>
+ <div class="admin-card grid-tile" id="admin-stats-tile" data-role="stats">
+ <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-stats-tile","stats-body"]'>
+ <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-settings"/></svg></span>
+ <h2 class="tile-title">Desempeño del equipo</h2>
+ <span class="tile-subtitle">Acciones, tiempos y pendientes de admins y moderadores</span>
+ <div class="tile-actions">
+ <button type="button" class="tile-close-btn" aria-label="Cerrar" data-stop data-click="closeGridTile" data-args='["admin-stats-tile","stats-body"]'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-x"/></svg></button>
+ </div>
+ </div>
+ <div id="stats-body" style="display:none;">
+ <div class="form-row" style="justify-content:space-between; align-items:center;">
+ <div>
+ <label for="stats-dias-select">Periodo</label>
+ <select id="stats-dias-select" data-change="cargarEstadisticasStaff" data-args='[{"$":"value"}]'>
+ <option value="7">Últimos 7 días</option>
+ <option value="30" selected>Últimos 30 días</option>
+ <option value="90">Últimos 90 días</option>
+ </select>
+ </div>
+ <a href="Audit.html" class="text-button" style="white-space:nowrap;">Ver auditoría detallada →</a>
+ </div>
+ <div class="form-row" style="justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px;">
+ <select id="stats-ciudad-select" data-change="setStatsCiudadFiltro" data-args='[{"$":"value"}]'>
+ <option value="todas">Todas las ciudades</option>
+ </select>
+ <span id="stats-master-note" class="stats-master-note"></span>
+ </div>
+ <div class="stats-chip-row" id="stats-rol-chips">
+ <button type="button" class="stats-chip active" data-click="setStatsRolFiltro" data-args='["todos",{"$":"this"}]'>Todos</button>
+ <button type="button" class="stats-chip" data-click="setStatsRolFiltro" data-args='["admin",{"$":"this"}]'>Admins</button>
+ <button type="button" class="stats-chip" data-click="setStatsRolFiltro" data-args='["moderador",{"$":"this"}]'>Moderadores</button>
+ </div>
+ <div class="stats-tab-row">
+ <button type="button" class="stats-tab active" data-click="setStatsMetrica" data-args='["volumen",{"$":"this"}]'>Acciones resueltas</button>
+ <button type="button" class="stats-tab" data-click="setStatsMetrica" data-args='["tiempo",{"$":"this"}]'>Tiempo de respuesta</button>
+ <button type="button" class="stats-tab" data-click="setStatsMetrica" data-args='["tipos",{"$":"this"}]'>Por tipo de acción</button>
+ </div>
+ <div class="chart-box"><canvas id="stats-chart"></canvas></div>
+ <div id="stats-staff-list" class="stats-staff-list"></div>
  </div>
  </div>
  </div>
