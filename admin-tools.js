@@ -1115,7 +1115,7 @@ async function resincronizarComunidadAlgoliaBtn() {
     }
     showCustomAlert({
       title: 'Resincronización disparada',
-      message: data.message || 'Revisa el Registro de ejecución en Apps Script para el detalle.',
+      message: data.message || 'Resincronización disparada.',
       icon: 'check',
       confirmText: 'Entendido'
     });
@@ -1631,7 +1631,7 @@ async function openSugerenciasConfiableModal() {
 
     const sugerencias = res.sugerencias || [];
     bodyEl.innerHTML = `
-      <p style="font-size:.78rem;color:#aaa;margin:0 0 16px;">Vendedores activos con al menos ${res.minVentasRequeridas} pedidos entregados, sin reportes pendientes de revisar, que todavía no están marcados como confiables.</p>
+      <p style="font-size:.78rem;color:#aaa;margin:0 0 16px;">Vendedores activos con al menos ${res.minVentasRequeridas} pedidos entregados que todavía no están marcados como confiables.</p>
       <div id="sc-list">
         ${sugerencias.length ? sugerencias.map(s => `
           <div class="sc-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);gap:10px;">
