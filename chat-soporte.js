@@ -170,10 +170,10 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
           ${rangoMio >= rangoMax ? '<button id="cs-finalizar" style="background:none;border:none;color:var(--color-error,#f87171);cursor:pointer">Finalizar</button>' : ""}
         </span>
       </div>
-      <div id="cs-mensajes" style="flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px;max-height:40vh"></div>
-      <div style="display:flex;border-top:1px solid var(--color-border-subtle,rgba(255,255,255,.07))">
-        <input id="cs-input" placeholder="Escribe…" style="flex:1;border:none;background:transparent;color:inherit;padding:10px 14px;outline:none">
-        <button id="cs-enviar" style="border:none;background:none;color:var(--color-accent,#f472b6);padding:0 14px;cursor:pointer">Enviar</button>
+      <div id="cs-mensajes" style="flex:1;overflow-y:auto;padding:12px 12px 8px;display:flex;flex-direction:column;gap:2px;max-height:40vh"></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--color-border-subtle,rgba(255,255,255,.07))">
+        <input id="cs-input" placeholder="Aa" style="flex:1;border:none;background:var(--color-surface-3,rgba(127,127,127,.18));color:inherit;padding:9px 14px;border-radius:20px;outline:none;font:inherit">
+        <button id="cs-enviar" aria-label="Enviar" style="flex:none;width:36px;height:36px;border:none;border-radius:50%;background:linear-gradient(135deg,#e11d6a,#c026d3);color:#fff;cursor:pointer;font-size:16px;line-height:1">➤</button>
       </div>`;
     body.querySelector("#cs-volver").onclick = renderLista;
     body.querySelector("#cs-agregar").onclick = () => agregarParticipante(id);
@@ -193,17 +193,29 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, off } from "https:/
     const cont = body.querySelector("#cs-mensajes");
     const otrosNombres = Object.entries(c.participantes || {}).filter(([uid]) => uid !== MI.uid).map(([, p]) => p.nombre).join(", ");
     cont.innerHTML = `<div style="opacity:.6;font-size:12px;text-align:center">Chat con ${otrosNombres.replace(/</g, "&lt;")} — escribe abajo</div>`;
+    let ult = {};
     onChildAdded(ref(db, `chats_soporte/${id}/mensajes`), (snap) => {
-      const m = snap.val();
-      const linea = document.createElement("div");
-      linea.style.cssText = `align-self:${m.uid === MI.uid ? "flex-end" : "flex-start"};background:${m.uid === MI.uid ? "var(--color-accent-soft,rgba(244,114,182,.15))" : "var(--color-bg,#1e2128)"};padding:6px 10px;border-radius:var(--radius-md,12px);max-width:85%`;
-      const quien = document.createElement("div");
-      quien.style.cssText = "font-size:11px;opacity:.6";
-      quien.textContent = m.nombre;
+      const m = snap.val(), mio = m.uid === MI.uid;
+      const seguido = ult.uid === m.uid && m.ts - ult.ts < 300000; // mismo autor y menos de 5 min: se agrupa
+      if (ult.hora) ult.hora.remove();
+      if (seguido && ult.burbuja) ult.burbuja.style[mio ? "borderBottomRightRadius" : "borderBottomLeftRadius"] = "6px";
+      const fila = document.createElement("div");
+      fila.style.cssText = `align-self:${mio ? "flex-end" : "flex-start"};max-width:80%;display:flex;flex-direction:column;align-items:${mio ? "flex-end" : "flex-start"};margin-top:${seguido ? 0 : 8}px`;
+      if (!mio && !seguido) {
+        const quien = document.createElement("div");
+        quien.style.cssText = "font-size:11px;opacity:.6;margin:0 0 2px 10px";
+        quien.textContent = m.nombre;
+        fila.appendChild(quien);
+      }
       const txt = document.createElement("div");
+      txt.style.cssText = `padding:8px 13px;border-radius:18px;${mio ? "border-bottom-right-radius:4px;background:linear-gradient(135deg,#e11d6a,#c026d3);color:#fff" : "border-bottom-left-radius:4px;background:var(--color-surface-3,rgba(127,127,127,.2));color:var(--color-text-main,inherit)"};word-break:break-word;white-space:pre-wrap;line-height:1.35`;
       txt.textContent = m.texto; // textContent: un mensaje con HTML no se ejecuta
-      linea.append(quien, txt);
-      cont.appendChild(linea);
+      const hora = document.createElement("div");
+      hora.style.cssText = "font-size:10px;opacity:.55;margin:2px 6px 0";
+      hora.textContent = new Date(m.ts).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+      fila.append(txt, hora);
+      cont.appendChild(fila);
+      ult = { uid: m.uid, ts: m.ts, burbuja: txt, hora };
       cont.scrollTop = cont.scrollHeight;
     }, (e) => { reportar("leerMensajes", e); estado("No se pueden leer los mensajes: " + (e && e.message ? e.message : e), "error"); });
   }
