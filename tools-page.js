@@ -109,7 +109,7 @@ document.getElementById('tools-back').addEventListener('click', () => runTool(''
 window.addEventListener('popstate', e => runTool(e.state?.tool || new URLSearchParams(location.search).get('tool') || '', false));
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (!tienePermiso('tools')) return void (location.href = 'index.html');
+  if (!tienePermiso('tools-lite')) return void (location.href = 'index.html');
   const initial = new URLSearchParams(location.search).get('tool');
   if (initial) runTool(initial, false);
 });

@@ -26,6 +26,7 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   eliminarAdmin: VENDEDORES_API_URL_ADMIN,
   resetPasswordAdmin: VENDEDORES_API_URL_ADMIN,
   guardarDatosBancariosAdmin: VENDEDORES_API_URL_ADMIN,
+  obtenerDatosBancariosAdmin: VENDEDORES_API_URL_ADMIN,
   obtenerEstadisticasStaff: ADMIN_API_URL_ADMIN,
   tokenChatSoporte: ADMIN_API_URL_ADMIN,
   listarContactosChat: ADMIN_API_URL_ADMIN,
@@ -334,6 +335,7 @@ function aplicarVisibilidadPorRol() {
     const el = document.getElementById(id);
     if (el) el.style.display = rol === "master" ? "none" : "";
   });
+  if (rol !== "master") cargarDatosBancarios();
 
   // 3) Ciudad de publicación en el form de producto Z&R: solo el Master
   // la elige (admin/moderador de ciudad la tienen fija en el backend).
@@ -553,22 +555,28 @@ async function cargarListaAdmins() {
     }
     window._ultimaListaAdmins = admins; // para que los botones de abajo busquen el nombre por uid sin meterlo en atributos HTML
     const rolSesion = sessionStorage.getItem("admin_rol") || "master";
-cont.innerHTML = admins.map((a) => `
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-border-subtle, #333);flex-wrap:wrap;">
-  <div>
-    <strong>${escapeHtml(a.nombre)}</strong> — ${escapeHtml(a.rol)} · ${escapeHtml(a.ciudad)}
-    <div style="font-size:12px;opacity:.7;">${escapeHtml(a.telefono)} · ${a.activo ? "Activa" : "Desactivada"}</div>
-    ${a.estado === "en_transicion" ? `<div style="font-size:12px;color:#ff9f4f;">⏳ En transición${a.fechaLimiteTransicion ? " hasta " + new Date(a.fechaLimiteTransicion).toLocaleDateString("es-MX") : ""}</div>` : ""}
+cont.innerHTML = admins.map((a) => {
+const btn = (fn, txt, extra = "") => `<button type="button" class="text-button" ${extra} data-uid="${escapeHtml(a.uid)}" data-click="${fn}" data-args="${dargs(ARG.THIS)}">${txt}</button>`;
+const esMaster = rolSesion === "master";
+return `<div class="acct-card${a.activo ? "" : " is-off"}">
+  <div class="acct-top">
+    <div class="acct-av">${escapeHtml((a.nombre || "?").trim().charAt(0).toUpperCase())}</div>
+    <div class="acct-info">
+      <div class="acct-name">${escapeHtml(a.nombre)} <span class="acct-pill ${escapeHtml(a.rol)}">${escapeHtml(a.rol)}</span></div>
+      <div class="acct-meta">${escapeHtml(a.ciudad)} · ${escapeHtml(a.telefono)}</div>
+    </div>
+    <span class="acct-st ${a.activo ? "on" : "off"}">${a.activo ? "Activa" : "Desactivada"}</span>
   </div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;">
-    <button type="button" class="text-button" data-uid="${escapeHtml(a.uid)}" data-activo="${a.activo ? "1" : "0"}" data-click="handleToggleAdminActivo" data-args="${dargs(ARG.THIS)}">${a.activo ? "Desactivar" : "Reactivar"}</button>
-    ${rolSesion === "master" && a.rol === "admin" && a.estado !== "en_transicion" ? `<button type="button" class="text-button" data-uid="${escapeHtml(a.uid)}" data-click="handleIniciarTransicion" data-args="${dargs(ARG.THIS)}">Iniciar transición</button>` : ""}
-    ${rolSesion === "master" && a.rol === "moderador" ? `<button type="button" class="text-button" data-uid="${escapeHtml(a.uid)}" data-click="handlePromoverModerador" data-args="${dargs(ARG.THIS)}">Promover a admin</button>` : ""}
-    <button type="button" class="text-button" data-uid="${escapeHtml(a.uid)}" data-click="handleResetPasswordAdmin" data-args="${dargs(ARG.THIS)}">Restablecer contraseña</button>
-    ${rolSesion === "master" ? `<button type="button" class="text-button" style="color:#e53935;" data-uid="${escapeHtml(a.uid)}" data-click="handleEliminarAdmin" data-args="${dargs(ARG.THIS)}">Eliminar cuenta</button>` : ""}
+  ${a.estado === "en_transicion" ? `<div class="acct-warn">⏳ En transición${a.fechaLimiteTransicion ? " hasta " + new Date(a.fechaLimiteTransicion).toLocaleDateString("es-MX") : ""}</div>` : ""}
+  <div class="acct-actions">
+    ${btn("handleToggleAdminActivo", a.activo ? "Desactivar" : "Reactivar", `data-activo="${a.activo ? "1" : "0"}"`)}
+    ${esMaster && a.rol === "admin" && a.estado !== "en_transicion" ? btn("handleIniciarTransicion", "Iniciar transición") : ""}
+    ${esMaster && a.rol === "moderador" ? btn("handlePromoverModerador", "Promover a admin") : ""}
+    ${btn("handleResetPasswordAdmin", "Restablecer contraseña")}
+    ${esMaster ? btn("handleEliminarAdmin", "Eliminar cuenta", 'style="color:#e5484d;"') : ""}
   </div>
-</div>
-`).join("");
+</div>`;
+}).join("");
 } catch (err) {
 console.error(err);
 cont.innerHTML = '<div style="text-align:center;padding:24px;color:#e53935;">Error al cargar cuentas</div>';
@@ -783,8 +791,18 @@ return;
 }
 const msg = `*Cuenta creada*\n\nHola ${nombre}, tu acceso a Z&R:\n\nTeléfono: ${data.telefono}\nContraseña temporal: *${data.codigo}*\n\nCámbiala después de iniciar sesión.`;
 const waLink = `https://wa.me/52${data.telefono}?text=${encodeURIComponent(msg)}`;
-document.getElementById("nuevo-admin-credenciales").style.display = "block";
-document.getElementById("nuevo-admin-credenciales").innerHTML = `<b>${nombre}</b><br>Tel: ${data.telefono}<br>Contraseña: <b>${data.codigo}</b><br><a href="${waLink}" target="_blank" rel="noopener">Enviar por WhatsApp</a>`;
+const cred = document.getElementById("nuevo-admin-credenciales");
+cred.style.display = "block";
+cred.innerHTML = `<div class="cred-card">
+  <div class="cred-head"><span class="cred-ok">✓</span> Cuenta creada <span class="acct-pill ${escapeHtml(rol)}">${escapeHtml(rol)}</span></div>
+  <div class="cred-row"><small>Nombre</small><b>${escapeHtml(nombre)}</b></div>
+  <div class="cred-row"><small>Teléfono</small><b>${escapeHtml(data.telefono)}</b></div>
+  <div class="cred-row"><small>Contraseña temporal</small><span class="cred-pass">${escapeHtml(data.codigo)}</span></div>
+  <div class="cred-actions">
+    <button type="button" class="text-button" data-copy="${escapeHtml(data.codigo)}" data-click="copiarCredencial" data-args="${dargs(ARG.THIS)}">Copiar contraseña</button>
+    <a class="wa-btn" href="${waLink}" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+  </div>
+</div>`;
 document.getElementById("crear-admin-form").reset();
 cargarListaAdmins();
 } catch (err) {
@@ -834,6 +852,30 @@ async function handleCambiarPasswordSubmit(e) {
 // Autoservicio de datos bancarios (CLABE/tarjeta) para que el Master les
 // pague su porcentaje mensual. Igual que la contraseña, el Master
 // heredado no tiene doc en `admins` y el backend lo rechaza por diseño.
+let _bancarios = null, _bancVisible = false;
+function renderTarjetaBancaria() {
+  const el = document.getElementById("tarjeta-bancaria");
+  const d = _bancarios;
+  if (!el) return;
+  if (!d || (!d.clabe && !d.tarjeta)) { el.innerHTML = ""; return; }
+  const fmt = (n) => _bancVisible ? escapeHtml(n).replace(/(.{4})(?=.)/g, "$1 ") : "•••• " + escapeHtml(n.slice(-4));
+  const fila = (t, n) => n ? `<div class="bk-row"><small>${t}</small><div class="bk-num">${fmt(n)}</div></div>` : "";
+  el.innerHTML = `<div class="bank-card">
+    <div class="bk-top"><span>Datos bancarios</span><button type="button" class="bk-eye" data-click="toggleDatosBancarios" data-args="[]">${_bancVisible ? "Ocultar" : "Mostrar"}</button></div>
+    ${fila("Tarjeta", d.tarjeta)}${fila("CLABE", d.clabe)}
+    <div class="bk-name">${escapeHtml(d.titular || "Sin titular")}</div></div>`;
+}
+window.toggleDatosBancarios = () => { _bancVisible = !_bancVisible; renderTarjetaBancaria(); };
+window.copiarCredencial = (btn) => navigator.clipboard?.writeText(btn.dataset.copy).then(() => showTemporaryMessage("Contraseña copiada", "success"));
+function setDatosBancarios(d) {
+  _bancarios = d; _bancVisible = false;
+  ["titular", "clabe", "tarjeta"].forEach((k) => { const i = document.getElementById("datos-bancarios-" + k); if (i) i.value = (d && d[k]) || ""; });
+  renderTarjetaBancaria();
+}
+// Requiere la acción obtenerDatosBancariosAdmin en el backend; si aún no existe, la tarjeta solo aparece tras guardar.
+async function cargarDatosBancarios() {
+  try { const r = await apiRequest("GET", { action: "obtenerDatosBancariosAdmin" }); if (r && r.ok) setDatosBancarios(r.datos || r); } catch (_) {}
+}
 async function handleDatosBancariosSubmit(e) {
   e.preventDefault();
   const titular = document.getElementById("datos-bancarios-titular").value;
@@ -852,6 +894,7 @@ async function handleDatosBancariosSubmit(e) {
       await showCustomAlert({ title: " No se pudo guardar", message: (data && data.error) || "Intenta de nuevo.", icon: "", confirmText: "Aceptar" });
       return;
     }
+    setDatosBancarios({ titular, clabe, tarjeta });
     await showCustomAlert({ title: " Listo", message: "Tus datos bancarios se guardaron correctamente.", icon: "", confirmText: "Listo" });
   } catch (err) {
     console.error(err);

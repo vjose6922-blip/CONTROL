@@ -2,7 +2,7 @@
 // [id, etiqueta, icono, permiso requerido]  (permisos en ROL_PERMISOS, common.js)
 window.ZNR_TOOLS = [
   ['inspector', 'Modo Inspector (Comunidad)', 'community', 'tools'],
-  ['confiable', 'Sugerencias: Vendedor confiable', 'lock', 'tools'],
+  ['confiable', 'Sugerencias: Vendedor confiable', 'lock', 'tools-lite'],
   ['vendorstats', 'Estadísticas de Vendedores', 'stats', 'tools'],
   ['analytics', 'Gráficas y Estadísticas', 'stats', 'tools'],
   ['donaciones', 'Estadísticas de Donaciones', 'heart', 'tools'],
