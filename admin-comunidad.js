@@ -124,7 +124,7 @@
           <div class="info">
             <strong>${escapeHtml(v.nombre)}</strong>
             <span> ${escapeHtml(v.telefono)}</span><br>
-            <span class="vest-${escapeHtml(v.estado)}">${escapeHtml(v.estado)}</span>
+            <span class="vest-${escapeHtml(v.estado)}">${escapeHtml(v.estado)}${v.estado === 'suspendido' && v.suspendidoHasta ? ' hasta ' + new Date(v.suspendidoHasta).toLocaleDateString('es-MX') : ''}</span>
             <span style="font-size:11px;color:var(--modal-soft);margin-left:8px">${v.fecha ? new Date(v.fecha).toLocaleDateString() : ''}</span>
             ${v.productos != null ? `<span style="font-size:11px;color:var(--modal-muted);margin-left:8px"> ${v.productos} productos</span>` : ''}
             ${v.resetSolicitado ? `<div style="margin-top:6px;padding:6px 10px;background:#fef9c3;border:1px solid #fde047;border-radius:8px;font-size:11.5px;color:#854d0e;display:flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" aria-hidden="true"><use href="#ic-lock"/></svg> Solicitó recuperar su contraseña${v.telefonoPendiente ? ` y cambiar su número a ${escapeHtml(v.telefonoPendiente)}` : ''}</div>` : ''}
@@ -249,14 +249,14 @@
   async function suspenderVendedor(uid, nombre, motivoReporte) {
     showCustomConfirm({
       title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender vendedor',
-      message: `¿Deseas suspender a "${nombre}"? Podrás reactivarlo en cualquier momento.`,
+      message: `¿Deseas suspender a "${nombre}"? Podrás reactivarlo en cualquier momento; si eliges una duración, se reactiva sola al vencer.`,
       icon: '', confirmText: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender', cancelText: 'Cancelar',
-      askReason: true,
+      askReason: true, askDuration: true,
       reasonPlaceholder: 'Motivo de la suspensión (opcional)',
-      onConfirm: async (razon) => {
+      onConfirm: async (razon, dias) => {
         try {
           const razonFinal = combinarRazonReporte(motivoReporte, razon);
-          const data = await _gasPost({ action: 'suspenderVendedor', uid, token: getAdminToken(), razon: razonFinal });
+          const data = await _gasPost({ action: 'suspenderVendedor', uid, token: getAdminToken(), razon: razonFinal, dias });
           if (!data.ok) throw new Error(data.error);
           _msg('Vendedor suspendido', 'success');
           loadVendors();

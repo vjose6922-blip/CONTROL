@@ -1288,14 +1288,15 @@ window.adminMarcarReporteLiveRevisado = async function(reporteId, btn) {
 window.adminSuspenderVendedorDesdeReporte = async function(vendedorUid, reporteId, btn) {
   if (!vendedorUid) { askAlert('Este reporte no tiene un vendedor asociado.'); return; }
   const motivoReporte = btn && btn.dataset ? (btn.dataset.motivo || '') : '';
+  let dias;
   const razon = await new Promise(resolve => {
     showCustomConfirm({
       title: 'Suspender vendedor',
       message: '¿Suspender la cuenta de este vendedor? No va a poder iniciar sesión ni transmitir hasta que la reactives desde "Vendedores". El reporte se archiva y su clip de video se borra.',
       icon: '', confirmText: 'Sí, suspender', cancelText: 'Cancelar',
-      askReason: true,
+      askReason: true, askDuration: true,
       reasonPlaceholder: 'Motivo de la suspensión (opcional)',
-      onConfirm: (r) => resolve(r === undefined ? '' : r),
+      onConfirm: (r, d) => { dias = d; resolve(r === undefined ? '' : r); },
       onCancel: () => resolve(null)
     });
   });
@@ -1305,7 +1306,7 @@ window.adminSuspenderVendedorDesdeReporte = async function(vendedorUid, reporteI
     const token = getAdminToken();
     const razonFinal = combinarRazonReporte(motivoReporte, razon);
     const VENDEDORES_API_URL_NOTIF = window.VENDEDORES_API_URL;
-    const res   = await apiFetch(VENDEDORES_API_URL_NOTIF, { action:'suspenderVendedor', uid: vendedorUid, token, razon: razonFinal }, true);
+    const res   = await apiFetch(VENDEDORES_API_URL_NOTIF, { action:'suspenderVendedor', uid: vendedorUid, token, razon: razonFinal, dias }, true);
     const data  = await res.json();
     if (!data.ok) { askAlert('Error: ' + data.error); return; }
     await _marcarReporteLiveRevisadoActual(reporteId, razonFinal);

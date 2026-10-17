@@ -32,7 +32,7 @@ const TIPO_LABELS = {
     eliminarProductosDeAdmin: "Eliminar productos ZNR de un admin", actualizarProductoZNR: "Actualizar producto ZNR",
     eliminarProductoZNR: "Eliminar producto ZNR", deleteProductoComunidadAdmin: "Eliminar producto de comunidad (admin)",
     marcarProductoConfiable: "Marcar producto confiable", eliminarBeneficiario: "Eliminar beneficiario",
-    guardarDatosBancariosAdmin: "Actualizar datos bancarios", marcarPagoAdminMes: "Marcar pago mensual a admin",
+    guardarDatosBancariosAdmin: "Actualizar datos bancarios", guardarPreguntaSecretaAdmin: "Guardar pregunta secreta", recuperarCuentaAdmin: "Recuperar cuenta con pregunta secreta", marcarPagoAdminMes: "Marcar pago mensual a admin",
     sincronizarPlanPlusAdminsExistentes: "Sincronizar Plan Plus retroactivo (admins)",
     confirmGroupPurchase: "Confirmar compra grupal (tienda)", cancelGroupPurchase: "Cancelar compra grupal (tienda)",
     removeOutOfStockNotifications: "Quitar productos sin stock (tienda)",

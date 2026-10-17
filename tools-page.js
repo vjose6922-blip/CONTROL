@@ -11,7 +11,8 @@ const EMBED_TOOLS = {
   planplus: ['modal-plan-plus-resumen', () => window.openPlanPlusResumenModal()],
   errores: ['modal-error-monitor', () => window.openErrorMonitorModal()],
   syncvendedor: ['sync-vendedor-modal', () => window.openSyncVendedorModal()],
-  sinciudad: ['modal-vendedores-sin-ciudad', () => window.openVendedoresSinCiudadModal()]
+  sinciudad: ['modal-vendedores-sin-ciudad', () => window.openVendedoresSinCiudadModal()],
+  catalogosalud: ['modal-catalogo-salud', () => window.openCatalogoSaludModal()]
 };
 // Acciones que no dejan contenido embebido (pestaña nueva o confirm/alert flotante).
 const ACTION_TOOLS = {

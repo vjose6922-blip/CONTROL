@@ -1008,7 +1008,7 @@ async function openAnalyticsModal(period, source) {
         </div>
         <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.4rem;font-weight:900;color:#22c55e;">${fmtMoney(res.totalRevenue)}</div>
-          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">Ingresos confirmados</div>
+          <div style="font-size:.72rem;color:var(--modal-soft);margin-top:2px;">${source === 'comunidad' ? 'Ingresos entregados' : 'Ingresos confirmados'}</div>
         </div>
         <div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22);border-radius:14px;padding:14px;text-align:center;">
           <div style="font-size:1.6rem;font-weight:900;color:#38bdf8;">${res.confirmedOrders}</div>
@@ -1721,6 +1721,54 @@ async function sincronizarPlanPlusAdminsBtn() {
 window.sincronizarPlanPlusAdminsBtn = sincronizarPlanPlusAdminsBtn;
 
 // ── Vendedores sin ciudad (migración de cuentas viejas) ─────────────────────
+// ── Salud del catálogo (Z&R): prendas activas y combinaciones que faltan para armar outfits ──
+async function openCatalogoSaludModal() {
+  document.getElementById('modal-catalogo-salud')?.remove();
+  const token = getAdminToken();
+  const rol = sessionStorage.getItem('admin_rol') || 'master';
+  const modal = document.createElement('div');
+  modal.id = 'modal-catalogo-salud';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML = `<div style="background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:0 0 32px;color:var(--modal-text);">
+    <div style="position:sticky;top:0;background:var(--modal-bg);padding:18px 20px 14px;border-bottom:1px solid var(--modal-border);display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2;">
+      <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('stats')} Salud del catálogo</h2>
+      <button id="btn-close-cat-salud" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
+    </div>
+    <div id="cat-salud-body" style="padding:18px 20px;">Cargando…</div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('btn-close-cat-salud').onclick = () => modal.remove();
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  const bodyEl = document.getElementById('cat-salud-body');
+  const GEN = { hombre: 'Hombre', mujer: 'Mujer', unisex: 'Unisex' }, SEC = { torso: 'Torso', piernas: 'Piernas', pies: 'Pies', accesorios: 'Accesorios' };
+  const pintar = async () => {
+    try {
+      if (!token) throw new Error('Sin sesión de admin');
+      const res = await apiFetch(window.CATALOGO_API_URL, { action: 'obtenerAlertaCatalogo', token }).then(r => r.json());
+      if (!res.ok) throw new Error(res.error || 'Error del servidor');
+      const alertas = res.alertas || [];
+      bodyEl.innerHTML = (alertas.length ? alertas.map(a => `
+        <div style="border:1px solid var(--modal-border);border-radius:14px;padding:14px;margin-bottom:12px;">
+          <div style="font-weight:800;margin-bottom:4px;">${escapeHtml(a.ciudad)}</div>
+          <div style="font-size:.85rem;color:${a.total < a.minimoTotal ? '#ef4444' : 'var(--modal-soft)'};margin-bottom:8px;">Prendas activas (con stock): <b>${a.total}</b> de ${a.minimoTotal} recomendadas</div>
+          ${(a.faltantes || []).map(f => `<div style="font-size:.8rem;display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--modal-border);"><span>${GEN[f.genero] || f.genero} · ${SEC[f.seccion] || f.seccion}${f.estilo !== '-' ? ' · ' + (f.estilo === 'formal' ? 'Formal' : 'Casual') : ''}</span><span style="color:var(--modal-soft);">tienes ${f.tiene}, mínimo ${f.minimo}</span></div>`).join('')}
+          <div style="font-size:.7rem;color:var(--modal-muted);margin-top:8px;">Actualizado: ${a.generadoEn ? new Date(a.generadoEn).toLocaleString('es-MX') : '—'}</div>
+        </div>`).join('') : '<p style="text-align:center;color:var(--modal-soft);padding:20px 0;">Todo en orden: el catálogo tiene prendas suficientes para armar outfits.</p>')
+        + (rol === 'master' ? '<button id="btn-cat-salud-run" class="primary-button full-width" style="margin-top:6px;">Actualizar ahora</button>' : '<p style="font-size:.72rem;color:var(--modal-muted);text-align:center;">Se recalcula cada 24 horas.</p>');
+      document.getElementById('btn-cat-salud-run')?.addEventListener('click', async (ev) => {
+        ev.target.disabled = true; ev.target.textContent = 'Actualizando…';
+        try {
+          const r = await apiFetch(window.CATALOGO_API_URL, { action: 'ejecutarMantenimientoCatalogo', token }, true).then(x => x.json());
+          if (!r.ok) throw new Error(r.error || 'Error del servidor');
+          window.actualizarContadoresHerramientas?.();
+          pintar();
+        } catch (e) { ev.target.disabled = false; ev.target.textContent = 'Actualizar ahora'; askAlert('No se pudo actualizar: ' + e.message); }
+      });
+    } catch (e) { bodyEl.innerHTML = '<p style="color:#ef4444;text-align:center;">Error al cargar: ' + escapeHtml(e.message) + '</p>'; }
+  };
+  pintar();
+}
+
 async function openVendedoresSinCiudadModal() {
   const old = document.getElementById('modal-vendedores-sin-ciudad');
   if (old) old.remove();

@@ -12,6 +12,7 @@ window.ZNR_TOOLS = [
   ['syncvendedor', 'Sincronizar productos de vendedor', 'refresh', 'tools'],
   ['algolia', 'Resincronizar todo Comunidad con Algolia', 'refresh', 'tools'],
   ['sinciudad', 'Vendedores sin ciudad', 'community', 'tools'],
+  ['catalogosalud', 'Salud del catálogo (prendas)', 'stats', 'tools'],
   ['backfillcomunidad', 'Asignar ciudad retroactiva (Comunidad)', 'refresh', 'tools'],
   ['backfillznr', 'Asignar ciudad retroactiva (Z&amp;R)', 'refresh', 'tools'],
   ['planplusadmins', 'Plan Plus retroactivo (admins/moderadores)', 'star', 'tools-master'],
@@ -55,6 +56,7 @@ window.actualizarContadoresHerramientas = () => {
   });
   if (tienePermiso('tools')) {
     get(window.VENDEDORES_API_URL, 'listarVendedoresSinCiudad').then((d) => d?.ok && pintarContador('sinciudad', (d.vendors || []).length));
+    get(window.CATALOGO_API_URL, 'obtenerAlertaCatalogo').then((d) => d?.ok && pintarContador('catalogosalud', d.alertas.reduce((n, a) => n + (a.faltantes.length || 1), 0), d.alertas.some((a) => a.total < a.minimoTotal)));
     get(window.VENDEDORES_API_URL, 'obtenerResumenPlanPlus').then((d) => d?.ok && pintarContador('planplus', d.vencenEn7dias || 0, (d.vencenEn7dias || 0) > 0));
   }
   get(window.VENDEDORES_API_URL, 'obtenerSugerenciasConfiable').then((d) => d?.ok && pintarContador('confiable', (d.sugerencias || []).length));

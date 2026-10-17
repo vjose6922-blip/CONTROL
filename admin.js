@@ -27,6 +27,7 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   resetPasswordAdmin: VENDEDORES_API_URL_ADMIN,
   guardarDatosBancariosAdmin: VENDEDORES_API_URL_ADMIN,
   obtenerDatosBancariosAdmin: VENDEDORES_API_URL_ADMIN,
+  guardarPreguntaSecretaAdmin: VENDEDORES_API_URL_ADMIN,
   obtenerEstadisticasStaff: ADMIN_API_URL_ADMIN,
   tokenChatSoporte: ADMIN_API_URL_ADMIN,
   listarContactosChat: ADMIN_API_URL_ADMIN,
@@ -331,7 +332,7 @@ function aplicarVisibilidadPorRol() {
 
   // "Mi cuenta": todos ven Cerrar sesión; contraseña y datos bancarios no aplican al
   // Master heredado (sin doc en `admins`, no puede usar cambiarPasswordAdmin).
-  ["admin-cambiar-password-section", "admin-datos-bancarios-section"].forEach(id => {
+  ["admin-cambiar-password-section", "admin-datos-bancarios-section", "admin-pregunta-secreta-section"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = rol === "master" ? "none" : "";
   });
@@ -441,7 +442,7 @@ const TIPO_LABELS = {
   eliminarProductosDeAdmin: "Eliminar productos ZNR de un admin", actualizarProductoZNR: "Actualizar producto ZNR",
   eliminarProductoZNR: "Eliminar producto ZNR", deleteProductoComunidadAdmin: "Eliminar producto de comunidad (admin)",
   marcarProductoConfiable: "Marcar producto confiable", eliminarBeneficiario: "Eliminar beneficiario",
-  guardarDatosBancariosAdmin: "Actualizar datos bancarios", marcarPagoAdminMes: "Marcar pago mensual a admin",
+  guardarDatosBancariosAdmin: "Actualizar datos bancarios", guardarPreguntaSecretaAdmin: "Guardar pregunta secreta", recuperarCuentaAdmin: "Recuperar cuenta con pregunta secreta", marcarPagoAdminMes: "Marcar pago mensual a admin",
   sincronizarPlanPlusAdminsExistentes: "Sincronizar Plan Plus retroactivo (admins)",
   confirmGroupPurchase: "Confirmar compra grupal (tienda)", cancelGroupPurchase: "Cancelar compra grupal (tienda)",
   removeOutOfStockNotifications: "Quitar productos sin stock (tienda)",
@@ -910,6 +911,82 @@ async function handleDatosBancariosSubmit(e) {
   }
 }
 
+
+// ---------- Pregunta secreta y recuperación de cuenta (admin / moderador) ----------
+// El orden debe coincidir con PREGUNTAS_SECRETAS de vendedores-api (se manda el índice).
+const PREGUNTAS_SECRETAS = ["¿Cómo se llamaba tu primera mascota?", "¿En qué ciudad nació tu mamá?", "¿Cómo se llamaba tu primera escuela?", "¿Cuál fue tu primer trabajo?", "¿Cuál era tu apodo de niño/a?"];
+const _selPregunta = document.getElementById("pregunta-secreta-idx");
+if (_selPregunta) _selPregunta.innerHTML = PREGUNTAS_SECRETAS.map((p, i) => `<option value="${i}">${escapeHtml(p)}</option>`).join("");
+
+async function handlePreguntaSecretaSubmit(e) {
+  e.preventDefault();
+  showLoader("Guardando...");
+  try {
+    const data = await apiRequest("POST", {
+      action: "guardarPreguntaSecretaAdmin",
+      preguntaIdx: _selPregunta.value,
+      respuesta: document.getElementById("pregunta-secreta-respuesta").value,
+      password: document.getElementById("pregunta-secreta-password").value,
+    });
+    if (!data || !data.ok) { await showCustomAlert({ title: " No se pudo guardar", message: (data && data.error) || "Intenta de nuevo.", icon: "", confirmText: "Aceptar" }); return; }
+    e.target.reset();
+    await showCustomAlert({ title: " Listo", message: "Tu pregunta secreta quedó guardada.", icon: "", confirmText: "Listo" });
+  } catch (err) {
+    console.error(err);
+    await showCustomAlert({ title: " Error", message: "Error al guardar la pregunta secreta.", icon: "", confirmText: "Aceptar" });
+  } finally { hideLoader(); }
+}
+const _formPregunta = document.getElementById("pregunta-secreta-form");
+if (_formPregunta) _formPregunta.addEventListener("submit", handlePreguntaSecretaSubmit);
+
+// Recuperación sin sesión: teléfono → pregunta → respuesta + contraseña nueva.
+function abrirRecuperarCuenta() {
+  const modal = document.createElement("div");
+  modal.className = "custom-alert-modal";
+  modal.innerHTML = `<div class="custom-alert-content">
+    <div class="custom-alert-header"><h3>Recuperar cuenta</h3></div>
+    <div class="custom-alert-body">
+      <p id="rec-msg">Escribe tu teléfono para ver tu pregunta secreta.</p>
+      <input class="custom-alert-input" id="rec-tel" type="tel" placeholder="Teléfono (10 dígitos)" style="font-family:inherit;width:100%;">
+      <div id="rec-paso2" hidden>
+        <p id="rec-pregunta" style="font-weight:700;margin-top:12px;"></p>
+        <input class="custom-alert-input" id="rec-resp" type="text" autocomplete="off" placeholder="Tu respuesta" style="font-family:inherit;width:100%;margin-top:6px;">
+        <input class="custom-alert-input" id="rec-pass" type="password" autocomplete="new-password" placeholder="Nueva contraseña (mín. 6)" style="font-family:inherit;width:100%;margin-top:6px;">
+      </div>
+    </div>
+    <div class="custom-alert-footer">
+      <button type="button" class="custom-alert-btn cancel" id="rec-cancel">Cancelar</button>
+      <button type="button" class="custom-alert-btn confirm" id="rec-ok">Continuar</button>
+    </div></div>`;
+  document.body.appendChild(modal);
+  const $ = (id) => modal.querySelector("#" + id);
+  const msg = (t) => { $("rec-msg").textContent = t; };
+  const llamar = (body) => apiFetch(window.VENDEDORES_API_URL, body, true).then((r) => r.json());
+  $("rec-cancel").onclick = () => modal.remove();
+  $("rec-ok").onclick = async () => {
+    const btn = $("rec-ok"); btn.disabled = true;
+    try {
+      if ($("rec-paso2").hidden) {
+        const d = await llamar({ action: "obtenerPreguntaSecretaAdmin", telefono: $("rec-tel").value });
+        if (!d.ok) return msg(d.error || "No se pudo continuar.");
+        $("rec-pregunta").textContent = d.pregunta; $("rec-paso2").hidden = false; $("rec-tel").disabled = true;
+        msg("Responde y elige tu nueva contraseña."); btn.textContent = "Cambiar contraseña";
+      } else {
+        const d = await llamar({ action: "recuperarCuentaAdmin", telefono: $("rec-tel").value, respuesta: $("rec-resp").value, nuevaPassword: $("rec-pass").value });
+        if (!d.ok) return msg(d.error || "No se pudo recuperar la cuenta.");
+        modal.remove();
+        showCustomAlert({ title: " Contraseña actualizada", message: "Ya puedes iniciar sesión con tu nueva contraseña.", icon: "", confirmText: "Aceptar" });
+      }
+    } catch (err) { msg("Error de conexión. Intenta de nuevo."); }
+    finally { btn.disabled = false; }
+  };
+}
+const _olvide = document.getElementById("olvide-password-btn");
+if (_olvide) _olvide.addEventListener("click", abrirRecuperarCuenta);
+
+const _badgeAuto = document.getElementById("product-badge-auto");
+if (_badgeAuto) _badgeAuto.addEventListener("change", () => { document.getElementById("product-badge").disabled = _badgeAuto.checked; });
+
 async function loadAdminProducts() {
   showLoader("Cargando productos...");
   try {
@@ -1254,6 +1331,8 @@ function fillFormForEdit(product) {
     document.getElementById("product-sizes").value = product.Talla || "";
     document.getElementById("product-category").value = product.Categoria || "";
     document.getElementById("product-badge").value = product.Badge || "";
+    document.getElementById("product-badge-auto").checked = !!product.BadgeAuto;
+    document.getElementById("product-badge").disabled = !!product.BadgeAuto;
     
 
     const img1 = document.getElementById("product-image1");
@@ -1343,6 +1422,7 @@ Descripcion: document.getElementById("product-description").value.trim(),
 Talla: document.getElementById("product-sizes").value.trim(),
 Categoria: document.getElementById("product-category").value.trim(),
 Badge: document.getElementById("product-badge").value,
+BadgeAuto: document.getElementById("product-badge-auto").checked,
 Imagen1: document.getElementById("product-image1").value.trim(),
 Imagen2: document.getElementById("product-image2").value.trim(),
 Imagen3: document.getElementById("product-image3").value.trim(),

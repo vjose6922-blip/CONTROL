@@ -271,13 +271,13 @@ confirmBtn.addEventListener("click", close);
 modal.addEventListener("click", (e) => { if (e.target === modal && !modal.classList.contains("closing")) close(); });
 }
 function showCustomConfirm(options) {
-const { title, message, icon = "", confirmText = "Aceptar", cancelText = "Cancelar", onConfirm, onCancel, askReason = false, reasonPlaceholder = "Motivo (opcional)" } = options;
+const { title, message, icon = "", confirmText = "Aceptar", cancelText = "Cancelar", onConfirm, onCancel, askReason = false, reasonPlaceholder = "Motivo (opcional)", askDuration = false } = options;
 const modal = document.createElement("div");
 modal.className = "custom-alert-modal";
 modal.innerHTML = `
 <div class="custom-alert-content">
 <div class="custom-alert-header"><span class="custom-alert-icon">${icon ? Icon(icon, {size:22}) : ''}</span><h3>${escapeHtml(title)}</h3></div>
-<div class="custom-alert-body"><p>${escapeHtml(message)}</p>${askReason ? `<textarea class="custom-alert-input" id="custom-confirm-razon" rows="2" maxlength="500" placeholder="${escapeHtml(reasonPlaceholder)}" style="font-family:inherit;resize:vertical;"></textarea>` : ''}</div>
+<div class="custom-alert-body"><p>${escapeHtml(message)}</p>${askReason ? `<textarea class="custom-alert-input" id="custom-confirm-razon" rows="2" maxlength="500" placeholder="${escapeHtml(reasonPlaceholder)}" style="font-family:inherit;resize:vertical;"></textarea>` : ''}${askDuration ? `<label style="display:block;margin-top:10px;font-size:12px;opacity:.75;">Duración de la suspensión</label><select class="custom-alert-input" id="custom-confirm-dias" style="font-family:inherit;width:100%;margin-top:4px;"><option value="">Indefinida (hasta reactivarla)</option><option value="1">1 día</option><option value="3">3 días</option><option value="7">7 días</option><option value="15">15 días</option><option value="30">30 días</option><option value="90">90 días</option></select>` : ''}</div>
 <div class="custom-alert-footer">
 <button class="custom-alert-btn cancel"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-x"/></svg> ${escapeHtml(cancelText)}</button>
 <button class="custom-alert-btn confirm"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> ${escapeHtml(confirmText)}</button>
@@ -287,6 +287,7 @@ modal.innerHTML = `
 document.body.appendChild(modal);
 activeModal = modal;
 const razonInput = askReason ? modal.querySelector("#custom-confirm-razon") : null;
+const diasSelect = askDuration ? modal.querySelector("#custom-confirm-dias") : null;
 if (razonInput) setTimeout(() => razonInput.focus(), 100);
 const confirmBtn = modal.querySelector(".custom-alert-btn.confirm");
 const cancelBtn = modal.querySelector(".custom-alert-btn.cancel");
@@ -295,7 +296,7 @@ if (!modal.parentNode) return;
 modal.classList.add("closing");
 // El motivo es opcional: si el staff lo deja en blanco, se manda "" y
 // el backend lo guarda vacío (registrarActividadStaff ya lo soporta).
-setTimeout(() => { if (modal.parentNode) modal.remove(); if (activeModal === modal) activeModal = null; if (callback) callback(razonInput ? razonInput.value.trim() : undefined); }, 150);
+setTimeout(() => { if (modal.parentNode) modal.remove(); if (activeModal === modal) activeModal = null; if (callback) callback(razonInput ? razonInput.value.trim() : undefined, diasSelect ? diasSelect.value : undefined); }, 150);
 };
 confirmBtn.addEventListener("click", () => close(onConfirm));
 cancelBtn.addEventListener("click", () => close(onCancel));
