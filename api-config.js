@@ -22,9 +22,9 @@
   props.WHATSAPP_NUMBER = { get: () => _w.join(''), configurable: false, enumerable: false };
   Object.defineProperties(window, props);
 
-  // Lecturas por POST (token en el body, no en la URL) solo para los backends que ya lo aceptan.
-  // auth, live, pedidos e historias siguen por GET hasta confirmar que también lo aceptan.
-  const LECTURAS_POST = new Set(['catalogo', 'vendedores', 'admin', 'beneficiarios', 'tienda-znr', 'ventas'].map(run));
+  // Lecturas por POST (token en el body, no en la URL/logs) para todos los backends de Cloud Run;
+  // todos aceptan lecturas por POST (revisado). Solo el API_URL de GAS (heredado) sigue por GET.
+  const LECTURAS_POST = new Set(['catalogo', 'vendedores', 'tienda-znr', 'admin', 'auth', 'ventas', 'beneficiarios', 'live', 'pedidos', 'historias'].map(run));
   window.getAdminToken = () => sessionStorage.getItem('admin_token') || '';
   window.apiFetch = (base, params, post = LECTURAS_POST.has(base)) => {
     const p = new URLSearchParams(params);
