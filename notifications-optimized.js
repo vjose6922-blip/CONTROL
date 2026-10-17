@@ -721,16 +721,16 @@ window.loadBeneficiarios = async function(force) {
     }
     const benBadgeNuevas = document.getElementById('ben-badge-nuevas');
     if (benBadgeNuevas) benBadgeNuevas.textContent = bens.length;
-    if (bens.length === 0) { list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay solicitudes pendientes.</p>'; return; }
+    if (bens.length === 0) { list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:32px;">No hay solicitudes pendientes.</p>'; return; }
     list.innerHTML = bens.map(b => `
       <div class="vendor-card" style="border-left:4px solid #f97316;">
         <div style="display:flex;align-items:flex-start;gap:10px;padding:14px 16px;">
           <div style="flex:1;min-width:0;">
             <div style="font-weight:700;font-size:.9rem;margin-bottom:2px;">${escapeHtml(b.nombre)}</div>
-            ${b.organizacion ? `<div style="font-size:.75rem;color:#888;">${escapeHtml(b.organizacion)}</div>` : ''}
-            <div style="font-size:.75rem;color:#888;margin-top:2px;">${Icon('map-pin',{size:13})} ${escapeHtml(b.ubicacion)} · ${_icPhone} ${escapeHtml(b.telefono)}</div>
-            <div style="font-size:.78rem;margin-top:6px;color:#555;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(b.historia)}</div>
-            <div style="font-size:.72rem;color:#aaa;margin-top:4px;">
+            ${b.organizacion ? `<div style="font-size:.75rem;color:var(--modal-muted);">${escapeHtml(b.organizacion)}</div>` : ''}
+            <div style="font-size:.75rem;color:var(--modal-muted);margin-top:2px;">${Icon('map-pin',{size:13})} ${escapeHtml(b.ubicacion)} · ${_icPhone} ${escapeHtml(b.telefono)}</div>
+            <div style="font-size:.78rem;margin-top:6px;color:var(--modal-soft);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${escapeHtml(b.historia)}</div>
+            <div style="font-size:.72rem;color:var(--modal-soft);margin-top:4px;">
               ${b.facebook ? `<a href="${escapeHtml(b.facebook)}" target="_blank" rel="noopener" style="color:#1877f2;">Facebook</a> · ` : ''}
               ${new Date(b.fecha_registro).toLocaleDateString('es-MX')}
             </div>
@@ -853,13 +853,13 @@ window.loadSolicitudesBeneficiario = async function(force) {
     if (cnt) cnt.textContent = sols.length;
     const benBadgeEdiciones = document.getElementById('ben-badge-ediciones');
     if (benBadgeEdiciones) benBadgeEdiciones.textContent = sols.length;
-    if (sols.length === 0) { list.innerHTML = '<p style="color:#aaa;text-align:center;padding:20px;">No hay solicitudes de edición o eliminación.</p>'; return; }
+    if (sols.length === 0) { list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:20px;">No hay solicitudes de edición o eliminación.</p>'; return; }
 
     const campo = (label, actual, nuevo) => {
       const cambio = String(actual||'') !== String(nuevo||'');
       return `<div style="margin-bottom:6px;">
-        <div style="font-size:.68rem;color:#888;text-transform:uppercase;">${label}</div>
-        <div style="font-size:.8rem;${cambio?'color:#888;text-decoration:line-through;':''}">${escapeHtml(actual)||'—'}</div>
+        <div style="font-size:.68rem;color:var(--modal-muted);text-transform:uppercase;">${label}</div>
+        <div style="font-size:.8rem;${cambio?'color:var(--modal-muted);text-decoration:line-through;':''}">${escapeHtml(actual)||'—'}</div>
         ${cambio ? `<div style="font-size:.8rem;color:#16a34a;font-weight:700;">${Icon('arrow-right',{size:12})} ${escapeHtml(nuevo)||'—'}</div>` : ''}
       </div>`;
     };
@@ -872,7 +872,7 @@ window.loadSolicitudesBeneficiario = async function(force) {
       const cambio = String(urlActual||'') !== String(urlNueva||'');
       if (!urlActual && !urlNueva) return '';
       return `<div style="text-align:center;">
-        <div style="font-size:.62rem;color:#888;text-transform:uppercase;margin-bottom:3px;">${label}</div>
+        <div style="font-size:.62rem;color:var(--modal-muted);text-transform:uppercase;margin-bottom:3px;">${label}</div>
         <div style="display:flex;align-items:center;gap:4px;justify-content:center;">
           ${thumb(urlActual)}
           ${cambio ? `<span style="color:#16a34a;font-size:.9rem;">${Icon('arrow-right',{size:13})}</span>${thumb(urlNueva)}` : ''}
@@ -887,7 +887,7 @@ window.loadSolicitudesBeneficiario = async function(force) {
           <div style="padding:14px 16px;">
             <div style="font-weight:700;font-size:.9rem;color:#dc2626;">${_icTrash} Solicitud de eliminación</div>
             <div style="font-size:.82rem;margin-top:4px;">${escapeHtml(s.actual ? s.actual.nombre : s.id_beneficiario)}</div>
-            <div style="font-size:.72rem;color:#888;margin-top:2px;">${s.fecha ? new Date(s.fecha).toLocaleDateString('es-MX') : ''}</div>
+            <div style="font-size:.72rem;color:var(--modal-muted);margin-top:2px;">${s.fecha ? new Date(s.fecha).toLocaleDateString('es-MX') : ''}</div>
             ${fotosActuales.length ? `<div style="display:flex;gap:6px;margin-top:8px;">${fotosActuales.map(thumb).join('')}</div>` : ''}
             <div style="display:flex;gap:8px;margin-top:10px;">
               <button data-click="adminAprobarSolicitudBeneficiario" data-args="${dargs(s.id, ARG.THIS)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#ef4444;color:#fff;font-weight:700;font-size:.75rem;cursor:pointer;">${_icCheck} Confirmar eliminación</button>
@@ -901,7 +901,7 @@ window.loadSolicitudesBeneficiario = async function(force) {
       return `<div class="vendor-card" style="border-left:4px solid #f97316;">
         <div style="padding:14px 16px;">
           <div style="font-weight:700;font-size:.9rem;color:#c2410c;">${Icon('edit',{size:13})} Solicitud de edición</div>
-          <div style="font-size:.72rem;color:#888;margin:2px 0 10px;">${s.fecha ? new Date(s.fecha).toLocaleDateString('es-MX') : ''}</div>
+          <div style="font-size:.72rem;color:var(--modal-muted);margin:2px 0 10px;">${s.fecha ? new Date(s.fecha).toLocaleDateString('es-MX') : ''}</div>
           ${campo('Nombre', actual.nombre, nuevo.nombre)}
           ${campo('Organización', actual.organizacion, nuevo.organizacion)}
           ${campo('Ubicación', actual.ubicacion, nuevo.ubicacion)}
@@ -968,14 +968,14 @@ window.loadReportesBeneficiarios = async function(force) {
     const reportes = data.reportes || [];
     const badge = document.getElementById('ben-badge-reportes');
     if (badge) badge.textContent = reportes.length;
-    if (reportes.length === 0) { list.innerHTML = '<p style="color:#aaa;text-align:center;padding:24px;">No hay reportes pendientes de revisar.</p>'; return; }
+    if (reportes.length === 0) { list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:24px;">No hay reportes pendientes de revisar.</p>'; return; }
 
     reportes.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
     list.innerHTML = reportes.map(r => `
       <div class="vendor-card" style="border-left:4px solid #ef4444;">
         <div style="padding:14px 16px;">
           <div style="font-weight:700;font-size:.9rem;">${Icon('flag',{size:13})} ${escapeHtml(r.nombre_beneficiario || r.beneficiario_id)}</div>
-          <div style="font-size:.72rem;color:#888;margin-top:2px;">${r.fecha ? new Date(r.fecha).toLocaleString('es-MX') : ''}${r.telefono_usuario ? ' · ' + _icPhone + ' ' + escapeHtml(r.telefono_usuario) : ''}</div>
+          <div style="font-size:.72rem;color:var(--modal-muted);margin-top:2px;">${r.fecha ? new Date(r.fecha).toLocaleString('es-MX') : ''}${r.telefono_usuario ? ' · ' + _icPhone + ' ' + escapeHtml(r.telefono_usuario) : ''}</div>
           <div style="margin-top:6px;font-size:.82rem;color:#333;background:#fff0f0;border-radius:8px;padding:8px 10px;">${escapeHtml(r.motivo)}</div>
           <div style="display:flex;gap:8px;margin-top:10px;">
             <button data-click="verBeneficiarioDesdeReporte" data-args="${dargs(r.beneficiario_id)}" style="flex:1;padding:7px;border:none;border-radius:8px;background:#e0e7ff;color:var(--notif-dark);font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver beneficiario</button>
@@ -1048,7 +1048,7 @@ window.loadReportesLive = async function() {
     }
 
     if (reportes.length === 0) {
-      list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay reportes pendientes de revisar.</p>';
+      list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:32px;">No hay reportes pendientes de revisar.</p>';
       return;
     }
 
@@ -1357,7 +1357,7 @@ window.loadReportesPedidos = async function() {
     }
 
     if (!reportes.length) {
-      list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay reportes de pedidos pendientes de revisar.</p>';
+      list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:32px;">No hay reportes de pedidos pendientes de revisar.</p>';
       return;
     }
     reportes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -1528,7 +1528,7 @@ window.loadReportesHistorias = async function() {
     }
 
     if (!reportes.length) {
-      list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay reportes de historias pendientes de revisar.</p>';
+      list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:32px;">No hay reportes de historias pendientes de revisar.</p>';
       return;
     }
 
@@ -1537,11 +1537,11 @@ window.loadReportesHistorias = async function() {
         ? (r.tipo === 'video'
             ? `<video src="${escapeHtml(r.url)}#t=0.1" controls playsinline preload="metadata" style="width:104px;height:184px;object-fit:cover;border-radius:10px;background:#000;flex-shrink:0;"></video>`
             : `<img src="${escapeHtml(r.url)}" alt="Historia reportada" loading="lazy" data-open="" style="width:104px;height:184px;object-fit:cover;border-radius:10px;background:#000;flex-shrink:0;cursor:zoom-in;">`)
-        : `<div style="width:104px;height:184px;border-radius:10px;background:rgba(0,0,0,.08);color:#999;font-size:.72rem;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;flex-shrink:0;">Ya no está disponible</div>`;
+        : `<div style="width:104px;height:184px;border-radius:10px;background:rgba(0,0,0,.08);color:var(--modal-muted);font-size:.72rem;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;flex-shrink:0;">Ya no está disponible</div>`;
       const estado = !r.historiaExiste ? 'Ya expiró o fue eliminada' : (r.oculta ? 'Oculta automáticamente' : 'Visible');
       const motivos = (r.motivos || []).slice(0, 5).map(m =>
-        `<li>${escapeHtml(m.motivo)} <span style="color:#999;">· ${m.fecha ? new Date(m.fecha).toLocaleString('es-MX') : ''}</span></li>`).join('');
-      const mas = (r.motivos || []).length > 5 ? `<li style="color:#999;">y ${r.motivos.length - 5} más…</li>` : '';
+        `<li>${escapeHtml(m.motivo)} <span style="color:var(--modal-muted);">· ${m.fecha ? new Date(m.fecha).toLocaleString('es-MX') : ''}</span></li>`).join('');
+      const mas = (r.motivos || []).length > 5 ? `<li style="color:var(--modal-muted);">y ${r.motivos.length - 5} más…</li>` : '';
       const motivoResumen = escapeHtml([...new Set((r.motivos || []).map(m => m.motivo))].join(', ').slice(0, 160));
       return `
       <div class="reporte-row" data-historia-id="${escapeHtml(r.historiaId)}">
@@ -1629,7 +1629,7 @@ window.loadFeedbackReportes = async function() {
     }
 
     if (!items.length) {
-      list.innerHTML = '<p style="color:#aaa;text-align:center;padding:32px;">No hay reportes de feedback pendientes de revisar.</p>';
+      list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:32px;">No hay reportes de feedback pendientes de revisar.</p>';
       return;
     }
     items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));

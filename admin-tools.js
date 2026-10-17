@@ -12,7 +12,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
   --modal-bg: #fff;
   --modal-text: #1a1a2e;
   --modal-border: rgba(0,0,0,.1);
-  --modal-muted: #6b7280;
+  --modal-muted: #626a77;
   --modal-soft: #5f6672;
   --modal-chip-bg: #f0f0f5;
 }
