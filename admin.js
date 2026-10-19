@@ -834,8 +834,8 @@ async function handleCambiarPasswordSubmit(e) {
     await showCustomAlert({ title: " Las contraseñas no coinciden", message: "La nueva contraseña y su confirmación deben ser iguales.", icon: "", confirmText: "Aceptar" });
     return;
   }
-  if (newPassword.length < 6) {
-    await showCustomAlert({ title: " Contraseña muy corta", message: "La nueva contraseña debe tener al menos 6 caracteres.", icon: "", confirmText: "Aceptar" });
+  if (!passwordValida(newPassword)) {
+    await showCustomAlert({ title: " Contraseña poco segura", message: POLITICA_PASSWORD, icon: "", confirmText: "Aceptar" });
     return;
   }
 
@@ -912,6 +912,10 @@ async function handleDatosBancariosSubmit(e) {
 }
 
 
+// Política de contraseñas elegidas (misma regla que vendedores-api): mínimo 8, con mayúscula, número y símbolo.
+const POLITICA_PASSWORD = "La contraseña debe tener al menos 8 caracteres, con una mayúscula, un número y un carácter especial (por ejemplo ! @ $ *).";
+const passwordValida = (p) => p.length >= 8 && /\p{Lu}/u.test(p) && /\d/.test(p) && /[^\p{L}\p{N}\s]/u.test(p);
+
 // ---------- Pregunta secreta y recuperación de cuenta (admin / moderador) ----------
 // El orden debe coincidir con PREGUNTAS_SECRETAS de vendedores-api (se manda el índice).
 const PREGUNTAS_SECRETAS = ["¿Cómo se llamaba tu primera mascota?", "¿En qué ciudad nació tu mamá?", "¿Cómo se llamaba tu primera escuela?", "¿Cuál fue tu primer trabajo?", "¿Cuál era tu apodo de niño/a?"];
@@ -951,7 +955,7 @@ function abrirRecuperarCuenta() {
       <div id="rec-paso2" hidden>
         <p id="rec-pregunta" style="font-weight:700;margin-top:12px;"></p>
         <input class="custom-alert-input" id="rec-resp" type="text" autocomplete="off" placeholder="Tu respuesta" style="font-family:inherit;width:100%;margin-top:6px;">
-        <input class="custom-alert-input" id="rec-pass" type="password" autocomplete="new-password" placeholder="Nueva contraseña (mín. 6)" style="font-family:inherit;width:100%;margin-top:6px;">
+        <input class="custom-alert-input" id="rec-pass" type="password" autocomplete="new-password" placeholder="Nueva contraseña (mín. 8, A-Z, 0-9, símbolo)" style="font-family:inherit;width:100%;margin-top:6px;">
       </div>
     </div>
     <div class="custom-alert-footer">
@@ -972,6 +976,7 @@ function abrirRecuperarCuenta() {
         $("rec-pregunta").textContent = d.pregunta; $("rec-paso2").hidden = false; $("rec-tel").disabled = true;
         msg("Responde y elige tu nueva contraseña."); btn.textContent = "Cambiar contraseña";
       } else {
+        if (!passwordValida($("rec-pass").value)) return msg(POLITICA_PASSWORD);
         const d = await llamar({ action: "recuperarCuentaAdmin", telefono: $("rec-tel").value, respuesta: $("rec-resp").value, nuevaPassword: $("rec-pass").value });
         if (!d.ok) return msg(d.error || "No se pudo recuperar la cuenta.");
         modal.remove();
