@@ -36,6 +36,7 @@ const TIPO_LABELS = {
     sincronizarPlanPlusAdminsExistentes: "Sincronizar Plan Plus retroactivo (admins)",
     confirmGroupPurchase: "Confirmar compra grupal (tienda)", cancelGroupPurchase: "Cancelar compra grupal (tienda)",
     removeOutOfStockNotifications: "Quitar productos sin stock (tienda)",
+    actualizarFeedback: "Actualizar feedback de usuario", resetPasswordComprador: "Restablecer contraseña de comprador",
 };
 
 // Etiquetas legibles para el tipo de cola pendiente (distinto de
@@ -46,7 +47,28 @@ const PENDIENTE_LABELS = {
     productoComunidad: "Producto de comunidad", reporteProducto: "Reporte de producto",
     reporteLive: "Reporte de live", reporteHistoria: "Reporte de historia", beneficiarioNuevo: "Alta de beneficiario",
     reporteBeneficiario: "Reporte de beneficiario", solicitudBeneficiario: "Solicitud de beneficiario",
+    reportePedido: "Reporte de pedido personalizado", feedback: "Feedback de usuario",
 };
+
+// Reportes/feedback abiertos leídos directo de los mismos endpoints que usa el centro de
+// notificaciones, para que nada quede fuera aunque el backend de auditoría no lo incluya.
+// [api, action, params extra, campo de la respuesta, tipo, fn(r) -> [refId, fecha, ciudad, razón]]
+const fmt = (x) => (x ? new Date(x).toLocaleString('sv-SE').slice(0, 16) : '');
+const FUENTES_PENDIENTES = [
+    ['catalogo', 'obtenerReportes', {}, 'reportes', 'reporteProducto', (r) => [r.reporteId || r.id, r.timestamp, r.ciudad, `${r.nombreProducto || ''}: ${r.motivo || ''}`]],
+    ['beneficiarios', 'obtenerReportesBeneficiarios', {}, 'reportes', 'reporteBeneficiario', (r) => [r.id, r.fecha, r.ciudad, `${r.nombre_beneficiario || ''}: ${r.motivo || ''}`]],
+    ['live', 'obtenerReportesLive', {}, 'reportes', 'reporteLive', (r) => [r.reporteId, r.timestamp, r.ciudad, `${r.liveTitulo || ''}: ${r.motivo || ''}`]],
+    ['pedidos', 'obtenerReportesPedido', {}, 'reportes', 'reportePedido', (r) => [r.reporteId, r.timestamp, r.ciudad, `${r.motivoTexto || r.motivo || ''}${r.detalle ? ': ' + r.detalle : ''}`]],
+    ['historias', 'obtenerReportesHistorias', {}, 'reportes', 'reporteHistoria', (r) => [r.historiaId, (r.motivos || [])[0]?.fecha, r.ciudad, (r.motivos || []).map((m) => m.motivo).join(', ')]],
+    ['ventas', 'listarFeedback', { estado: 'abiertos' }, 'items', 'feedback', (r) => [r.id, r.fecha, '', `${r.tipo || ''}${r.area ? ' · ' + r.area : ''}: ${r.mensaje || ''}`]],
+];
+async function leerPendientes(token) {
+    const lotes = await Promise.all(FUENTES_PENDIENTES.map(([api, action, extra, campo, tipo, f]) =>
+        fetch(`https://${api}-api-1038143238323.us-central1.run.app`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ action, token, ...extra }) })
+            .then((r) => r.json()).then((d) => (d.ok ? d[campo] || [] : []).map((r) => { const [ref, fecha, ciudad, razon] = f(r); return ['pend_' + tipo + '_' + ref, fmt(fecha), '', '', ciudad || '', PENDIENTE_LABELS[tipo], ref, 'Pendiente', razon]; }))
+            .catch(() => [])));
+    return lotes.flat();
+}
 async function obtenerFilasAuditoria(dias) {
     const token = sessionStorage.getItem("admin_token") || "";
     const params = new URLSearchParams({ action: "obtenerAuditoriaStaff", dias: dias || 30, token });
@@ -77,6 +99,8 @@ async function obtenerFilasAuditoria(dias) {
     const pendientes = pendientesDetalle.map((p) => [
         'pend_' + p.tipo + '_' + p.refId, p.fecha || '', '', '', p.ciudad, PENDIENTE_LABELS[p.tipo] || p.tipo, p.refId, 'Pendiente', p.detalle || ''
     ]);
+    const vistos = new Set(pendientes.map((p) => p[0]));
+    pendientes.push(...(await leerPendientes(token)).filter((p) => !vistos.has(p[0])));
     const encabezado = ['ID', 'Fecha', 'Usuario', 'Rol', 'Ciudad', 'Acción', 'Referencia', 'Estado', 'Razón'];
     const filas = [...pendientes, ...resueltas].sort((a, b) => (b[1] || '').localeCompare(a[1] || ''));
     return [encabezado, ...filas];
