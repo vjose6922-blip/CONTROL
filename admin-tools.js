@@ -12,9 +12,9 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  box-sizing: border-box;
  }
   .admin-header {
- background: var(--header-footer-bg) !important;
- backdrop-filter: blur(18px) !important;
- border-bottom: 1px solid var(--border-header) !important;
+ background: var(--page-bg) !important;
+ backdrop-filter: none !important;
+ border-bottom: 0 !important;
  }
 .app-header {
  flex-wrap: nowrap;  
@@ -32,7 +32,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  color: var(--header-text) !important;
  }
  .admin-main {
- background: var(--page-bg);
+ background: transparent;
  min-height: calc(100vh - 64px);
  padding: 12px;
  width: 100%;
