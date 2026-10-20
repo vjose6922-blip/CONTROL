@@ -1,28 +1,20 @@
 // Estilos compartidos de index.html / Tools.html / notificaciones.html (inyectados por JS para no usar un .css aparte)
 document.head.insertAdjacentHTML('beforeend', `<style>
 :root {
-  --modal-bg: #1a1a2e;
-  --modal-text: #fff;
-  --modal-border: rgba(255,255,255,.08);
-  --modal-muted: #999;
-  --modal-soft: #aaa;
-  --modal-chip-bg: rgba(255,255,255,.08);
-}
-[data-theme="light"] {
-  --modal-bg: #fff;
-  --modal-text: #1a1a2e;
-  --modal-border: rgba(0,0,0,.1);
-  --modal-muted: #626a77;
-  --modal-soft: #5f6672;
-  --modal-chip-bg: #f0f0f5;
+  --modal-bg: var(--color-surface);
+  --modal-text: var(--color-text-main);
+  --modal-border: var(--color-border-subtle);
+  --modal-muted: var(--color-text-muted);
+  --modal-soft: var(--color-text-muted);
+  --modal-chip-bg: var(--color-surface-3);
 }
  * {
  box-sizing: border-box;
  }
   .admin-header {
- background: rgba(5, 3, 10, 0.95) !important;
+ background: var(--header-footer-bg) !important;
  backdrop-filter: blur(18px) !important;
- border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+ border-bottom: 1px solid var(--border-header) !important;
  }
 .app-header {
  flex-wrap: nowrap;  
@@ -37,10 +29,10 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 }
  .admin-header .app-title,
  .admin-header .app-subtitle {
- color: white !important;
+ color: var(--header-text) !important;
  }
  .admin-main {
- background: linear-gradient(180deg, #0b0714 0%, #1a1528 100%);
+ background: var(--page-bg);
  min-height: calc(100vh - 64px);
  padding: 12px;
  width: 100%;
@@ -62,7 +54,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  }
  .admin-card-header {
  padding: 14px 16px;
- background: linear-gradient(135deg, #3b1f5f, #5a3b8a);
+ background: var(--gradient-accent);
  color: white !important;
  display: flex;
  justify-content: space-between;
@@ -92,7 +84,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  width: 100%;
  }
  .admin-stat-card {
- background: linear-gradient(135deg, #3b1f5f, #5a3b8a);
+ background: var(--gradient-accent);
  border-radius: 12px;
  padding: 10px 4px;
  text-align: center;
@@ -177,7 +169,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  }
  .admin-section-header .ash-icon {
  display: inline-flex;
- color: #ff4f81;
+ color: var(--color-accent-solid);
  }
  .admin-cards-grid {
  display: grid;
@@ -241,7 +233,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  position: absolute;
  top: 10px;
  right: 10px;
- background: #ff4f81;
+ background: var(--color-accent-solid);
  color: #fff;
  border-radius: 50px;
  min-width: 20px;
@@ -261,7 +253,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  display: block;
  margin-top: 10px;
  padding: 12px;
- background: linear-gradient(135deg, #ff4f81, #ff7a4f);
+ background: var(--gradient-accent);
  color: #fff;
  font-weight: 700;
  font-size: 13px;
@@ -384,15 +376,15 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  flex-shrink: 0;
  }
  #notif-badge.has-notifs {
- background: #ff4f81;
+ background: var(--color-accent-solid);
  color: #fff;
- box-shadow: 0 0 0 0 rgba(255,79,129,0.7);
+ box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb),0.7);
  animation: notif-pulse 1.8s ease-in-out infinite;
  }
  @keyframes notif-pulse {
- 0%  { box-shadow: 0 0 0 0 rgba(255,79,129,0.7); }
- 70% { box-shadow: 0 0 0 7px rgba(255,79,129,0); }
- 100%{ box-shadow: 0 0 0 0 rgba(255,79,129,0); }
+ 0%  { box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb),0.7); }
+ 70% { box-shadow: 0 0 0 7px rgba(var(--color-accent-rgb),0); }
+ 100%{ box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb),0); }
  }
  .form-vertical {
  display: flex;
@@ -410,7 +402,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  .form-row label {
  font-weight: 600;
  font-size: 13px;
- color: #3b1f5f;
+ color: #2a1a16;
  }
  .form-row input,
  .form-row select,
@@ -427,8 +419,8 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  .form-row select:focus,
  .form-row textarea:focus {
  outline: none;
- border-color: #ff4f81;
- box-shadow: 0 0 0 3px rgba(255, 79, 129, 0.1);
+ border-color: var(--color-accent-solid);
+ box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb),0.1);
  }
  @media (min-width: 768px) {
  .form-vertical {
@@ -483,11 +475,11 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  .upload-progress {
  width: 0%;
  height: 100%;
- background: linear-gradient(90deg, #ff4f81, #ff7a4f);
+ background: var(--gradient-accent);
  transition: width 0.3s;
  }
  .primary-button {
- background: linear-gradient(135deg, #ff4f81, #ff7a4f);
+ background: var(--gradient-accent);
  border: none;
  border-radius: 50px;
  padding: 12px 20px;
@@ -500,7 +492,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  }
  .primary-button:hover {
  transform: translateY(-2px);
- box-shadow: 0 6px 20px rgba(255, 79, 129, 0.4);
+ box-shadow: 0 6px 20px rgba(var(--color-accent-rgb),0.4);
  }
  .admin-controls {
  display: flex;
@@ -559,7 +551,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  .admin-product-price {
  font-size: 13px;
  font-weight: 700;
- color: #ff4f81;
+ color: var(--color-accent-solid);
  }
  .admin-product-stock {
  font-size: 11px;
@@ -593,11 +585,11 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  cursor: pointer;
  }
  .admin-product-actions button:first-child {
- background: #e8e8ff;
- color: #3b1f5f;
+ background: #fbf5f2;
+ color: #2a1a16;
  }
  .admin-product-actions button:first-child:hover {
- background: #3b1f5f;
+ background: var(--color-accent-solid);
  color: white;
  }
  .admin-product-actions button:last-child {
@@ -614,7 +606,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  grid-template-columns: 80px 1fr 100px 100px 120px;
  gap: 12px;
  padding: 12px 16px;
- background: linear-gradient(135deg, #3b1f5f, #5a3b8a);
+ background: var(--gradient-accent);
  border-radius: 12px;
  font-weight: 600;
  font-size: 13px;
@@ -653,14 +645,14 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  font-size: 12px;
  }
  .admin-pagination button:hover {
- background: #3b1f5f;
+ background: var(--color-accent-solid);
  color: white;
- border-color: #3b1f5f;
+ border-color: #2a1a16;
  }
  .admin-pagination button.active-page {
- background: #ff4f81;
+ background: var(--color-accent-solid);
  color: white;
- border-color: #ff4f81;
+ border-color: var(--color-accent-solid);
  }
  .global-loader {
  position: fixed;
@@ -682,7 +674,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  width: 40px;
  height: 40px;
  border: 4px solid #f3f3f3;
- border-top: 4px solid #ff4f81;
+ border-top: 4px solid var(--color-accent-solid);
  border-radius: 50%;
  animation: spin 1s linear infinite;
  }
@@ -718,7 +710,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  width: 40px;
  height: 40px;
  flex-shrink: 0;
- background: linear-gradient(135deg, #ff4f81, #3b1f5f);
+ background: var(--gradient-accent);
  border-radius: 12px;
  display: flex;
  align-items: center;
@@ -736,7 +728,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  font-size: 12px;
  color: rgba(255,255,255,0.7);
  }
-.npi-badge{background:#ff4f81;color:#fff;border-radius:50px;padding:2px 10px;font-size:12px;font-weight:800;min-width:24px;text-align:center;}
+.npi-badge{background:var(--color-accent-solid);color:#fff;border-radius:50px;padding:2px 10px;font-size:12px;font-weight:800;min-width:24px;text-align:center;}
 .npi-badge.zero{background:rgba(255,255,255,.12);color:#888;}
 /* Botón de tema: muestra sol u luna según el tema activo */
 #theme-toggle .icon-moon { display: none; }
@@ -744,26 +736,13 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 [data-theme="light"] #theme-toggle .icon-moon { display: inline; }
 
 /* ===== index.html / Tools.html: son oscuros por defecto, esto los aclara ===== */
-[data-theme="light"] .admin-header {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
-}
-[data-theme="light"] .admin-header .app-title,
-[data-theme="light"] .admin-header .app-subtitle { color: #1a1a2e !important; }
-[data-theme="light"] .icon-button {
-  background: rgba(0, 0, 0, 0.06) !important;
-  color: #1a1a2e !important;
-}
 [data-theme="light"] .logo-touch-area,
 [data-theme="light"] .logo-touch-area * {
   box-shadow: none !important;
   filter: none !important;
   text-shadow: none !important;
 }
-[data-theme="light"] .admin-main {
-  background: linear-gradient(180deg, #f4f4f8 0%, #e9e7f0 100%);
-}
-[data-theme="light"] .admin-section-header h2 { color: #1a1a2e; }
+.admin-section-header h2 { color: var(--ink-title); }
 [data-theme="light"] #tools-back {
   background: rgba(0, 0, 0, 0.05);
   border-color: rgba(0, 0, 0, 0.12);
@@ -771,16 +750,16 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 }
 
 /* ===== notificaciones.html: es claro por defecto, esto lo oscurece ===== */
-[data-theme="dark"] body { background: #0b0714; color: #eee; }
+[data-theme="dark"] body { background: var(--color-bg); color: var(--color-text-main); }
 [data-theme="dark"] .notif-section-header { background: linear-gradient(135deg, color-mix(in srgb, var(--notif-dark) 45%, #000), color-mix(in srgb, var(--notif-dark) 75%, #000)); }
 [data-theme="dark"] .request-card,
 [data-theme="dark"] .request-summary,
 [data-theme="dark"] .notifications-filters,
 [data-theme="dark"] .skeleton-notif,
 [data-theme="dark"] .zr-skel-card {
-  background: #181428 !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  color: #eee;
+  background: var(--color-surface) !important;
+  border-color: var(--color-border-subtle) !important;
+  color: var(--color-text-main);
 }
 </style>`);
 
@@ -955,7 +934,7 @@ async function openAnalyticsModal(period, source) {
       ${['znr','comunidad'].map(s => `<button class="an-source-btn" data-source="${s}" style="flex:1;padding:8px 0;border-radius:30px;border:1px solid ${s===source ? 'transparent' : 'rgba(127,127,127,.22)'};background:${s===source ? 'linear-gradient(135deg,#6366f1,#818cf8)' : 'rgba(127,127,127,.22)'};color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;">${sourceLabels[s]}</button>`).join('')}
     </div>
     <div style="padding:10px 20px 0;display:flex;gap:6px;">
-      ${['day','week','month','all'].map(p => `<button class="an-period-btn" data-period="${p}" style="flex:1;padding:8px 0;border-radius:30px;border:1px solid ${p===period ? 'transparent' : 'rgba(127,127,127,.22)'};background:${p===period ? 'linear-gradient(135deg,#ff4f81,#ff7a4f)' : 'rgba(127,127,127,.22)'};color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;">${periodLabels[p]}</button>`).join('')}
+      ${['day','week','month','all'].map(p => `<button class="an-period-btn" data-period="${p}" style="flex:1;padding:8px 0;border-radius:30px;border:1px solid ${p===period ? 'transparent' : 'rgba(127,127,127,.22)'};background:${p===period ? 'var(--gradient-accent)' : 'rgba(127,127,127,.22)'};color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;">${periodLabels[p]}</button>`).join('')}
     </div>
     <div id="an-body" style="padding:18px 20px;">Cargando…</div>
   </div>`;
@@ -1025,7 +1004,7 @@ async function openAnalyticsModal(period, source) {
       <div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-bottom:24px;">
         ${byDay.map(d => `
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:flex-end;height:100%;">
-            <div title="${d.count}" style="width:100%;max-width:30px;background:linear-gradient(180deg,#ff7a4f,#ff4f81);border-radius:6px 6px 2px 2px;height:${Math.max(4, (d.count/maxDay)*64)}px;"></div>
+            <div title="${d.count}" style="width:100%;max-width:30px;background:var(--gradient-accent);border-radius:6px 6px 2px 2px;height:${Math.max(4, (d.count/maxDay)*64)}px;"></div>
             <span style="font-size:.62rem;color:var(--modal-muted);">${escapeHtml(d.label)}</span>
           </div>`).join('')}
       </div>` : '<p style="color:var(--modal-soft);text-align:center;padding:10px 0;">Sin solicitudes en este período.</p>'}
@@ -1038,7 +1017,7 @@ async function openAnalyticsModal(period, source) {
             <span style="color:var(--modal-text);">${escapeHtml(p.name)}</span><span style="color:var(--modal-soft);">${p.count}</span>
           </div>
           <div style="background:rgba(127,127,127,.22);border-radius:20px;height:6px;overflow:hidden;">
-            <div style="background:#ff4f81;height:100%;width:${(p.count/maxProd)*100}%;"></div>
+            <div style="background:var(--color-accent-solid);height:100%;width:${(p.count/maxProd)*100}%;"></div>
           </div>
         </div>`).join('')}` : ''}
 
@@ -2180,7 +2159,7 @@ function customPromptModal(mensaje, valorInicial) {
         <input id="custom-input-field" type="text" inputmode="numeric" value="${String(valorInicial).replace(/"/g,'&quot;')}" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px;font-size:15px;box-sizing:border-box;margin-bottom:14px;">
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button id="custom-input-cancel" style="padding:9px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#555;font-weight:600;cursor:pointer;">Cancelar</button>
-          <button id="custom-input-ok" style="padding:9px 14px;border-radius:8px;border:none;background:#7c3aed;color:#fff;font-weight:700;cursor:pointer;">Aceptar</button>
+          <button id="custom-input-ok" style="padding:9px 14px;border-radius:8px;border:none;background:var(--color-accent-solid);color:#fff;font-weight:700;cursor:pointer;">Aceptar</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
@@ -2211,7 +2190,7 @@ function customAlertModal(mensaje) {
       <div style="background:#fff;border-radius:16px;padding:22px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.35);">
         <p style="margin:0 0 16px;font-size:.85rem;color:var(--modal-text);line-height:1.5;">${msgHtml}</p>
         <div style="display:flex;justify-content:flex-end;">
-          <button id="custom-alert-ok" style="padding:9px 16px;border-radius:8px;border:none;background:#7c3aed;color:#fff;font-weight:700;cursor:pointer;">OK</button>
+          <button id="custom-alert-ok" style="padding:9px 16px;border-radius:8px;border:none;background:var(--color-accent-solid);color:#fff;font-weight:700;cursor:pointer;">OK</button>
         </div>
       </div>`;
     document.body.appendChild(modal);

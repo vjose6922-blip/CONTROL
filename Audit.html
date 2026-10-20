@@ -17,6 +17,8 @@
       base-uri 'self';
     ">
     <script src="error-bootstrap.js"></script>
+    <script src="theme-boot.js" data-default="dark"></script>
+    <link rel="stylesheet" href="styles.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Panel de Auditoría de Tareas - Usuario Master</title>
 
@@ -130,9 +132,9 @@
             Verdana,
             sans-serif;
 
-        background: #f4f6f9;
+        background: var(--page-bg);
 
-        color: #2c3e50;
+        color: var(--color-text-main);
 
         overflow-x: hidden;
     }
@@ -142,10 +144,10 @@
 
         font-size: 1.5rem;
 
-        color: #2c3e50;
+        color: var(--ink-title);
 
         border-bottom:
-            2px solid #3498db;
+            2px solid var(--color-accent-solid);
 
         padding-bottom: 10px;
     }
@@ -170,7 +172,7 @@
     }
 
     p {
-        color: #555;
+        color: var(--color-text-muted);
 
         margin-bottom: 15px;
     }
@@ -182,12 +184,12 @@
 
         border-radius: 6px;
 
-        background: #eef5fb;
+        background: var(--color-accent-soft);
 
-        color: #245b80;
+        color: var(--color-accent);
 
         border:
-            1px solid #c9e2f5;
+            1px solid var(--color-border);
 
         font-weight: 600;
     }
@@ -223,10 +225,10 @@
         height: 650px;
         height: min(650px, 75vh);
 
-        background: white;
+        background: var(--color-surface);
 
         border:
-            1px solid #ddd;
+            1px solid var(--color-border);
 
         border-radius: 8px;
 
@@ -236,7 +238,7 @@
 
         box-shadow:
             0 4px 12px
-            rgba(0, 0, 0, 0.08);
+            var(--shadow-soft);
     }
 
     @media (max-width: 600px) {
@@ -253,10 +255,10 @@
 
         padding: 12px;
 
-        background: white;
+        background: var(--color-surface);
 
         border:
-            1px solid #ddd;
+            1px solid var(--color-border);
 
         border-radius: 6px;
 
@@ -268,7 +270,7 @@
 
         line-height: 1.6;
 
-        color: #555;
+        color: var(--color-text-muted);
     }
 
     .debug-ok {
@@ -286,7 +288,7 @@
 
 <script src="audit-guard.js"></script>
 
-<a href="index.html" style="display:inline-block;margin-bottom:12px;color:#245b80;text-decoration:none;font-weight:600;">
+<a href="index.html" style="display:inline-block;margin-bottom:12px;color:var(--color-accent);text-decoration:none;font-weight:600;">
     ← Volver al panel
 </a>
 

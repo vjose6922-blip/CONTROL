@@ -476,6 +476,8 @@ async function iniciarUniver() {
 
                 theme:
                     defaultTheme,
+                darkMode:
+                    document.documentElement.dataset.theme === 'dark',
 
                 presets: [
 
