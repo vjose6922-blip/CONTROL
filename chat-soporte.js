@@ -86,7 +86,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
     .csb-b.csb-activa{box-shadow:0 0 0 3px var(--color-accent-solid,#8b5cf6),0 4px 14px rgba(0,0,0,.4)}
     .csb-b.csb-nueva{animation:csb-pop .38s cubic-bezier(.2,1.4,.4,1)}
     .csb-b svg{width:22px;height:22px}
-    .csb-hub{background:var(--color-surface-2,#3a3e4b)}
+    .csb-hub{background:var(--gradient-accent,linear-gradient(135deg,#ff3d7f,#ff5c6f));box-shadow:0 4px 16px rgba(var(--color-accent-rgb,255,61,127),.5)}
     .csb-count{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--color-surface,#252831)}
     #csb-card{position:fixed;z-index:9001;right:78px;width:min(310px,calc(100vw - 92px));box-sizing:border-box;background:var(--color-surface,#252831);color:var(--color-text-primary,#dde1e8);border:1px solid var(--color-border-subtle,rgba(255,255,255,.1));border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.5);padding:12px;animation:csb-in .18s ease-out}
     .csb-head{display:flex;align-items:center;gap:10px}
@@ -136,7 +136,14 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
     statusEl.style.cssText = "display:block;padding:8px 14px;font-size:12px;line-height:1.35;color:" + col + ";background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.07);";
     if (tipo === "ok") statusTimer = setTimeout(() => { statusEl.style.display = "none"; }, 4000);
   }
-  function abrirPanel() { panel.style.display = "flex"; }
+  function posicionarPanel() { // el panel nace a la altura de la burbuja (antes salía pegado abajo)
+    if (panel.style.display !== "flex" || !stackEl) return;
+    const b = stackEl.querySelector(".csb-hub") || stackEl;
+    panel.style.bottom = "auto";
+    panel.style.top = Math.max(8, Math.min(b.getBoundingClientRect().top, window.innerHeight - panel.offsetHeight - 8)) + "px";
+  }
+  new ResizeObserver(posicionarPanel).observe(panel); // al pasar de lista a chat cambia el alto
+  function abrirPanel() { panel.style.display = "flex"; posicionarPanel(); }
   function cerrarPanel() { cerrarMensajes(); panel.style.display = "none"; renderBurbujas(); }
   const alternarPanel = () => { if (panel.style.display === "flex") cerrarPanel(); else { abrirPanel(); renderLista(); renderBurbujas(); } };
 
@@ -470,6 +477,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
     if (isNaN(actual)) actual = window.innerHeight * 0.45;
     stackEl.style.top = Math.min(Math.max(lim.min, actual), lim.max) + "px";
     if (cardEl) pintarCard();
+    posicionarPanel();
   }
   function conectarArrastre() {
     let inicio = null;
@@ -482,6 +490,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
       const lim = limitesTop();
       stackEl.style.top = Math.min(Math.max(lim.min, inicio.top + dy), lim.max) + "px";
       if (cardEl) pintarCard();
+      posicionarPanel();
     });
     const soltar = () => {
       if (!inicio) return;
