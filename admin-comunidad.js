@@ -45,8 +45,7 @@
 </style>`;
 
   
-  // ── Router de migración GAS → Cloud Run (mismo criterio que en
-  // vendedor-unificado.js / admin.js) ──────────────────────────────
+  // ── Servicios de Cloud Run por acción (mismo criterio que en admin.js) ──
   const VENDEDORES_API_URL_COMUNIDAD =
     window.VENDEDORES_API_URL;
   const CATALOGO_API_URL_COMUNIDAD =
@@ -72,10 +71,12 @@
     marcarProductoConfiable: CATALOGO_API_URL_COMUNIDAD,
   };
   function _resolverApiUrlComunidad(action) {
-    return MAPA_ACCIONES_MIGRADAS_COMUNIDAD[action] || API_URL;
+    const url = MAPA_ACCIONES_MIGRADAS_COMUNIDAD[action];
+    if (!url) throw new Error('Acción sin servicio asignado: ' + action);
+    return url;
   }
-  const _gasGet = (p) => apiFetch(_resolverApiUrlComunidad(p.action), p).then(r => r.json());
-  const _gasPost = (p) => apiFetch(_resolverApiUrlComunidad(p.action), p, true).then(r => r.json());
+  const _apiGet = (p) => apiFetch(_resolverApiUrlComunidad(p.action), p).then(r => r.json());
+  const _apiPost = (p) => apiFetch(_resolverApiUrlComunidad(p.action), p, true).then(r => r.json());
   function _msg(text, type) {
     if (typeof showTemporaryMessage === 'function') showTemporaryMessage(text, type);
   }
@@ -101,10 +102,10 @@
     if (!container) return;
     container.innerHTML = window.znrSkeletonRows(3);
     try {
-      const data = await _gasGet({ action: 'vendedoresAdmin', token: getAdminToken() });
+      const data = await _apiGet({ action: 'vendedoresAdmin', token: getAdminToken() });
       if (!data.ok) throw new Error(data.error);
       const vendors = data.vendors || [];
-      const resets = (await _gasGet({ action: 'listarResetsComprador', token: getAdminToken() }).catch(() => ({}))).solicitudes || [];
+      const resets = (await _apiGet({ action: 'listarResetsComprador', token: getAdminToken() }).catch(() => ({}))).solicitudes || [];
       const resetsHtml = resets.map(r => `
         <div class="vendor-row">
           <div class="info">
@@ -171,7 +172,7 @@
         waWindow = window.open('', '_blank');
         if (waWindow) waWindow.document.write('<p style="font-family:sans-serif;padding:20px">⏳ Aprobando vendedor, un momento...</p>');
       }
-      const data = await _gasPost({ action, uid, token: getAdminToken() });
+      const data = await _apiPost({ action, uid, token: getAdminToken() });
       if (!data.ok) { if (waWindow) waWindow.close(); throw new Error(data.error); }
       if (action === 'aprobarVendedor' && data.codigo && data.telefono) {
         const row    = document.getElementById(`vrow-${uid}`);
@@ -213,7 +214,7 @@
   async function _doResetPassword(uid, btn) {
     const runFn = async () => {
     try {
-      const data = await _gasPost({ action: 'resetPasswordVendedor', uid, token: getAdminToken() });
+      const data = await _apiPost({ action: 'resetPasswordVendedor', uid, token: getAdminToken() });
       if (!data.ok) throw new Error(data.error);
       if (data.codigo && data.telefono) {
         const row    = document.getElementById(`vrow-${uid}`);
@@ -256,7 +257,7 @@
       onConfirm: async (razon, dias) => {
         try {
           const razonFinal = combinarRazonReporte(motivoReporte, razon);
-          const data = await _gasPost({ action: 'suspenderVendedor', uid, token: getAdminToken(), razon: razonFinal, dias });
+          const data = await _apiPost({ action: 'suspenderVendedor', uid, token: getAdminToken(), razon: razonFinal, dias });
           if (!data.ok) throw new Error(data.error);
           _msg('Vendedor suspendido', 'success');
           loadVendors();
@@ -286,7 +287,7 @@
     const prods = document.getElementById('vstats-products');
     grid.innerHTML = '<p style="color:var(--modal-soft);text-align:center;grid-column:span 2">Cargando...</p>';
     prods.innerHTML = '';
-    _gasGet({ action: 'listarTodoComunidad', token: getAdminToken(), vendedor_uid: uid })
+    _apiGet({ action: 'listarTodoComunidad', token: getAdminToken(), vendedor_uid: uid })
       .then(data => {
         const all       = data.products || [];
         const totalStock = all.reduce((s, p) => s + (Number(p.stock) || 0), 0);
@@ -315,7 +316,7 @@
     if (!container) return;
     container.innerHTML = window.znrSkeletonRows(3);
     try {
-      const data = await _gasGet({ action: 'productosPendientes', token: getAdminToken() });
+      const data = await _apiGet({ action: 'productosPendientes', token: getAdminToken() });
       if (!data.ok) throw new Error(data.error);
       const products = data.products || [];
       if (!products.length) {
@@ -359,12 +360,11 @@
     try {
       const payload = { action, id, token: getAdminToken() };
       if (confiable !== null && confiable !== undefined) payload.confiable = confiable;
-      const data = await _gasPost(payload);
+      const data = await _apiPost(payload);
       if (!data.ok) throw new Error(data.error);
       _msg(msg, 'success');
       const row = document.getElementById(`prow-${id}`);
-      // 🔧 La fila ya se quita del DOM; evitamos re-pegarle a GAS
-      // (productosPendientes escanea toda la hoja ProductosComunidad)
+      // 🔧 La fila ya se quita del DOM; evitamos volver a pedir productosPendientes
       // solo para redibujar la misma lista sin esa fila.
       if (row) {
         row.style.opacity = '0';
@@ -389,7 +389,7 @@
   if (!container) return;
   container.innerHTML = window.znrSkeletonRows(3);
   try {
-    const data = await _gasGet({ action: 'obtenerReportes', token: getAdminToken() });
+    const data = await _apiGet({ action: 'obtenerReportes', token: getAdminToken() });
     if (!data.ok) throw new Error(data.error);
     const reportes = data.reportes || [];
     updateReportesBadge(reportes.length);
@@ -492,7 +492,7 @@
       onConfirm: async (razon) => {
         try {
           const razonFinal = combinarRazonReporte(motivoReporte, razon);
-          const data = await _gasPost({ action: 'deleteComunidad', id: String(productId), token: getAdminToken(), razon: razonFinal });
+          const data = await _apiPost({ action: 'deleteComunidad', id: String(productId), token: getAdminToken(), razon: razonFinal });
           if (!data.ok) throw new Error(data.error);
           _msg(' Producto eliminado', 'success');
           loadReportes();
@@ -513,7 +513,7 @@
         const runFn = async () => {
         try {
           const razonFinal = combinarRazonReporte(motivoReporte, razon);
-          const data = await _gasPost({ action: 'marcarReporteRevisado', reporteId: String(reporteId), token: getAdminToken(), razon: razonFinal });
+          const data = await _apiPost({ action: 'marcarReporteRevisado', reporteId: String(reporteId), token: getAdminToken(), razon: razonFinal });
           if (!data.ok) throw new Error(data.error);
           _msg(' Reporte archivado', 'success');
           const row = document.getElementById(`rrow-${reporteId}`);
@@ -630,7 +630,7 @@ function verProductoDesdeReporte(reporte) {
   async function resetPasswordComprador(telefono, btn, descartar) {
     const runFn = async () => {
       try {
-        const data = await _gasPost({ action: 'resetPasswordComprador', telefono, ...(descartar && { descartar: 1 }), token: getAdminToken() });
+        const data = await _apiPost({ action: 'resetPasswordComprador', telefono, ...(descartar && { descartar: 1 }), token: getAdminToken() });
         if (!data.ok) throw new Error(data.error);
         if (data.codigo) {
           await showCustomAlert({

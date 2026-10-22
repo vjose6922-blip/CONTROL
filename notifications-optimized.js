@@ -204,9 +204,6 @@ initLazyImagesInNotifications();
 }
 
 async function loadNotificationsOptimized(forceRefresh = false) {
-  if (typeof API_URL === 'undefined') {
-    return;
-  }
   if (isLoading) return;
   isLoading = true;
   

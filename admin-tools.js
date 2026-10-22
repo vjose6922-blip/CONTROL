@@ -768,7 +768,6 @@ async function openDonacionesStatsModal() {
   const old = document.getElementById('modal-donaciones-stats');
   if (old) old.remove();
   const token = getAdminToken();
-  const api   = window.API_URL || '';
   const beneficiariosApi = window.BENEFICIARIOS_API_URL;
   const vendedoresApi = window.VENDEDORES_API_URL;
   const catalogoApi = window.CATALOGO_API_URL;
@@ -918,7 +917,6 @@ async function openAnalyticsModal(period, source) {
   const old = document.getElementById('modal-analytics');
   if (old) old.remove();
   const token = getAdminToken();
-  const api   = window.API_URL || '';
   const periodLabels = { day:'Hoy', week:'Semana', month:'Mes', all:'Todo' };
   const sourceLabels = { znr:'Catálogo ZNR', comunidad:'Comunidad' };
 
@@ -1082,7 +1080,7 @@ async function resincronizarComunidadAlgoliaBtn() {
       hideLoader();
       showCustomAlert({
         title: 'Sin sesión activa',
-        message: 'No hay API_URL o token de admin disponible. Inicia sesión de nuevo.',
+        message: 'No hay token de admin disponible. Inicia sesión de nuevo.',
         icon: 'error',
         confirmText: 'Entendido'
       });
@@ -1140,7 +1138,7 @@ async function reentrenarModeloIA() {
       hideLoader();
       showCustomAlert({
         title: 'Sin sesión activa',
-        message: 'No hay API_URL o token de admin disponible. Inicia sesión de nuevo.',
+        message: 'No hay token de admin disponible. Inicia sesión de nuevo.',
         icon: 'error',
         confirmText: 'Entendido'
       });
@@ -1376,7 +1374,7 @@ async function ejecutarSyncVendedor() {
   if (!api || !token) {
     showCustomAlert({
       title: 'Sin sesión activa',
-      message: 'No hay API_URL o token de admin disponible. Inicia sesión de nuevo.',
+      message: 'No hay token de admin disponible. Inicia sesión de nuevo.',
       icon: 'error',
       confirmText: 'Entendido'
     });
@@ -1463,7 +1461,7 @@ window.loadErrorLog = function() {
   const token = getAdminToken();
 
   if (!api || !token) {
-    list.innerHTML = '<p style="color:#f97316;text-align:center;padding:20px">' + Icon('error') + ' Sin sesión activa o sin API_URL. Inicia sesión de nuevo.</p>';
+    list.innerHTML = '<p style="color:#f97316;text-align:center;padding:20px">' + Icon('error') + ' Sin sesión activa. Inicia sesión de nuevo.</p>';
     return;
   }
 
@@ -1478,7 +1476,7 @@ window.loadErrorLog = function() {
         list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:20px">${Icon('x')} ${escapeHtml(data.error)}</p>`;
         return;
       }
-      // Normalizar campos en español del Apps Script → formato interno
+      // Normalizar campos en español → formato interno
       const remote = (Array.isArray(data.errors) ? data.errors : []).map(e => ({
         ts:       e.ts        || e.Timestamp || new Date().toISOString(),
         level:    e.nivel     || e.Nivel     || e.level    || 'ERROR',

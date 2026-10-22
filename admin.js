@@ -1,7 +1,6 @@
 (function () {
 'use strict';
-// ── Router de migración GAS → Cloud Run (mismo criterio que en
-// vendedor-unificado.js) ──────────────────────────────────────────
+// ── Servicios de Cloud Run por acción ───────────────────────────────
 const VENDEDORES_API_URL_ADMIN =
   window.VENDEDORES_API_URL;
 const AUTH_API_URL_ADMIN =
@@ -42,8 +41,7 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   delete: CATALOGO_API_URL_ADMIN,
   uploadImage: CATALOGO_API_URL_ADMIN,
 };
-// Apps Script está archivado — si una acción no está en el mapa, es un
-// olvido nuestro, no algo que deba caer a GAS en silencio.
+// Si una acción no está en el mapa es un olvido: no hay servicio al que enviarla.
 function resolverApiUrlAdmin(action) {
   return MAPA_ACCIONES_MIGRADAS_ADMIN[action] || null;
 }
@@ -62,7 +60,7 @@ let notificationInterval = null;
 async function apiRequest(method, body) {
 try {
 const url = resolverApiUrlAdmin((body && body.action) || "");
-if (!url) throw new Error("API_URL no disponible");
+if (!url) throw new Error("Acción sin servicio asignado: " + ((body && body.action) || ""));
 const params = Object.assign(method === "GET" ? { action: "list" } : {}, body || {});
 if (!params.token && getAdminToken()) params.token = getAdminToken();
 const res = await apiFetch(url, params, method === "GET" ? undefined : true);

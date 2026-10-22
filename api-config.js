@@ -5,7 +5,6 @@
   const _w = ['52', '867', '178', '1272'];
 
   const urls = {
-    API_URL: 'https://script.google.com/macros/s/AKfycbzNshrt3zldBNiyoB8x36ktCEO02H0cKxebiTuK7UAbsgd5R9biaCW7W4ihm1aVOJG7ww/exec',
     CATALOGO_API_URL: run('catalogo'),
     VENDEDORES_API_URL: run('vendedores'),
     TIENDA_ZNR_API_URL: run('tienda-znr'),
@@ -23,7 +22,7 @@
   Object.defineProperties(window, props);
 
   // Lecturas por POST (token en el body, no en la URL/logs) para todos los backends de Cloud Run;
-  // todos aceptan lecturas por POST (revisado). Solo el API_URL de GAS (heredado) sigue por GET.
+  // todos aceptan lecturas por POST (revisado).
   const LECTURAS_POST = new Set(['catalogo', 'vendedores', 'tienda-znr', 'admin', 'auth', 'ventas', 'beneficiarios', 'live', 'pedidos', 'historias'].map(run));
   window.getAdminToken = () => sessionStorage.getItem('admin_token') || '';
   window.apiFetch = (base, params, post = LECTURAS_POST.has(base)) => {
