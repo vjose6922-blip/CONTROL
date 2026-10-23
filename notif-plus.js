@@ -4,7 +4,7 @@ let _plusModalNombre = '';
 async function loadSolicitudesPlus() {
   const listEl = document.getElementById('admin-plus-list');
   if (!listEl) return;
-  const API = "https://vendedores-api-1038143238323.us-central1.run.app";
+  const API = window.VENDEDORES_API_URL;
   const token = getAdminToken();
   if (!API || !token) return;
 
@@ -55,7 +55,7 @@ async function loadSolicitudesPlus() {
 }
 
 async function recordarInteresPlus(uid, nombre, btn) {
-  const API = "https://vendedores-api-1038143238323.us-central1.run.app";
+  const API = window.VENDEDORES_API_URL;
   const token = getAdminToken();
   const runFn = async () => {
     const res = await fetch(API, { method:'POST', body: JSON.stringify({ action:'recordarInteresPlus', token, uid }) });
@@ -85,7 +85,7 @@ function closePlusModal() {
 async function confirmarRespuestaPlus(respuesta, btn) {
   const errEl = document.getElementById('plus-modal-error');
   errEl.style.display = 'none';
-  const API = "https://vendedores-api-1038143238323.us-central1.run.app";
+  const API = window.VENDEDORES_API_URL;
   const token = getAdminToken();
   if (!API || !token) return;
 

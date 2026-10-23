@@ -2,7 +2,6 @@
   'use strict';
 
   const run = (n) => `https://${n}-api-1038143238323.us-central1.run.app`;
-  const _w = ['52', '867', '178', '1272'];
 
   const urls = {
     CATALOGO_API_URL: run('catalogo'),
@@ -18,7 +17,6 @@
   };
 
   const props = Object.fromEntries(Object.entries(urls).map(([k, v]) => [k, { get: () => v, configurable: false, enumerable: false }]));
-  props.WHATSAPP_NUMBER = { get: () => _w.join(''), configurable: false, enumerable: false };
   Object.defineProperties(window, props);
 
   // Lecturas por POST (token en el body, no en la URL/logs) para todos los backends de Cloud Run;
