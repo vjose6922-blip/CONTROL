@@ -20,6 +20,7 @@ async function loadSolicitudesPlus() {
     const data = await res.json();
     if (!data.ok) { listEl.innerHTML = `<p style="color:#f87171;text-align:center">${escapeHtml(data.error || 'Error')}</p>`; return; }
 
+    loadPagosPlus();
     const lista = data.solicitudes || [];
     updateTabBadge('plus', lista.length);
     document.getElementById('sc-plus').textContent = lista.length;
@@ -52,6 +53,22 @@ async function loadSolicitudesPlus() {
     if (refreshIcon) refreshIcon.style.animation = '';
     if (refreshBtn) refreshBtn.disabled = false;
   }
+}
+
+// Últimos pagos de Plan Plus (Stripe o Mercado Pago). Solo el Master los ve; para los demás no se pide nada.
+async function loadPagosPlus() {
+  const el = document.getElementById('admin-plus-pagos');
+  if (!el || (sessionStorage.getItem('admin_rol') || 'master') !== 'master') return;
+  try {
+    const data = await (await apiFetch(window.VENDEDORES_API_URL, { action: 'listarPagosPlus', token: getAdminToken() })).json();
+    if (!data.ok || !data.pagos.length) { el.innerHTML = ''; return; }
+    const fecha = f => f ? new Date(f).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+    el.innerHTML = `<p style="color:#aaa;font-size:.8rem;font-weight:600;margin:0 0 8px;">${Icon('credit-card')} Pagos recibidos</p>` + data.pagos.map(p =>
+      `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 12px;margin-bottom:6px;background:#1e1e2e;border-radius:10px;font-size:.82rem;">
+        <span style="color:#e2e8f0;">${escapeHtml(p.vendedor)} <span style="color:#888;">· ${fecha(p.fecha)}</span></span>
+        <span style="color:#e2e8f0;font-weight:600;white-space:nowrap;">$${Number(p.monto || 0).toLocaleString('es-MX')} · ${p.proveedor === 'stripe' ? 'Stripe' : 'Mercado Pago'}</span>
+      </div>`).join('');
+  } catch (_) { el.innerHTML = ''; }
 }
 
 async function recordarInteresPlus(uid, nombre, btn) {
