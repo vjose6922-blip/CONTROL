@@ -326,6 +326,8 @@ border-radius: 8px;
  </button>
  <button class="notif-tab" data-section="plus" data-click="switchNotifTab" data-args='["plus",{"$":"this"}]'><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg> Plus <span class="notif-tab-badge" id="tab-badge-plus" style="background:var(--notif-light);">0</span>
  </button>
+ <button class="notif-tab" data-section="pagos" data-click="switchNotifTab" data-args='["pagos",{"$":"this"}]' hidden><svg width="13" height="13" aria-hidden="true"><use href="#ic-credit-card"/></svg> Pagos <span class="notif-tab-badge" id="tab-badge-pagos" style="background:#dc2626;display:none;">0</span>
+ </button>
  <button class="notif-tab" data-section="beneficiarios" data-click="switchNotifTab" data-args='["beneficiarios",{"$":"this"}]'><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg> Beneficiarios <span class="notif-tab-badge" id="tab-badge-beneficiarios" style="background:#f97316;">0</span>
  </button>
  </div>
@@ -502,6 +504,18 @@ border-radius: 8px;
 
  <script src="admin-tools.js" defer></script>
 <script src="api-config.js"></script>
+ <div class="notif-section" id="section-pagos" style="display:none;">
+ <div class="notif-section-header" style="background:linear-gradient(135deg,var(--notif-accent),var(--notif-light));">
+ <h2><svg width="16" height="16" aria-hidden="true"><use href="#ic-credit-card"/></svg> Pagos en línea <span class="section-count" id="sc-pagos">0</span></h2>
+ <button class="icon-button" data-click="loadPagos" title="Actualizar" style="background:rgba(255,255,255,.15);color:#fff;">
+   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#ic-refresh"/></svg>
+ </button>
+ </div>
+ <div class="notif-section-body">
+ <div id="admin-pagos-list"><p style="color:var(--modal-soft);text-align:center;padding:32px;">Abre esta pestaña para cargar los pagos.</p></div>
+ </div>
+ </div>
+
  <script type="module" src="fcm-init.js"></script>
  <script type="module" src="chat-soporte.js"></script>
  <script src="icons.js" defer></script>
@@ -516,6 +530,7 @@ border-radius: 8px;
  <script src="sw-register.js"></script>
 
  <script src="notif-plus.js"></script>
+ <script src="notif-pagos.js"></script>
 
 </body>
 </html>
