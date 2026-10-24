@@ -1,6 +1,6 @@
  function switchNotifTab(section, btn) {
 
- ['solicitudes','vendors','pending','reportes','reportes_live','reportes_pedidos','reportes_historias','feedback','plus','beneficiarios','pagos'].forEach(s => {
+ ['solicitudes','vendors','pending','reportes','reportes_live','reportes_pedidos','reportes_historias','feedback','plus','beneficiarios'].forEach(s => {
  const el = document.getElementById('section-' + s);
  if (el) el.style.display = 'none';
  });
@@ -19,7 +19,6 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
  if (section === 'reportes_pedidos' && typeof loadReportesPedidos === 'function') loadReportesPedidos();
  if (section === 'reportes_historias' && typeof loadReportesHistorias === 'function') loadReportesHistorias();
  if (section === 'feedback' && typeof loadFeedbackReportes === 'function') loadFeedbackReportes();
- if (section === 'pagos' && typeof loadPagos === 'function') loadPagos();
  }
 
  function updateTabBadge(section, count) {
@@ -71,7 +70,7 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
 
  window.addEventListener('DOMContentLoaded', () => {
  const hash = window.location.hash.replace('#','');
- if (['solicitudes','vendors','pending','reportes','reportes_live','reportes_pedidos','reportes_historias','feedback','plus','beneficiarios','pagos'].includes(hash)) {
+ if (['solicitudes','vendors','pending','reportes','reportes_live','reportes_pedidos','reportes_historias','feedback','plus','beneficiarios'].includes(hash)) {
  const btn = document.querySelector(`.notif-tab[data-section="${hash}"]`);
  if (btn) switchNotifTab(hash, btn);
  }
@@ -81,12 +80,6 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
  }, 600);
 
  loadSolicitudesPlus();
- // Pagos es solo del Master: para los demás la pestaña ni aparece. Se carga al inicio para el contador de alertas.
- if ((sessionStorage.getItem('admin_rol') || 'master') === 'master') {
- const tabPagos = document.querySelector('.notif-tab[data-section="pagos"]');
- if (tabPagos) tabPagos.hidden = false;
- if (typeof loadPagos === 'function') loadPagos();
- }
  if (typeof loadReportesLive === 'function') loadReportesLive();
  if (typeof loadBeneficiarios === 'function') loadBeneficiarios();
  if (typeof loadSolicitudesBeneficiario === 'function') loadSolicitudesBeneficiario();
@@ -114,7 +107,7 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
  }
  });
 
- window._notifSectionCounts = { solicitudes: 0, vendors: 0, pending: 0, reportes: 0, reportes_live: 0, reportes_pedidos: 0, reportes_historias: 0, feedback: 0, plus: 0, beneficiarios: 0, pagos: 0 };
+ window._notifSectionCounts = { solicitudes: 0, vendors: 0, pending: 0, reportes: 0, reportes_live: 0, reportes_pedidos: 0, reportes_historias: 0, feedback: 0, plus: 0, beneficiarios: 0 };
 
  function _rebuildHeaderBadge() {
  const total = Object.values(window._notifSectionCounts).reduce((a, b) => a + b, 0);
