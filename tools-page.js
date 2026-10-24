@@ -23,6 +23,8 @@ const ACTION_TOOLS = {
   backfillznr: () => window.asignarCiudadMasivaZNRBtn(),
   planplusadmins: () => window.sincronizarPlanPlusAdminsBtn(),
   contactoadmins: () => window.sincronizarContactosAdminsBtn(),
+  purgartelefonos: () => window.purgarTelefonosPublicosBtn(),
+  limpiarfotosvendedores: () => window.limpiarFotosVendedoresBtn(),
   migrarciudades: () => window.migrarCiudadesBtn(),
   pendientescarga: () => window.pendientesPorCargarBtn()
 };

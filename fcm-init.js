@@ -37,6 +37,7 @@ async function registrarTokenFCM(ownerType, ownerId, token) {
         ownerType,
         ownerId,
         token,
+        sessionToken: ownerType === "admin" ? window.getAdminToken() : undefined,
         userAgent: navigator.userAgent
       })
     });

@@ -421,7 +421,7 @@ function setStatsMetrica(metrica, btn) {
 // función tal cual, en admin-api). Lo que no esté aquí se muestra tal cual.
 const TIPO_LABELS = {
   aprobarVendedor: "Aprobar vendedor", rechazarVendedor: "Rechazar vendedor",
-  resetPasswordVendedor: "Restablecer contraseña", resetPasswordComprador: "Restablecer contraseña de comprador", aprobarCambioTelefono: "Aprobar cambio de teléfono",
+  resetPasswordVendedor: "Restablecer contraseña", resetPasswordComprador: "Restablecer contraseña de comprador", saludarRegistroComprador: "Saludar a comprador nuevo", omitirRegistroComprador: "Omitir comprador nuevo", desconocerCuentaComprador: "Cerrar cuenta de comprador no reconocida", aprobarCambioTelefono: "Aprobar cambio de teléfono",
   rechazarCambioTelefono: "Rechazar cambio de teléfono", marcarVendedorConfiable: "Marcar vendedor confiable",
   marcarVendedorPlan: "Cambiar plan de vendedor", ajustarDiasPlanPlus: "Ajustar días Plan Plus",
   suspenderVendedor: "Suspender vendedor", reactivarVendedor: "Reactivar vendedor",

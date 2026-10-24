@@ -2314,6 +2314,50 @@ async function sincronizarContactosAdminsBtn() {
 }
 window.sincronizarContactosAdminsBtn = sincronizarContactosAdminsBtn;
 
+// Migración de una sola vez: quita los teléfonos que ya estaban publicados (productos, perfiles, fundaciones). Por tandas, hasta terminar.
+async function purgarTelefonosPublicosBtn() {
+  showLoader('Quitando teléfonos de los datos públicos…');
+  const total = {};
+  for (const coleccion of ['productos_comunidad', 'perfil_vendedor', 'beneficiarios_aprobados']) {
+    let cursor = '';
+    do {
+      const res = await _vApi('purgarTelefonosPublicos', { coleccion, cursor });
+      if (!res.ok) { hideLoader(); return askAlert(res.error || 'No se pudo completar'); }
+      total[coleccion] = (total[coleccion] || 0) + res.limpiados;
+      cursor = res.siguiente || '';
+    } while (cursor);
+  }
+  hideLoader();
+  askAlert(`Listo. Documentos limpiados: ${Object.entries(total).map(([k, n]) => `${k} ${n}`).join(', ')}.\n\nSiguiente paso: ejecuta "Resincronizar todo Comunidad con Algolia" para limpiar también el buscador.`);
+}
+window.purgarTelefonosPublicosBtn = purgarTelefonosPublicosBtn;
+
+// Fotos huérfanas de los vendedores (carpeta vendedores_uploads/): primero simula y muestra cuántas son; borra solo si confirmas.
+async function limpiarFotosVendedoresBtn() {
+  const llamar = (confirmar) => fetch(window.CATALOGO_API_URL, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'limpiarImagenesHuerfanasVendedores', token: getAdminToken(), confirmar }),
+  }).then(r => r.json()).catch(e => ({ ok: false, error: e.message }));
+  showLoader('Buscando fotos huérfanas…');
+  const sim = await llamar(false);
+  hideLoader();
+  if (!sim.ok) return askAlert(sim.error || 'No se pudo revisar');
+  if (!sim.huerfanas) return askAlert(`No hay fotos huérfanas (revisé ${sim.totalArchivos} archivos; ${sim.enUso} en uso).`);
+  showCustomConfirm({
+    title: 'Borrar fotos huérfanas',
+    message: `Hay ${sim.huerfanas} fotos sin usar (≈ ${sim.mb} MB, con más de 7 días) de ${sim.totalArchivos} archivos. Esto no se puede deshacer. ¿Borrarlas?`,
+    confirmText: 'Sí, borrar',
+    onConfirm: async () => {
+      showLoader('Borrando…');
+      let r, borradas = 0;
+      do { r = await llamar(true); if (!r.ok) break; borradas += r.borradas; } while (r.quedan > 0);
+      hideLoader();
+      askAlert(r.ok ? `Listo: ${borradas} fotos borradas.` : (r.error || 'No se pudo completar'));
+    },
+  });
+}
+window.limpiarFotosVendedoresBtn = limpiarFotosVendedoresBtn;
+
 // Migración única: ciudad "Nuevo Laredo" → "Nuevo Laredo, Tamaulipas". Primero simula y pregunta; después aplica.
 async function migrarCiudadesBtn() {
   const sim = await _vApi('migrarCiudadesConEstado');

@@ -1911,10 +1911,9 @@ items: znrItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price }
 });
 }
 try {
-await fetch(window.TIENDA_ZNR_API_URL, {
-method: "POST",
-body: JSON.stringify({ action: "saveClientPhone", requestId: requestId, phone: clientPhone })
-});
+const _tk = localStorage.getItem("comprador_token") || "";
+const _post = async b => { const r = await (await fetch(window.TIENDA_ZNR_API_URL, { method: "POST", body: JSON.stringify({ ...b, compradorToken: _tk }) })).json(); if (!r.ok) throw new Error(r.error || "Error"); };
+await _post({ action: "saveClientPhone", requestId, phone: clientPhone });
 const notificationItems = znrItems.map(item => ({
 productId: item.id,
 nombre:  item.name,
@@ -1923,10 +1922,7 @@ imagen:  item.Imagen1 || "",
 talla:  item.Talla  || "",
 precio:  item.price  || 0
 }));
-await fetch(window.TIENDA_ZNR_API_URL, {
-method: "POST",
-body: JSON.stringify({ action: "createNotification", items: notificationItems, requestId: requestId })
-});
+await _post({ action: "createNotification", items: notificationItems, requestId });
 znrItems.forEach(i => delete localCart[i.id]);
 saveCartToStorage();
 updateCartBadge();

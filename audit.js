@@ -36,7 +36,7 @@ const TIPO_LABELS = {
     sincronizarPlanPlusAdminsExistentes: "Sincronizar Plan Plus retroactivo (admins)",
     confirmGroupPurchase: "Confirmar compra grupal (tienda)", cancelGroupPurchase: "Cancelar compra grupal (tienda)",
     removeOutOfStockNotifications: "Quitar productos sin stock (tienda)",
-    actualizarFeedback: "Actualizar feedback de usuario", resetPasswordComprador: "Restablecer contraseña de comprador",
+    actualizarFeedback: "Actualizar feedback de usuario", resetPasswordComprador: "Restablecer contraseña de comprador", saludarRegistroComprador: "Saludar a comprador nuevo", omitirRegistroComprador: "Omitir comprador nuevo", desconocerCuentaComprador: "Cerrar cuenta de comprador no reconocida",
 };
 
 // Etiquetas legibles para el tipo de cola pendiente (distinto de

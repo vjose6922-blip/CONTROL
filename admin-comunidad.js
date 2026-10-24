@@ -57,6 +57,9 @@
     resetPasswordVendedor: VENDEDORES_API_URL_COMUNIDAD,
     listarResetsComprador: VENDEDORES_API_URL_COMUNIDAD,
     resetPasswordComprador: VENDEDORES_API_URL_COMUNIDAD,
+    listarRegistrosComprador: VENDEDORES_API_URL_COMUNIDAD,
+    marcarRegistroCompradorSaludado: VENDEDORES_API_URL_COMUNIDAD,
+    desconocerCuentaComprador: VENDEDORES_API_URL_COMUNIDAD,
     aprobarCambioTelefono: VENDEDORES_API_URL_COMUNIDAD,
     rechazarCambioTelefono: VENDEDORES_API_URL_COMUNIDAD,
     suspenderVendedor: VENDEDORES_API_URL_COMUNIDAD,
@@ -106,7 +109,23 @@
       if (!data.ok) throw new Error(data.error);
       const vendors = data.vendors || [];
       const resets = (await _apiGet({ action: 'listarResetsComprador', token: getAdminToken() }).catch(() => ({}))).solicitudes || [];
-      const resetsHtml = resets.map(r => `
+      const registros = (await _apiGet({ action: 'listarRegistrosComprador', token: getAdminToken() }).catch(() => ({}))).registros || [];
+      const registrosHtml = `
+        <div class="vendor-row"><div class="info">
+          <strong>¿Un comprador no reconoce su cuenta?</strong><br>
+          <input id="desconocer-tel" inputmode="numeric" maxlength="10" placeholder="Teléfono de 10 dígitos" style="margin:6px 6px 0 0;padding:6px 8px;border-radius:8px;border:1px solid var(--modal-soft)">
+          <button class="btn-stats" data-click="AdminComunidad.desconocerCuentaComprador" data-args="${dargs('', ARG.THIS)}">Cerrar cuenta y generar código</button>
+        </div></div>` + registros.map(r => `
+        <div class="vendor-row">
+          <div class="info">
+            <strong>Cuenta nueva de comprador ${escapeHtml(r.telefono)}</strong><br>
+            <span>Envíale el agradecimiento por WhatsApp: si no fue ella quien se registró, te avisará.</span>
+            <button class="btn-approve" data-click="AdminComunidad.saludarRegistroComprador" data-args="${dargs(r.telefono, ARG.THIS)}">Enviar agradecimiento</button>
+            <button class="btn-stats" data-click="AdminComunidad.saludarRegistroComprador" data-args="${dargs(r.telefono, ARG.THIS, true)}">Omitir</button>
+            <button class="btn-stats" data-click="AdminComunidad.desconocerCuentaComprador" data-args="${dargs(r.telefono, ARG.THIS)}">No la reconoce</button>
+          </div>
+        </div>`).join('');
+      const resetsHtml = registrosHtml + resets.map(r => `
         <div class="vendor-row">
           <div class="info">
             <strong>Comprador ${escapeHtml(r.telefono)}</strong><br>
@@ -635,7 +654,7 @@ function verProductoDesdeReporte(reporte) {
         if (data.codigo) {
           await showCustomAlert({
             title: 'Código generado',
-            message: `Envía este código por WhatsApp al comprador (${data.telefono}): ${data.codigo}`,
+            message: `Envía este código por WhatsApp SOLO a este número (${data.telefono}) y a ningún otro. Vale 30 minutos y un solo uso: ${data.codigo}`,
             confirmText: 'Listo'
           });
         }
@@ -649,8 +668,47 @@ function verProductoDesdeReporte(reporte) {
     else await runFn();
   }
 
+  const MENSAJE_BIENVENIDA_COMPRADOR = '¡Gracias por registrarte en Z&R! 💚 Te escribimos para confirmar tu cuenta de comprador. Si NO reconoces este registro, avísanos respondiendo este mensaje y la cerramos de inmediato. Si fuiste tú, ignora esta advertencia.';
+
+  function saludarRegistroComprador(telefono, btn, omitir) {
+    if (!omitir) window.open(`https://wa.me/52${telefono}?text=${encodeURIComponent(MENSAJE_BIENVENIDA_COMPRADOR)}`, '_blank'); // primero, dentro del toque (si no, el navegador lo bloquea)
+    const runFn = async () => {
+      try {
+        const data = await _apiPost({ action: 'marcarRegistroCompradorSaludado', telefono, ...(omitir && { omitir: 1 }), token: getAdminToken() });
+        if (!data.ok) throw new Error(data.error);
+        _msg(omitir ? ' Omitido' : ' Agradecimiento enviado', 'success');
+        loadVendors();
+      } catch (err) { _msg(' ' + err.message, 'error'); }
+    };
+    return btn && window.withButtonLoading ? window.withButtonLoading(btn, runFn, 'Guardando…') : runFn();
+  }
+
+  function desconocerCuentaComprador(telefono, btn) {
+    const tel = String(telefono || (document.getElementById('desconocer-tel') || {}).value || '').replace(/\D/g, '');
+    if (tel.length !== 10) return _msg(' Escribe los 10 dígitos del número', 'error');
+    showCustomConfirm({
+      title: 'Cerrar cuenta de comprador',
+      message: `La contraseña de la cuenta ${tel} dejará de funcionar y se cerrarán sus sesiones. Se generará un código para que su dueño real cree una contraseña nueva.`,
+      confirmText: 'Cerrar cuenta',
+      onConfirm: async () => {
+        try {
+          const data = await _apiPost({ action: 'desconocerCuentaComprador', telefono: tel, token: getAdminToken() });
+          if (!data.ok) throw new Error(data.error);
+          await showCustomAlert({
+            title: 'Cuenta cerrada',
+            message: `Envía este código por WhatsApp SOLO a este número (${data.telefono}) y a ningún otro. Con él creará su contraseña desde "¿Olvidaste tu contraseña?". Vale 30 minutos y un solo uso: ${data.codigo}`,
+            confirmText: 'Listo'
+          });
+          loadVendors();
+        } catch (err) { _msg(' ' + err.message, 'error'); }
+      }
+    });
+  }
+
   window.AdminComunidad = {
     init,
+    saludarRegistroComprador,
+    desconocerCuentaComprador,
     resetPasswordComprador,
     loadVendors,
     loadPendingProducts,

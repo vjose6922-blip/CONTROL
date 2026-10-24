@@ -17,6 +17,8 @@ window.ZNR_TOOLS = [
   ['backfillznr', 'Asignar ciudad retroactiva (Z&amp;R)', 'refresh', 'tools'],
   ['planplusadmins', 'Plan Plus retroactivo (admins/moderadores)', 'star', 'tools-master'],
   ['contactoadmins', 'Sincronizar WhatsApp de admins por ciudad', 'whatsapp', 'tools-master'],
+  ['purgartelefonos', 'Quitar teléfonos de datos públicos (migración)', 'lock', 'tools-master'],
+  ['limpiarfotosvendedores', 'Limpiar fotos huérfanas de vendedores', 'refresh', 'tools-master'],
   ['migrarciudades', 'Migrar ciudades a formato Ciudad, Estado', 'map-pin', 'tools-master'],
   ['pendientescarga', 'Pendientes por cargar', 'refresh', 'tools']
 ];
