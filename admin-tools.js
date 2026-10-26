@@ -1434,6 +1434,7 @@ function openErrorMonitorModal() {
         <button data-click="clearErrorLog" style="background:rgba(127,127,127,.22);border:1px solid rgba(127,127,127,.22);color:#ef4444;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" aria-hidden="true"><use href="#ic-trash"/></svg> Limpiar log
         </button>
+        <button data-click="copiarErrorLog" style="background:rgba(127,127,127,.22);border:1px solid rgba(127,127,127,.22);color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer">📋 Copiar errores</button>
         <select id="em-filter" data-change="renderErrorLog" style="background:rgba(127,127,127,.22);border:1px solid rgba(127,127,127,.22);color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer">
           <option value="all">Todos</option>
           <option value="CRÍTICO">Solo críticos</option>
@@ -1536,6 +1537,25 @@ window.renderErrorLog = function() {
       ${stk ? `<details style="margin-top:5px;"><summary style="color:var(--modal-muted);font-size:11px;cursor:pointer;">Stack trace</summary><pre style="color:var(--modal-muted);font-size:10px;margin:4px 0 0;white-space:pre-wrap;word-break:break-all;">${stk}</pre></details>` : ''}
     </div>`;
   }).join('');
+};
+
+// Copia los errores (los del filtro, agrupados) como texto para pegarlos en un chat; si el portapapeles no deja, baja un .txt.
+window.copiarErrorLog = async function() {
+  const filter = (document.getElementById('em-filter') || {}).value || 'all';
+  const errors = (window._emErrors || []).filter(e => filter === 'all' || e.level === filter);
+  if (!errors.length) return showTemporaryMessage('No hay errores para copiar', 'info');
+  const texto = znrGrupoErrores(errors).map(({ e, n }) => [
+    `[${e.level}] ${e.source || '?'}${e.action ? ' · ' + e.action : ''} ×${n} · ${e.ts}`, e.message,
+    e.url && 'URL: ' + e.url, e.filename && `Archivo: ${e.filename}:${e.lineno}:${e.colno}`, e.stack && 'Stack: ' + e.stack,
+  ].filter(Boolean).join('\n')).join('\n\n');
+  try {
+    await navigator.clipboard.writeText(texto);
+    showTemporaryMessage('Errores copiados: pégalos en el chat', 'success');
+  } catch (_) {
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([texto], { type: 'text/plain' })), download: 'errores-znr.txt' });
+    a.click();
+    showTemporaryMessage('No se pudo copiar; se descargó errores-znr.txt', 'info');
+  }
 };
 
 window.clearErrorLog = async function() {
