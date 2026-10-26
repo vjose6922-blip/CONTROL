@@ -25,8 +25,13 @@
   window.getAdminToken = () => sessionStorage.getItem('admin_token') || '';
   window.apiFetch = (base, params, post = LECTURAS_POST.has(base)) => {
     const p = new URLSearchParams(params);
-    return post
+    const req = post
       ? fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: p.toString() })
       : fetch(`${base}?${p}`);
+    // Si una API rechaza el token, admin.js confirma con el servidor si la sesión sigue viva.
+    return req.then(r => {
+      if (getAdminToken()) r.clone().json().then(d => { if (d && d.ok === false && /autoriz|sesi[oó]n|token/i.test(d.error || '')) dispatchEvent(new Event('znr:sesion-rechazada')); }).catch(() => {});
+      return r;
+    });
   };
 })();
