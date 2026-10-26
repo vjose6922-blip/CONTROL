@@ -402,7 +402,7 @@ showTemporaryMessage("Solicitudes actualizadas", "info");
 }
 }
 } catch (err) {
-reportError('notifications-bg', err);
+if (err?.message !== 'Failed to fetch') reportError('notifications-bg', err);
 }
 }, 5000);
 }

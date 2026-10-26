@@ -1805,6 +1805,10 @@ function openNotifications() {
 window.location.href = "notificaciones.html";
 }
 document.addEventListener("DOMContentLoaded", () => {
+if (sessionStorage.getItem("sesion_reemplazada")) {
+sessionStorage.removeItem("sesion_reemplazada");
+document.getElementById("login-forms-card")?.insertAdjacentHTML("afterbegin", '<p role="alert" style="margin:0 0 12px;padding:10px 12px;border-radius:8px;background:rgba(239,68,68,.15);color:#ef4444;font-size:14px;">Tu sesión se cerró porque se inició sesión con tu cuenta en otro dispositivo (o se cambió la contraseña). Vuelve a entrar.</p>');
+}
 const loginForm = document.getElementById("admin-login-form");
 if (loginForm) loginForm.addEventListener("submit", handleAdminLogin);
 const loginFormCuenta = document.getElementById("admin-login-form-cuenta");
@@ -2015,6 +2019,16 @@ _continuarConSesionGuardada();
 } else if (hasSession === "true" && !savedToken) {
 _forceAdminLogout();
 }
+});
+// Una API rechazó el token: puede ser falta de permiso, así que se confirma con el servidor antes de cerrar.
+// Solo hay una sesión por cuenta: entrar en otro dispositivo invalida esta.
+let _revisandoSesion = false;
+window.addEventListener("znr:sesion-rechazada", async () => {
+if (_revisandoSesion || !adminSession) return;
+_revisandoSesion = true;
+const d = await apiRequest("GET", { action: "verificarSesionAdmin" }).catch(() => null);
+if (d && d.ok === false) { sessionStorage.setItem("sesion_reemplazada", "1"); doAdminLogout(); }
+_revisandoSesion = false;
 });
 function doAdminLogout() {
 stopNotificationMonitoring();

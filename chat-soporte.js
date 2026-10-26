@@ -44,7 +44,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
   }
 
   const t = await api("tokenChatSoporte");
-  if (!t.ok) return;
+  if (!t?.ok) return;
   await signInWithCustomToken(getAuth(app), t.customToken);
   const MI = { uid: t.uid, nombre: t.nombre, rol: t.rol };
   if (typeof window.solicitarPermisoNotificacionesSiFalta === "function") {
