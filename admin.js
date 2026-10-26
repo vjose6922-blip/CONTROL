@@ -26,6 +26,9 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   resetPasswordAdmin: VENDEDORES_API_URL_ADMIN,
   guardarDatosBancariosAdmin: VENDEDORES_API_URL_ADMIN,
   obtenerDatosBancariosAdmin: VENDEDORES_API_URL_ADMIN,
+  adminCobroEstado: VENDEDORES_API_URL_ADMIN,
+  adminCobroConectar: VENDEDORES_API_URL_ADMIN,
+  adminCobroDesconectar: VENDEDORES_API_URL_ADMIN,
   guardarPreguntaSecretaAdmin: VENDEDORES_API_URL_ADMIN,
   obtenerEstadisticasStaff: ADMIN_API_URL_ADMIN,
   tokenChatSoporte: ADMIN_API_URL_ADMIN,
@@ -334,7 +337,7 @@ function aplicarVisibilidadPorRol() {
     const el = document.getElementById(id);
     if (el) el.style.display = rol === "master" ? "none" : "";
   });
-  if (rol !== "master") cargarDatosBancarios();
+  if (rol !== "master") { cargarDatosBancarios(); cargarCobroTarjeta(); }
   // Cabecera de perfil de "Mi cuenta"
   const nombre = sessionStorage.getItem("admin_nombre") || (rol === "master" ? "Master" : "Mi cuenta");
   const ciudad = sessionStorage.getItem("admin_ciudad");
@@ -568,7 +571,7 @@ return `<div class="acct-card${a.activo ? "" : " is-off"}">
     <div class="acct-av">${escapeHtml((a.nombre || "?").trim().charAt(0).toUpperCase())}</div>
     <div class="acct-info">
       <div class="acct-name">${escapeHtml(a.nombre)} <span class="acct-pill ${escapeHtml(a.rol)}">${escapeHtml(a.rol)}</span></div>
-      <div class="acct-meta">${escapeHtml(a.ciudad)} · ${escapeHtml(a.telefono)}</div>
+      <div class="acct-meta">${escapeHtml(a.ciudad)} · ${escapeHtml(a.telefono)}${a.rol === "admin" ? " · " + (a.cobro && a.cobro.length ? "Cobra con " + escapeHtml(a.cobro.join(" y ")) : "Sin cobro con tarjeta") : ""}</div>
     </div>
     <span class="acct-st ${a.activo ? "on" : "off"}">${a.activo ? "Activa" : "Desactivada"}</span>
   </div>
@@ -881,6 +884,38 @@ function setDatosBancarios(d) {
 async function cargarDatosBancarios() {
   try { const r = await apiRequest("GET", { action: "obtenerDatosBancariosAdmin" }); if (r && r.ok) setDatosBancarios(r.datos || r); } catch (_) {}
 }
+// Cobro con tarjeta de la Tienda Z&R: el admin conecta SU Stripe y/o Mercado Pago y los pedidos de la tienda de
+// su ciudad le caen directo (Z&R se queda con el 5%). Sin ninguna, el comprador ve la CLABE de arriba.
+async function cargarCobroTarjeta() {
+  const el = document.getElementById("cobro-tarjeta");
+  if (!el) return;
+  try {
+    const r = await apiRequest("POST", { action: "adminCobroEstado" });
+    if (!r.ok) throw new Error(r.error || "No se pudo cargar");
+    if (!r.aplica) { el.innerHTML = ""; return; }
+    const fila = (p, nombre, estado) => {
+      const [txt, accion, color] = estado === "listo" ? ["Desconectar", "desconectarCobro", "#dc2626"] : [estado === "pendiente" ? "Terminar registro" : "Conectar", "conectarCobro", "#7c3aed"];
+      return `<div style="display:flex;align-items:center;gap:10px;margin:8px 0;font-size:.85rem;"><span style="flex:1;">${estado === "listo" ? "✅" : "○"} ${nombre}${estado === "pendiente" ? " · registro pendiente" : ""}</span>
+        <button type="button" data-click="${accion}" data-args="${dargs(p)}" style="padding:7px 12px;border-radius:10px;border:1px solid ${color};background:transparent;color:${color};font-weight:700;cursor:pointer;">${txt}</button></div>`;
+    };
+    el.innerHTML = `<h3 style="font-size:.95rem;margin:18px 0 4px;">Cobrar con tarjeta (Tienda Z&R)</h3>
+      <p style="font-size:.8rem;color:var(--color-text-soft);margin:0 0 6px;">Conecta tu cuenta para que los pedidos de la tienda de tu ciudad te paguen directo. Z&R se queda con el 5%. Si no conectas ninguna, el comprador ve tu CLABE.</p>
+      ${fila("stripe", "Stripe · tarjeta, OXXO, Apple Pay, Google Pay", r.stripe)}${fila("mp", "Mercado Pago", r.mp ? "listo" : "no")}`;
+  } catch (err) { el.innerHTML = `<p style="color:#dc2626;font-size:.8rem;">Cobro con tarjeta: ${escapeHtml(err.message)}</p>`; }
+}
+window.conectarCobro = async (pasarela) => {
+  showLoader("Abriendo el registro...");
+  try {
+    const r = await apiRequest("POST", { action: "adminCobroConectar", pasarela, volver: location.href.split("#")[0] });
+    if (!r.ok) throw new Error(r.error || "No se pudo iniciar la conexión");
+    location.href = r.url;
+  } catch (err) { hideLoader(); showCustomAlert({ title: "No se pudo conectar", message: err.message, icon: "", confirmText: "Aceptar" }); }
+};
+window.desconectarCobro = (pasarela) => showCustomConfirm({
+  title: "Desconectar", message: "Los compradores de tu ciudad ya no podrán pagarte con " + (pasarela === "mp" ? "Mercado Pago" : "Stripe") + ".",
+  icon: "", confirmText: "Desconectar", cancelText: "Volver",
+  onConfirm: async () => { await apiRequest("POST", { action: "adminCobroDesconectar", pasarela }).catch(() => {}); cargarCobroTarjeta(); },
+});
 async function handleDatosBancariosSubmit(e) {
   e.preventDefault();
   const titular = document.getElementById("datos-bancarios-titular").value;
