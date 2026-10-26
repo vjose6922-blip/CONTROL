@@ -292,7 +292,7 @@ function createOptimizedNotificationCard(group) {
   const groupStatus = getGroupStatus(group);
   let statusBadge = '';
   switch (groupStatus) {
-    case 'confirmed': statusBadge = `<span class="group-status-badge confirmed">Confirmado · ${group.pagado ? 'Pagado' : 'Esperando pago'}</span>`; break;
+    case 'confirmed': statusBadge = `<span class="group-status-badge confirmed">Confirmado · ${group.devolucion && group.devolucion.estado === 'reembolsada' ? 'Reembolsado' : group.pagado ? 'Pagado' : 'Esperando pago'}</span>`; break;
     case 'cancelled': statusBadge = '<span class="group-status-badge cancelled">Cancelado por cliente</span>'; break;
     case 'rejected':  statusBadge = '<span class="group-status-badge rejected">Rechazado</span>'; break;
     default:          statusBadge = '<span class="group-status-badge pending">Pendiente</span>';
