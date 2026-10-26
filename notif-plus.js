@@ -79,7 +79,7 @@ function renderPagosZnr() {
     <div style="display:flex;gap:6px;margin-bottom:10px;">${chip('todos', 'Todos')}${chip('tienda', 'Tienda Z&R')}${chip('plus', 'Plan Plus')}</div>` +
     (lista.length ? lista.map(p =>
       `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 12px;margin-bottom:6px;background:#1e1e2e;border-radius:10px;font-size:.82rem;">
-        <span style="color:#e2e8f0;"><span style="color:#ff4f81;font-weight:600;">${tipo[p.origen] || ''}</span> · ${escapeHtml(p.quien || p.vendedor || '')} <span style="color:#888;">· ${fecha(p.fecha)}</span>${p.duplicado ? ' <span style="color:#fbbf24;font-weight:700;">· cobro duplicado</span>' : ''}</span>
+        <span style="color:#e2e8f0;"><span style="color:#ff4f81;font-weight:600;">${tipo[p.origen] || ''}</span> · ${escapeHtml(p.quien || p.vendedor || '')} <span style="color:#888;">· ${fecha(p.fecha)}</span>${p.duplicado ? ' <span style="color:#fbbf24;font-weight:700;">· cobro duplicado</span>' : ''}${p.reembolsado ? ' <span style="color:#f87171;font-weight:700;">· reembolsado</span>' : ''}</span>
         <span style="color:#e2e8f0;font-weight:600;white-space:nowrap;">$${Number(p.monto || 0).toLocaleString('es-MX')} · ${p.proveedor === 'stripe' ? 'Stripe' : 'Mercado Pago'}</span>
       </div>`).join('') : '<p style="color:#888;font-size:.8rem;">Sin pagos todavía.</p>');
 }

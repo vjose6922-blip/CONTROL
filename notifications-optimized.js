@@ -98,8 +98,8 @@ const filters = [
 { value: 'all',       label: `${LIST}  Todas`,      color: 'var(--notif-dark)' },
 { value: 'pending',   label: `${CLOCK} Pendientes`, color: '#f97316' },
 { value: 'confirmed', label: `${CHECK} Confirmadas`,color: '#22c55e' },
-{ value: 'cancelled', label: `${X_ICO} Canceladas`,         color: '#ef4444' },
-{ value: 'rejected',  label: `${X_ICO} Rechazadas`, color: '#9ca3af' }
+{ value: 'devolucion', label: '↩ Devoluciones', color: '#f59e0b' },
+{ value: 'rejected',  label: `${X_ICO} Canceladas`, color: '#9ca3af' }
 ];
 filters.forEach(filter => {
 const btn = document.createElement("button");
@@ -153,8 +153,8 @@ let statusText = "";
 switch(statusFilter) {
 case 'pending':   statusText = "pendientes"; break;
 case 'confirmed': statusText = "confirmadas"; break;
-case 'cancelled': statusText = "canceladas"; break;
-case 'rejected':  statusText = "rechazadas"; break;
+case 'devolucion': statusText = "con devolución"; break;
+case 'rejected':  statusText = "canceladas"; break;
 default: statusText = "total";
 }
 counter.textContent = `${count} solicitud${count !== 1 ? 'es' : ''} ${statusText !== 'total' ? statusText : ''}`;
@@ -172,8 +172,10 @@ return;
 let filteredGroups = [...allGroups];
 if (currentStatusFilter !== 'all') {
 filteredGroups = allGroups.filter(group => {
+if (currentStatusFilter === 'devolucion') return !!group.devolucion;
 const groupStatus = getGroupStatus(group);
-return groupStatus === currentStatusFilter;
+// "Canceladas" junta lo que canceló el cliente y lo que canceló/rechazó Z&R
+return currentStatusFilter === 'rejected' ? (groupStatus === 'rejected' || groupStatus === 'cancelled') : groupStatus === currentStatusFilter;
 });
 }
 updateResultCounter(filteredGroups.length, currentStatusFilter);
@@ -187,8 +189,8 @@ let emptyMessage = "";
 switch(currentStatusFilter) {
 case 'pending':   emptyMessage += "No hay solicitudes pendientes"; break;
 case 'confirmed': emptyMessage += "No hay solicitudes confirmadas"; break;
-case 'cancelled': emptyMessage += "No hay solicitudes canceladas por clientes"; break;
-case 'rejected':  emptyMessage += "No hay solicitudes rechazadas"; break;
+case 'devolucion': emptyMessage += "No hay devoluciones"; break;
+case 'rejected':  emptyMessage += "No hay solicitudes canceladas"; break;
 default: emptyMessage += "No hay solicitudes";
 }
 container.innerHTML = `<div class="empty">${emptyMessage}</div>`;
@@ -324,6 +326,8 @@ function createOptimizedNotificationCard(group) {
       </div>
     </div>
 
+    ${devolucionHtml(group.devolucion)}
+
     <div class="request-products-container">
       ${group.notifications.map(notif => `
         <div class="request-product-item ${!notif.hasStock ? 'out-of-stock' : ''}" data-product-id="${escapeHtml(String(notif.productId))}">
@@ -369,6 +373,8 @@ function createOptimizedNotificationCard(group) {
   const requestId = group.requestId;
   card.querySelector('[data-action="remove-stock"]')?.addEventListener('click', () => removeOutOfStockNotifications(requestId));
   card.querySelector('[data-action="confirm"]')?.addEventListener('click', () => confirmGroupPurchase(requestId));
+  card.querySelector('[data-action="dv-ok"]')?.addEventListener('click', () => resolverDevolucion(requestId, true));
+  card.querySelector('[data-action="dv-no"]')?.addEventListener('click', () => resolverDevolucion(requestId, false));
   card.querySelector('[data-action="cancel"]')?.addEventListener('click', () => cancelGroupPurchase(requestId));
   return card;
 }
@@ -622,6 +628,39 @@ async function confirmGroupPurchase(requestId) {
     showCustomAlert({ title: "Error", message: err.message || "Ocurrió un error. Intenta nuevamente.", icon: "", confirmText: "Aceptar" });
     if (typeof hideLoader === 'function') hideLoader();
   }
+}
+// Devolución pedida por el cliente: motivo, nota, foto y, mientras está "solicitada", aprobar (reembolsa
+// en Stripe/Mercado Pago y regresa el stock) o rechazar con una razón que ve el cliente.
+function devolucionHtml(d) {
+  if (!d) return '';
+  const est = { solicitada: 'Por revisar', procesando: 'Reembolsando…', reembolsada: 'Aprobada · reembolsada', rechazada: 'Rechazada' }[d.estado] || d.estado;
+  return `<div style="margin:10px 0;padding:10px 12px;border-radius:12px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);font-size:.85rem;">
+    <strong>↩ Devolución · ${escapeHtml(est)}</strong><br>Motivo: ${escapeHtml(d.motivo || '')}${d.nota ? '<br>' + escapeHtml(d.nota) : ''}${d.razon ? '<br>Respuesta: ' + escapeHtml(d.razon) : ''}
+    ${d.foto ? `<br><img src="${escapeHtml(d.foto)}" alt="Foto de la devolución" data-open="" style="max-width:140px;border-radius:8px;margin-top:6px;cursor:zoom-in;">` : ''}
+    ${d.estado === 'solicitada' ? `<div style="display:flex;gap:8px;margin-top:8px;"><button class="btn btn-confirm" data-action="dv-ok">Aprobar y reembolsar</button><button class="btn btn-cancel" data-action="dv-no">Rechazar</button></div>` : ''}
+  </div>`;
+}
+async function resolverDevolucion(requestId, aprobar) {
+const razon = await new Promise(resolve => showCustomConfirm({
+  title: aprobar ? "Aprobar devolución" : "Rechazar devolución",
+  message: aprobar ? "Se reembolsará el pago al cliente y el producto regresará al stock." : "El cliente verá la razón del rechazo.",
+  icon: "", confirmText: aprobar ? "Aprobar y reembolsar" : "Rechazar", cancelText: "Volver",
+  askReason: true, reasonPlaceholder: aprobar ? "Nota (opcional)" : "Razón del rechazo",
+  onConfirm: (r) => resolve(r === undefined ? "" : r), onCancel: () => resolve(null)
+}));
+if (razon === null) return;
+if (typeof showLoader === 'function') showLoader(aprobar ? "Reembolsando..." : "Guardando...");
+try {
+const data = await (await apiFetch(TIENDA_ZNR_API_URL_NOTIF, { action: "resolverDevolucion", requestId, aprobar, razon, token: getAdminToken() }, true)).json();
+if (!data.ok) throw new Error(data.error || "Error");
+showCustomAlert({ title: aprobar ? "Devolución aprobada" : "Devolución rechazada", message: aprobar ? "Se reembolsó el pago y se avisó al cliente." : "Se avisó al cliente.", icon: "", confirmText: "Aceptar" });
+invalidateNotificationsCache();
+loadNotificationsOptimized(true);
+} catch (err) {
+showCustomAlert({ title: "Error", message: err.message, icon: "", confirmText: "Aceptar" });
+} finally {
+if (typeof hideLoader === 'function') hideLoader();
+}
 }
 async function cancelGroupPurchase(requestId) {
 const razon = await new Promise(resolve => {
