@@ -84,8 +84,9 @@ if (allCancelled) return 'cancelled';
 const hasPending   = group.notifications.some(n => n.status === 'pending');
 const hasConfirmed = group.notifications.some(n => n.status === 'confirmed');
 const hasCancelled = group.notifications.some(n => n.status === 'cancelled');
-if (hasCancelled && !hasPending && !hasConfirmed) return 'cancelled';
-return 'pending';
+if (hasPending || group.notifications.some(n => n.status === 'processing')) return 'pending';
+if (hasConfirmed) return 'confirmed'; // confirmado en parte (lo demás sin stock)
+return hasCancelled ? 'cancelled' : 'rejected';
 }
 function addStatusFilterUI() {
 const container = document.getElementById("notifications");
@@ -289,7 +290,7 @@ function createOptimizedNotificationCard(group) {
   const groupStatus = getGroupStatus(group);
   let statusBadge = '';
   switch (groupStatus) {
-    case 'confirmed': statusBadge = '<span class="group-status-badge confirmed">Confirmado</span>'; break;
+    case 'confirmed': statusBadge = `<span class="group-status-badge confirmed">Confirmado · ${group.pagado ? 'Pagado' : 'Esperando pago'}</span>`; break;
     case 'cancelled': statusBadge = '<span class="group-status-badge cancelled">Cancelado por cliente</span>'; break;
     case 'rejected':  statusBadge = '<span class="group-status-badge rejected">Rechazado</span>'; break;
     default:          statusBadge = '<span class="group-status-badge pending">Pendiente</span>';
