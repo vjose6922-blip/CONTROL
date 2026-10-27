@@ -260,13 +260,14 @@ confirmBtn.addEventListener("click", close);
 modal.addEventListener("click", (e) => { if (e.target === modal && !modal.classList.contains("closing")) close(); });
 }
 function showCustomConfirm(options) {
-const { title, message, icon = "", confirmText = "Aceptar", cancelText = "Cancelar", onConfirm, onCancel, askReason = false, reasonPlaceholder = "Motivo (opcional)", askDuration = false } = options;
+// requireReason: el motivo es obligatorio (queda en audit.html). numberLabel/numberValue: campo de días que llega como 2º argumento.
+const { title, message, icon = "", confirmText = "Aceptar", cancelText = "Cancelar", onConfirm, onCancel, requireReason = false, askReason = requireReason, reasonPlaceholder = requireReason ? "Motivo (obligatorio)" : "Motivo (opcional)", askDuration = false, numberLabel = "", numberValue = "" } = options;
 const modal = document.createElement("div");
 modal.className = "custom-alert-modal";
 modal.innerHTML = `
 <div class="custom-alert-content">
 <div class="custom-alert-header"><span class="custom-alert-icon">${icon ? Icon(icon, {size:22}) : ''}</span><h3>${escapeHtml(title)}</h3></div>
-<div class="custom-alert-body"><p>${escapeHtml(message)}</p>${askReason ? `<textarea class="custom-alert-input" id="custom-confirm-razon" rows="2" maxlength="500" placeholder="${escapeHtml(reasonPlaceholder)}" style="font-family:inherit;resize:vertical;"></textarea>` : ''}${askDuration ? `<label style="display:block;margin-top:10px;font-size:12px;opacity:.75;">Duración de la suspensión</label><select class="custom-alert-input" id="custom-confirm-dias" style="font-family:inherit;width:100%;margin-top:4px;"><option value="">Indefinida (hasta reactivarla)</option><option value="1">1 día</option><option value="3">3 días</option><option value="7">7 días</option><option value="15">15 días</option><option value="30">30 días</option><option value="90">90 días</option></select>` : ''}</div>
+<div class="custom-alert-body"><p>${escapeHtml(message)}</p>${askReason ? `<textarea class="custom-alert-input" id="custom-confirm-razon" rows="2" maxlength="500" placeholder="${escapeHtml(reasonPlaceholder)}" style="font-family:inherit;resize:vertical;"></textarea>` : ''}${askDuration ? `<label style="display:block;margin-top:10px;font-size:12px;opacity:.75;">Duración de la suspensión</label><select class="custom-alert-input" id="custom-confirm-dias" style="font-family:inherit;width:100%;margin-top:4px;"><option value="">Indefinida (hasta reactivarla)</option><option value="1">1 día</option><option value="3">3 días</option><option value="7">7 días</option><option value="15">15 días</option><option value="30">30 días</option><option value="90">90 días</option></select>` : ''}${numberLabel ? `<label style="display:block;margin-top:10px;font-size:12px;opacity:.75;">${escapeHtml(numberLabel)}</label><input class="custom-alert-input" id="custom-confirm-num" inputmode="numeric" value="${escapeHtml(numberValue)}" style="width:100%;margin-top:4px;">` : ''}</div>
 <div class="custom-alert-footer">
 <button class="custom-alert-btn cancel"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-x"/></svg> ${escapeHtml(cancelText)}</button>
 <button class="custom-alert-btn confirm"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> ${escapeHtml(confirmText)}</button>
@@ -276,15 +277,15 @@ modal.innerHTML = `
 document.body.appendChild(modal);
 activeModal = modal;
 const razonInput = askReason ? modal.querySelector("#custom-confirm-razon") : null;
-const diasSelect = askDuration ? modal.querySelector("#custom-confirm-dias") : null;
+const diasSelect = modal.querySelector("#custom-confirm-dias, #custom-confirm-num");
 if (razonInput) setTimeout(() => razonInput.focus(), 100);
 const confirmBtn = modal.querySelector(".custom-alert-btn.confirm");
+if (requireReason) { const upd = () => { confirmBtn.disabled = !razonInput.value.trim(); }; razonInput.addEventListener("input", upd); upd(); }
 const cancelBtn = modal.querySelector(".custom-alert-btn.cancel");
 const close = (callback) => {
 if (!modal.parentNode) return;
 modal.classList.add("closing");
-// El motivo es opcional: si el staff lo deja en blanco, se manda "" y
-// el backend lo guarda vacío (registrarActividadStaff ya lo soporta).
+// Si el motivo es opcional y queda en blanco, se manda "" (registrarActividadStaff lo guarda vacío).
 setTimeout(() => { if (modal.parentNode) modal.remove(); if (activeModal === modal) activeModal = null; if (callback) callback(razonInput ? razonInput.value.trim() : undefined, diasSelect ? diasSelect.value : undefined); }, 150);
 };
 confirmBtn.addEventListener("click", () => close(onConfirm));
@@ -3500,3 +3501,10 @@ const ROL_PERMISOS = {
   moderador: ["notif", "productos", "tools-lite"],
 };
 window.tienePermiso = (permiso) => (ROL_PERMISOS[sessionStorage.getItem("admin_rol") || "master"] || ROL_PERMISOS.moderador).includes(permiso);
+
+// Contador único (.znr-count): en 0 o vacío queda gris y sin destello, lo escriba quien lo escriba.
+document.addEventListener("DOMContentLoaded", () => {
+  const marcar = (el) => el.classList.toggle("zero", !(parseInt(el.textContent, 10) > 0));
+  const obs = new MutationObserver((ms) => ms.forEach((m) => marcar(m.target.nodeType === 3 ? m.target.parentElement : m.target)));
+  document.querySelectorAll(".znr-count").forEach((el) => { marcar(el); obs.observe(el, { childList: true, characterData: true, subtree: true }); });
+});

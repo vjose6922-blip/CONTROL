@@ -268,11 +268,11 @@
 
   async function suspenderVendedor(uid, nombre, motivoReporte) {
     showCustomConfirm({
-      title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender vendedor',
+      title: 'Suspender vendedor',
       message: `¿Deseas suspender a "${nombre}"? Podrás reactivarlo en cualquier momento; si eliges una duración, se reactiva sola al vencer.`,
-      icon: '', confirmText: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-suspend"/></svg> Suspender', cancelText: 'Cancelar',
-      askReason: true, askDuration: true,
-      reasonPlaceholder: 'Motivo de la suspensión (opcional)',
+      icon: 'suspend', confirmText: 'Suspender', cancelText: 'Cancelar',
+      askReason: true, askDuration: true, requireReason: !motivoReporte, // desde un reporte ya va el motivo del reporte
+      reasonPlaceholder: motivoReporte ? 'Motivo de la suspensión (opcional)' : 'Motivo de la suspensión (obligatorio)',
       onConfirm: async (razon, dias) => {
         try {
           const razonFinal = combinarRazonReporte(motivoReporte, razon);
@@ -280,6 +280,7 @@
           if (!data.ok) throw new Error(data.error);
           _msg('Vendedor suspendido', 'success');
           loadVendors();
+          if (document.getElementById('global-vendor-stats-modal')?.style.display === 'flex') window.openVendorStatsGlobal?.();
         } catch (err) { _msg(' ' + err.message, 'error'); }
       }
     });

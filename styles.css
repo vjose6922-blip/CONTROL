@@ -1028,7 +1028,7 @@ body {
 .admin-notification-bell { position: relative; font-size: 22px; cursor: pointer; padding: 8px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: white; transition: transform .2s, background .2s; }
 .admin-notification-bell:hover { background: rgba(255, 255, 255, 0.18); }
 .admin-notification-bell:active { transform: scale(.92); }
-#notif-badge { position: absolute; top: -4px; right: -4px; background: #ff4f81; color: white; border-radius: 999px; font-size: 11px; padding: 2px 6px; font-weight: 700; min-width: 18px; text-align: center; }
+#notif-badge { position: absolute; top: -4px; right: -4px; }
 
 .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
 .admin-stat-card { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-soft)); color: white; padding: 16px; border-radius: var(--radius-lg); text-align: center; }
@@ -1232,6 +1232,8 @@ body {
   max-height: 500px;
   overflow-y: auto;
 }
+/* Abierta a pantalla completa, la sección ya hace scroll: la lista usa todo el alto (sin media pantalla vacía). */
+.grid-tile.expanded .admin-products-list { max-height: none; overflow: visible; }
 
 .admin-product-row {
   display: grid;
@@ -1642,13 +1644,14 @@ a[data-loading="true"] {
   height: 100%;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
-  z-index: 10001;
+  z-index: 100001;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   animation: modalFadeIn 0.2s ease forwards;
 }
+.custom-alert-btn:disabled { opacity: .5; cursor: not-allowed; }
 .custom-alert-modal.closing { animation: modalFadeOut 0.15s ease forwards; pointer-events: none; }
 .custom-alert-content {
   background: var(--color-surface);
@@ -2954,6 +2957,7 @@ body:not([data-rol]) #admin-refresh-btn { display: none; }
 .bk-name { margin-top:16px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:13px; }
 /* Cuentas existentes / nueva cuenta */
 .acct-card,.cred-card { display:flex; flex-direction:column; gap:10px; padding:14px; margin-bottom:10px; border-radius:16px; background:rgba(127,127,127,.1); border:1px solid rgba(127,127,127,.25); }
+.acct-card[hidden] { display:none; }
 .acct-card.is-off { opacity:.6; }
 .acct-top { display:flex; align-items:center; gap:12px; }
 .acct-av { flex:none; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; font-weight:800; color:#fff; background:linear-gradient(135deg,#2563eb,#7c3aed); }
@@ -2969,9 +2973,14 @@ body:not([data-rol]) #admin-refresh-btn { display: none; }
 .cred-pass { font:700 20px ui-monospace,monospace; letter-spacing:.12em; }
 .wa-btn { background:#25d366; color:#052e16; font-weight:700; font-size:12px; padding:6px 14px; border-radius:20px; text-decoration:none; }
 
-/* Contador con alerta (errores repetidos más de 10 veces) */
-.admin-mini-card .amc-badge.alerta { background:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.35); animation:amcAlerta 1.4s ease-in-out infinite; }
-@keyframes amcAlerta { 50% { box-shadow:0 0 0 6px rgba(220,38,38,0); } }
+/* Contador único del panel (tarjetas, campana, pestañas y secciones): rojo con destello; en 0 gris y quieto.
+   El destello es un ::after que solo anima transform/opacity (lo pinta la GPU, no repinta la página). */
+.znr-count { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:50px; background:#dc2626; color:#fff; font-size:11px; font-weight:800; line-height:1; }
+.znr-count::after { content:""; position:absolute; inset:0; border-radius:inherit; box-shadow:0 0 0 3px rgba(220,38,38,.45); animation:znrDestello 1.4s ease-out infinite; pointer-events:none; }
+.znr-count.zero { background:rgba(127,127,127,.18); color:var(--modal-muted, #888); }
+.znr-count.zero::after { content:none; }
+@keyframes znrDestello { to { transform:scale(1.6); opacity:0; } }
+@media (prefers-reduced-motion: reduce) { .znr-count::after { animation:none; } }
 
 /* Cabecera de perfil en Mi cuenta */
 .mi-perfil { display:flex; align-items:center; gap:14px; padding:14px; margin-bottom:12px; border-radius:16px; background:var(--color-surface, #fff); border:1px solid var(--color-border-subtle, #e2e4ea); }
