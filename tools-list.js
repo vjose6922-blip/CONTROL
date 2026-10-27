@@ -20,7 +20,8 @@ window.ZNR_TOOLS = [
   ['purgartelefonos', 'Quitar teléfonos de datos públicos (migración)', 'lock', 'tools-master'],
   ['limpiarfotosvendedores', 'Limpiar fotos huérfanas de vendedores', 'refresh', 'tools-master'],
   ['migrarciudades', 'Migrar ciudades a formato Ciudad, Estado', 'map-pin', 'tools-master'],
-  ['pendientescarga', 'Pendientes por cargar', 'refresh', 'tools']
+  ['pendientescarga', 'Pendientes por cargar', 'refresh', 'tools'],
+  ['banners', 'Banners de temporada (Comunidad)', 'calendar', 'tools-master']
 ];
 // data-tools-grid="link" (index: abre Tools.html?tool=…) o "button" (Tools.html: la abre en la misma página).
 document.querySelectorAll('[data-tools-grid]').forEach((el) => {

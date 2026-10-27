@@ -1,5 +1,5 @@
-const CACHE_NAME    = 'zr-admin-cache-v16';
-const DYNAMIC_CACHE = 'zr-admin-dynamic-v16';
+const CACHE_NAME    = 'zr-admin-cache-v17';
+const DYNAMIC_CACHE = 'zr-admin-dynamic-v17';
 
 const STATIC_ASSETS = [
   './',
@@ -31,6 +31,7 @@ const STATIC_ASSETS = [
   'notif-ui.js',
   'notif-plus.js',
   'tools-page.js',
+  'banners-temporada.js',
   'manifest.json',
   'logo.svg',
 ];
