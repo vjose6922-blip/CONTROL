@@ -563,10 +563,20 @@ async function cargarListaAdmins() {
     }
     window._ultimaListaAdmins = admins; // para que los botones de abajo busquen el nombre por uid sin meterlo en atributos HTML
     const rolSesion = sessionStorage.getItem("admin_rol") || "master";
+    // Filtro por ciudad (solo Master: un admin ya solo ve su ciudad)
+    const filtro = document.getElementById("cuentas-filtro-ciudad");
+    if (filtro && rolSesion === "master") {
+      const sel = filtro.value;
+      const ciudades = [...new Set(admins.map((a) => a.ciudad).filter(Boolean))].sort((x, y) => x.localeCompare(y, "es"));
+      filtro.innerHTML = `<option value="">Todas las ciudades (${admins.length})</option>` + ciudades.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)} (${admins.filter((a) => a.ciudad === c).length})</option>`).join("");
+      filtro.value = ciudades.includes(sel) ? sel : "";
+      filtro.hidden = false;
+      filtro.onchange = () => cont.querySelectorAll(".acct-card").forEach((c) => { c.hidden = !!filtro.value && c.dataset.ciudad !== filtro.value; });
+    }
 cont.innerHTML = admins.map((a) => {
 const btn = (fn, txt, extra = "") => `<button type="button" class="text-button" ${extra} data-uid="${escapeHtml(a.uid)}" data-click="${fn}" data-args="${dargs(ARG.THIS)}">${txt}</button>`;
 const esMaster = rolSesion === "master";
-return `<div class="acct-card${a.activo ? "" : " is-off"}">
+return `<div class="acct-card${a.activo ? "" : " is-off"}" data-ciudad="${escapeHtml(a.ciudad || "")}">
   <div class="acct-top">
     <div class="acct-av">${escapeHtml((a.nombre || "?").trim().charAt(0).toUpperCase())}</div>
     <div class="acct-info">
@@ -585,6 +595,7 @@ return `<div class="acct-card${a.activo ? "" : " is-off"}">
   </div>
 </div>`;
 }).join("");
+filtro?.onchange?.(); // al recargar la lista se mantiene la ciudad elegida
 } catch (err) {
 console.error(err);
 cont.innerHTML = '<div style="text-align:center;padding:24px;color:#e53935;">Error al cargar cuentas</div>';
@@ -1491,6 +1502,7 @@ throw new Error(res?.error || "Error desconocido");
 }
 resetProductForm();
 clearImageUploads();
+window.closeGridTile?.("admin-create-section", "create-product-body");
 await loadAdminProducts();
 await showCustomAlert({
 title: id ? " Producto actualizado" : " Producto creado",
@@ -1721,16 +1733,7 @@ async function checkNotifications() {
  
     const count = data.solicitudes;
     const badge = document.getElementById("notif-badge");
-    if (badge) {
-      badge.textContent = data.total > 0 ? data.total : '0';
-      if (data.total > 0) {
-        badge.classList.add('has-notifs');
-        badge.style.animation = "pulse 0.5s ease";
-        setTimeout(() => { if (badge) badge.style.animation = ""; }, 500);
-      } else {
-        badge.classList.remove('has-notifs');
-      }
-    }
+    if (badge) badge.textContent = data.total;
     if (count > lastNotifCount && count > 0 && adminSession) {
       const bell = document.querySelector(".admin-notification-bell");
       if (bell) {

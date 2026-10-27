@@ -229,26 +229,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  line-height: 1.25;
  padding-right: 4px;
  }
- .admin-mini-card .amc-badge {
- position: absolute;
- top: 10px;
- right: 10px;
- background: var(--color-accent-solid);
- color: #fff;
- border-radius: 50px;
- min-width: 20px;
- height: 20px;
- padding: 0 6px;
- font-size: 11px;
- font-weight: 800;
- display: flex;
- align-items: center;
- justify-content: center;
- }
- .admin-mini-card .amc-badge.zero {
- background: rgba(127,127,127,0.18);
- color: var(--modal-muted);
- }
+ .admin-mini-card .amc-badge { position: absolute; top: 10px; right: 10px; }
  .admin-cta-bar {
  display: block;
  margin-top: 10px;
@@ -359,32 +340,6 @@ document.head.insertAdjacentHTML('beforeend', `<style>
  }
  .tile-close-btn:hover {
  background: rgba(255,255,255,0.32);
- }
- #notif-badge {
- min-width: 18px;
- height: 18px;
- padding: 0 5px;
- border-radius: 50px;
- background: rgba(255,255,255,0.18);
- color: rgba(255,255,255,0.6);
- display: inline-flex;
- align-items: center;
- justify-content: center;
- font-size: 11px;
- font-weight: 800;
- transition: background 0.4s ease, color 0.3s ease;
- flex-shrink: 0;
- }
- #notif-badge.has-notifs {
- background: var(--color-accent-solid);
- color: #fff;
- box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb),0.7);
- animation: notif-pulse 1.8s ease-in-out infinite;
- }
- @keyframes notif-pulse {
- 0%  { box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb),0.7); }
- 70% { box-shadow: 0 0 0 7px rgba(var(--color-accent-rgb),0); }
- 100%{ box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb),0); }
  }
  .form-vertical {
  display: flex;
@@ -2095,173 +2050,47 @@ window._renderVendorStatsList = function() {
   });
 };
 
-window.togglePlanVendedor = async function(uid, nombre, currentPlan) {
-  const token = getAdminToken();
-  const api   = window.VENDEDORES_API_URL;
+// Acciones de plan desde Estadísticas de vendedor: el motivo es obligatorio para que quede en audit.html.
+// Resuelve { razon, dias } o null si se cancela.
+const pedirMotivo = (title, message, confirmText, numberLabel = '', numberValue = '') => new Promise((resolve) => showCustomConfirm({
+  title, message, confirmText, numberLabel, numberValue, requireReason: true,
+  onConfirm: (razon, dias) => resolve({ razon, dias }), onCancel: () => resolve(null),
+}));
+const _msgVend = (txt, tipo) => (window.showTemporaryMessage ? window.showTemporaryMessage(txt, tipo) : askAlert(txt));
 
-  if (!api) {
-    if (window.showTemporaryMessage) window.showTemporaryMessage('API no disponible', 'error');
-    return;
-  }
-  if (!token) {
-    if (window.showTemporaryMessage) window.showTemporaryMessage('Token no encontrado. Re-inicia sesión.', 'error');
-    return;
-  }
-
-  const nuevoPlan = currentPlan === 'plus' ? 'free' : 'plus';
-  let dias = 20;
-
-  if (nuevoPlan === 'plus') {
-    const input = await askPrompt(`¿Por cuántos días activar el plan Plus para "${nombre}"?`, '30');
-    if (input === null) return; // cancelado
-    const parsed = parseInt(input, 10);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      if (window.showTemporaryMessage) window.showTemporaryMessage('Número de días inválido.', 'error');
-      else askAlert('Número de días inválido.');
-      return;
-    }
-    dias = parsed;
-  } else {
-
-    if (!await askConfirm(`¿Quitar el plan Plus a "${nombre}"? Se ocultarán productos si excede el límite.`)) {
-      return;
-    }
-  }
-
+// Manda la acción a vendedores-api y vuelve a pintar las estadísticas.
+async function accionPlanVendedor(params, loader, exito) {
   try {
-    if (window.showLoader) window.showLoader('Actualizando plan...');
-    const params = new URLSearchParams();
-    params.append('action', 'marcarVendedorPlan');
-    params.append('uid', uid);
-    params.append('plan', nuevoPlan);
-    params.append('dias', String(dias));
-    params.append('token', token);
-
-    const res = await apiFetch(api, params, true);
-    const data = await res.json();
+    window.showLoader?.(loader);
+    const data = await apiFetch(window.VENDEDORES_API_URL, { ...params, token: getAdminToken() }, true).then((r) => r.json());
     if (!data.ok) throw new Error(data.error || 'Error del servidor');
-
-    const mensaje = nuevoPlan === 'plus'
-      ? `Plan Plus activado por ${dias} días para ${nombre}`
-      : `Plan Plus removido de ${nombre}`;
-
-    if (window.showTemporaryMessage) window.showTemporaryMessage(mensaje, 'success');
-    else askAlert(mensaje);
-
+    _msgVend(exito(data), 'success');
     window.openVendorStatsGlobal();
+  } catch (err) { _msgVend(err.message, 'error'); } finally { window.hideLoader?.(); }
+}
 
-  } catch (err) {
-    if (window.showTemporaryMessage) window.showTemporaryMessage(err.message, 'error');
-    else askAlert('Error: ' + err.message);
-  } finally {
-    if (window.hideLoader) window.hideLoader();
-  }
+window.togglePlanVendedor = async function(uid, nombre, currentPlan) {
+  if (!getAdminToken()) return _msgVend('Token no encontrado. Re-inicia sesión.', 'error');
+  const activar = currentPlan !== 'plus';
+  const r = await pedirMotivo(activar ? 'Activar Plan Plus' : 'Quitar Plan Plus',
+    activar ? `¿Activar el plan Plus para "${nombre}"?` : `¿Quitar el plan Plus a "${nombre}"? Se ocultarán productos si excede el límite.`,
+    activar ? 'Activar' : 'Quitar Plus', activar ? 'Días de Plus' : '', '30');
+  if (!r) return;
+  const dias = activar ? parseInt(r.dias, 10) : 0;
+  if (activar && !(dias > 0)) return _msgVend('Número de días inválido.', 'error');
+  accionPlanVendedor({ action: 'marcarVendedorPlan', uid, plan: activar ? 'plus' : 'free', dias, razon: r.razon }, 'Actualizando plan...',
+    () => (activar ? `Plan Plus activado por ${dias} días para ${nombre}` : `Plan Plus removido de ${nombre}`));
 };
 
-// Modal propio de texto+número, para no depender de los diálogos nativos prompt()/alert()
-// nativos (en algunos entornos — WebView, PWA instalada, etc. — esos
-// diálogos del navegador no se muestran encima del resto de la página).
-// z-index más alto que el de #global-vendor-stats-modal (19999) para
-// que nunca quede tapado detrás de él.
-function customPromptModal(mensaje, valorInicial) {
-  return new Promise(resolve => {
-    const old = document.getElementById('custom-input-modal');
-    if (old) old.remove();
-    const modal = document.createElement('div');
-    modal.id = 'custom-input-modal';
-    modal.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px;';
-    const msgHtml = String(mensaje).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;padding:22px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.35);">
-        <p style="margin:0 0 14px;font-size:.85rem;color:var(--modal-text);line-height:1.5;">${msgHtml}</p>
-        <input id="custom-input-field" type="text" inputmode="numeric" value="${String(valorInicial).replace(/"/g,'&quot;')}" style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px;font-size:15px;box-sizing:border-box;margin-bottom:14px;">
-        <div style="display:flex;gap:8px;justify-content:flex-end;">
-          <button id="custom-input-cancel" style="padding:9px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#555;font-weight:600;cursor:pointer;">Cancelar</button>
-          <button id="custom-input-ok" style="padding:9px 14px;border-radius:8px;border:none;background:var(--color-accent-solid);color:#fff;font-weight:700;cursor:pointer;">Aceptar</button>
-        </div>
-      </div>`;
-    document.body.appendChild(modal);
-    const field = document.getElementById('custom-input-field');
-    field.focus();
-    field.select();
-    const cleanup = (result) => { modal.remove(); resolve(result); };
-    document.getElementById('custom-input-ok').addEventListener('click', () => cleanup(field.value));
-    document.getElementById('custom-input-cancel').addEventListener('click', () => cleanup(null));
-    modal.addEventListener('click', e => { if (e.target === modal) cleanup(null); });
-    field.addEventListener('keydown', e => {
-      if (e.key === 'Enter') cleanup(field.value);
-      if (e.key === 'Escape') cleanup(null);
-    });
-  });
-}
-
-// Modal propio de solo-aviso, mismo motivo que customPromptModal.
-function customAlertModal(mensaje) {
-  return new Promise(resolve => {
-    const old = document.getElementById('custom-alert-modal');
-    if (old) old.remove();
-    const modal = document.createElement('div');
-    modal.id = 'custom-alert-modal';
-    modal.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px;';
-    const msgHtml = String(mensaje).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;padding:22px;max-width:340px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.35);">
-        <p style="margin:0 0 16px;font-size:.85rem;color:var(--modal-text);line-height:1.5;">${msgHtml}</p>
-        <div style="display:flex;justify-content:flex-end;">
-          <button id="custom-alert-ok" style="padding:9px 16px;border-radius:8px;border:none;background:var(--color-accent-solid);color:#fff;font-weight:700;cursor:pointer;">OK</button>
-        </div>
-      </div>`;
-    document.body.appendChild(modal);
-    const ok = document.getElementById('custom-alert-ok');
-    ok.focus();
-    const cleanup = () => { modal.remove(); resolve(); };
-    ok.addEventListener('click', cleanup);
-    modal.addEventListener('click', e => { if (e.target === modal) cleanup(); });
-  });
-}
-
 window.ajustarDiasPlus = async function(uid, nombre, diasActuales) {
-  const token = getAdminToken();
-  const api   = window.VENDEDORES_API_URL;
-
-  if (!api) { await customAlertModal('API no disponible'); return; }
-  if (!token) { await customAlertModal('Token no encontrado. Re-inicia sesión.'); return; }
-
-  const input = await customPromptModal(`"${nombre}" tiene ${diasActuales} días de Plus restantes.\n¿Cuántos días quieres agregar? (usa un número negativo para restar, ej. -5)`, '30');
-  if (input === null) return; // cancelado
-  // Normaliza guiones "tipográficos" (–, —, −) que a veces quedan al
-  // copiar texto desde un chat o documento, para que sigan
-  // reconociéndose como signo negativo.
-  const cleanInput = String(input).trim().replace(/[\u2010-\u2015\u2212]/g, '-');
-  const delta = parseInt(cleanInput, 10);
-  if (!Number.isFinite(delta) || delta === 0) {
-    await customAlertModal('Número de días inválido: "' + input + '". Usa solo dígitos, opcionalmente con un signo "-" al inicio (ej. 30 o -5).');
-    return;
-  }
-
-  try {
-    if (window.showLoader) window.showLoader('Ajustando días de Plus...');
-    const params = new URLSearchParams();
-    params.append('action', 'ajustarDiasPlanPlus');
-    params.append('uid', uid);
-    params.append('dias', String(delta));
-    params.append('token', token);
-
-    const res = await apiFetch(api, params, true);
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'Error del servidor');
-
-    const mensaje = data.plan === 'plus'
-      ? `Plan Plus de ${nombre} ${delta > 0 ? 'extendido' : 'acortado'} (${delta > 0 ? '+' : ''}${delta} días).`
-      : `El ajuste dejó el plan de ${nombre} vencido — volvió a Free.`;
-    await customAlertModal(mensaje);
-
-    window.openVendorStatsGlobal();
-  } catch (err) {
-    await customAlertModal('Error: ' + err.message);
-  } finally {
-    if (window.hideLoader) window.hideLoader();
-  }
+  if (!getAdminToken()) return _msgVend('Token no encontrado. Re-inicia sesión.', 'error');
+  const r = await pedirMotivo('Ajustar días de Plus', `"${nombre}" tiene ${diasActuales} días de Plus restantes.`, 'Ajustar', 'Días a agregar (negativo para restar, ej. -5)', '30');
+  if (!r) return;
+  // Normaliza guiones "tipográficos" (–, —, −) que quedan al copiar de un chat o documento.
+  const delta = parseInt(String(r.dias).trim().replace(/[\u2010-\u2015\u2212]/g, '-'), 10);
+  if (!Number.isFinite(delta) || delta === 0) return _msgVend(`Número de días inválido: "${r.dias}". Usa solo dígitos, con "-" al inicio para restar (ej. 30 o -5).`, 'error');
+  accionPlanVendedor({ action: 'ajustarDiasPlanPlus', uid, dias: delta, razon: r.razon }, 'Ajustando días de Plus...',
+    (d) => (d.plan === 'plus' ? `Plan Plus de ${nombre} ${delta > 0 ? 'extendido' : 'acortado'} (${delta > 0 ? '+' : ''}${delta} días).` : `El ajuste dejó el plan de ${nombre} vencido — volvió a Free.`));
 };
 
 window.eliminarCuentaVendedorAdmin = async function(uid, nombre) {
@@ -2278,9 +2107,9 @@ window.eliminarCuentaVendedorAdmin = async function(uid, nombre) {
       icon: '',
       confirmText: 'Sí, eliminar definitivamente',
       cancelText: 'Cancelar',
-      askReason: true,
-      reasonPlaceholder: 'Motivo de la eliminación (opcional)',
-      onConfirm: (r) => resolve(r === undefined ? '' : r),
+      requireReason: true,
+      reasonPlaceholder: 'Motivo de la eliminación (obligatorio)',
+      onConfirm: (r) => resolve(r),
       onCancel: () => resolve(null),
     });
   });
