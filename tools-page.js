@@ -12,7 +12,8 @@ const EMBED_TOOLS = {
   errores: ['modal-error-monitor', () => window.openErrorMonitorModal()],
   syncvendedor: ['sync-vendedor-modal', () => window.openSyncVendedorModal()],
   sinciudad: ['modal-vendedores-sin-ciudad', () => window.openVendedoresSinCiudadModal()],
-  catalogosalud: ['modal-catalogo-salud', () => window.openCatalogoSaludModal()]
+  catalogosalud: ['modal-catalogo-salud', () => window.openCatalogoSaludModal()],
+  banners: ['modal-banners-temporada', () => window.openBannersTemporadaModal()]
 };
 // Acciones que no dejan contenido embebido (pestaña nueva o confirm/alert flotante).
 const ACTION_TOOLS = {
