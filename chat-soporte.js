@@ -195,17 +195,40 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
     body.appendChild(nuevo);
   }
 
+  // Selector de personas con buscador (nombre, rol o ciudad). multiple=true → casillas; si no, un toque elige.
+  // Resuelve el arreglo de elegidos, o null si se cancela.
+  function elegirPersonas(titulo, personas, multiple) {
+    return new Promise((resolve) => {
+      const h = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+      const ov = Object.assign(document.createElement("div"), { id: "cs-elegir" });
+      ov.style.cssText = "position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px";
+      ov.innerHTML = `<div style="background:var(--color-surface,#252831);color:var(--color-text-primary,#dde1e8);border-radius:16px;width:100%;max-width:380px;max-height:80vh;display:flex;flex-direction:column;padding:16px;gap:10px">
+        <b>${h(titulo)}</b>
+        <input id="cs-buscar" placeholder="Buscar por nombre, rol o ciudad" style="padding:10px;border-radius:10px;border:1px solid rgba(127,127,127,.4);background:transparent;color:inherit">
+        <div id="cs-lista" style="overflow-y:auto;display:flex;flex-direction:column;gap:4px">${personas.map((p, i) => `<label data-i="${i}" data-q="${h(`${p.nombre} ${p.rol} ${p.ciudad || ""}`.toLowerCase())}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(127,127,127,.12);cursor:pointer">
+          <input type="${multiple ? "checkbox" : "radio"}" name="cs-p" value="${i}"><span><b>${h(p.nombre)}</b><br><small style="opacity:.7">${h(p.rol)}${p.ciudad ? " · " + h(p.ciudad) : ""}</small></span></label>`).join("")}</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end"><button id="cs-cancelar" type="button" style="padding:9px 14px;border-radius:10px;border:1px solid rgba(127,127,127,.4);background:none;color:inherit">Cancelar</button>
+        <button id="cs-ok" type="button" disabled style="padding:9px 14px;border-radius:10px;border:0;background:var(--color-accent-solid,#e11d6a);color:#fff;font-weight:700">${multiple ? "Agregar" : "Elegir"}</button></div></div>`;
+      document.body.appendChild(ov);
+      const $ = (sel) => ov.querySelector(sel), ok = $("#cs-ok");
+      const elegidos = () => [...ov.querySelectorAll("[name=cs-p]:checked")].map((c) => personas[c.value]);
+      const fin = (r) => { ov.remove(); resolve(r); };
+      $("#cs-buscar").oninput = (e) => { const q = e.target.value.trim().toLowerCase(); ov.querySelectorAll("[data-q]").forEach((l) => { l.style.display = l.dataset.q.includes(q) ? "" : "none"; }); };
+      $("#cs-lista").onchange = () => { const n = elegidos().length; ok.disabled = !n; if (multiple) ok.textContent = n ? `Agregar (${n})` : "Agregar"; else fin(elegidos()); };
+      ok.onclick = () => fin(elegidos());
+      $("#cs-cancelar").onclick = () => fin(null);
+      ov.onclick = (e) => { if (e.target === ov) fin(null); };
+      $("#cs-buscar").focus();
+    });
+  }
+
   async function iniciarChat() {
     try {
       estado("Buscando contactos…", "info");
       const r = await api("listarContactosChat");
       if (!r.ok || !r.personas || !r.personas.length) { estado(r.error || "No hay a quién escribirle todavía.", "error"); return; }
-      const opciones = r.personas.map((p, i) => `${i + 1}) ${p.nombre} (${p.rol})`).join("\n");
-      const resp = await prompt(`¿Con quién? Escribe el número:\n${opciones}`);
-      if (resp === null) { estado(""); return; } // canceló
-      const idx = Number(resp) - 1;
-      const elegido = r.personas[idx];
-      if (!elegido) { estado(`"${resp}" no es una opción válida (1 a ${r.personas.length}).`, "error"); return; }
+      const [elegido] = (await elegirPersonas("¿Con quién?", r.personas, false)) || [];
+      if (!elegido) { estado(""); return; } // canceló
 
       abrirPanel(); // por si algo lo cerró mientras estaba el modal
       estado(`Creando chat con ${elegido.nombre}…`, "info");
@@ -348,13 +371,15 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
 
   async function agregarParticipante(id) {
     const r = await api("listarContactosChat");
-    if (!r.ok || !r.personas.length) { estado(r.error || "No hay nadie más para agregar.", "error"); return; }
-    const opciones = r.personas.map((p, i) => `${i + 1}) ${p.nombre} (${p.rol})`).join("\n");
-    const idx = Number(await prompt(`¿A quién agregas?\n${opciones}`)) - 1;
-    const elegido = r.personas[idx];
-    if (!elegido) { estado("Opción no válida.", "error"); return; }
-    const res = await api("agregarParticipanteChat", { chatId: id, uidNuevo: elegido.uid });
-    if (!res.ok) estado(res.error, "error"); else estado(`${elegido.nombre} agregado al chat`, "ok");
+    // Solo quien todavía no está y el backend acepta: moderadores, y Master solo si lo agrega un admin.
+    const yaEstan = chats[id]?.participantes || {};
+    const posibles = (r.personas || []).filter((p) => !yaEstan[p.uid] && (p.rol === "moderador" || (p.rol === "master" && MI.rol === "admin")));
+    if (!r.ok || !posibles.length) { estado(r.error || "No hay nadie más para agregar.", "error"); return; }
+    const elegidos = await elegirPersonas("¿A quién agregas?", posibles, true);
+    if (!elegidos) return;
+    const res = await Promise.all(elegidos.map((p) => api("agregarParticipanteChat", { chatId: id, uidNuevo: p.uid })));
+    const fallo = res.find((x) => !x.ok);
+    if (fallo) estado(fallo.error, "error"); else estado(`${elegidos.map((p) => p.nombre).join(", ")} agregado${elegidos.length > 1 ? "s" : ""} al chat`, "ok");
   }
 
   async function finalizar(id) {
