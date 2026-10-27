@@ -77,6 +77,10 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
   // Burbujas: mismas medidas y comportamiento que .pp-b de pedidos.css / pedido-chat.js de ZNR.
   document.head.insertAdjacentHTML("beforeend", `<style id="chat-soporte-css">
     #chat-soporte-panel{position:fixed;right:78px;bottom:16px;z-index:9002}
+    #chat-soporte-panel.cs-full{inset:0!important;width:auto!important;max-width:none!important;max-height:none!important;border-radius:0!important;z-index:100000}
+    #chat-soporte-panel .cs-btn{background:none;border:0;color:inherit;opacity:.8;cursor:pointer;padding:6px;display:inline-grid;place-items:center;border-radius:8px}
+    #chat-soporte-panel .cs-btn:hover{opacity:1;background:rgba(127,127,127,.15)}
+    #chat-soporte-panel .cs-ico{display:inline-grid;place-items:center}
     @media (max-width:520px){#chat-soporte-panel{left:10px;right:10px;bottom:10px;width:auto!important;max-width:none!important}}
     /* Burbujas flotantes: mismo diseño que burbuja-mensajes.js de ZNR */
     #csb-stack{position:fixed;right:10px;z-index:9000;width:58px;display:flex;flex-direction:column;align-items:center;gap:10px;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -144,6 +148,26 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
   }
   new ResizeObserver(posicionarPanel).observe(panel); // al pasar de lista a chat cambia el alto
   function abrirPanel() { panel.style.display = "flex"; posicionarPanel(); }
+  const svg = (d) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const IC = {
+    volver: svg('<path d="M15 18l-6-6 6-6"/>'), cerrar: svg('<path d="M18 6L6 18M6 6l12 12"/>'), nuevo: svg('<path d="M12 5v14M5 12h14"/>'),
+    agregar: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'),
+    finalizar: svg('<circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/>'), enviar: svg('<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>'),
+    expandir: svg('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>'), contraer: svg('<path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/>'),
+  };
+  const btn = (id, ic, titulo, color = "") => `<button id="${id}" class="cs-btn" type="button" title="${titulo}" aria-label="${titulo}"${color ? ` style="color:${color}"` : ""}>${IC[ic]}</button>`;
+  // Ventana completa: se recuerda en este dispositivo; el selector de personas la respeta.
+  const esFull = () => panel.classList.contains("cs-full");
+  const btnExpandir = () => btn("cs-expandir", esFull() ? "contraer" : "expandir", esFull() ? "Ventana flotante" : "Ventana completa");
+  try { panel.classList.toggle("cs-full", localStorage.getItem("cs_full") === "1"); } catch (_) {}
+  body.addEventListener("click", (e) => {
+    const b = e.target.closest("#cs-expandir");
+    if (!b) return;
+    panel.classList.toggle("cs-full");
+    try { localStorage.setItem("cs_full", esFull() ? "1" : ""); } catch (_) {}
+    b.outerHTML = btnExpandir();
+    posicionarPanel();
+  });
   function cerrarPanel() { cerrarMensajes(); panel.style.display = "none"; renderBurbujas(); }
   const alternarPanel = () => { if (panel.style.display === "flex") cerrarPanel(); else { abrirPanel(); renderLista(); renderBurbujas(); } };
 
@@ -165,7 +189,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
       const d = new Date(t), hoy = new Date();
       return d.toDateString() === hoy.toDateString() ? d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : d.toLocaleDateString("es-MX", { day: "numeric", month: "short" }).replace(".", "");
     };
-    body.innerHTML = '<div style="padding:14px;font-weight:600;border-bottom:1px solid var(--color-border-subtle,rgba(255,255,255,.07));display:flex;align-items:center;justify-content:space-between"><span>Chats de soporte <span style="opacity:.4;font-size:10px;font-weight:400">' + VERSION + '</span></span><span id="cs-cerrar" style="cursor:pointer;opacity:.7;font-size:18px;line-height:1" aria-label="Cerrar">✕</span></div>';
+    body.innerHTML = '<div style="padding:14px;font-weight:600;border-bottom:1px solid var(--color-border-subtle,rgba(255,255,255,.07));display:flex;align-items:center;justify-content:space-between"><span>Chats de soporte <span style="opacity:.4;font-size:10px;font-weight:400">' + VERSION + '</span></span><span>' + btnExpandir() + btn("cs-cerrar", "cerrar", "Cerrar") + '</span></div>';
     body.querySelector("#cs-cerrar").onclick = cerrarPanel;
     // Los chats con mensajes más recientes primero, como en Messenger.
     const ids = Object.keys(chats).sort((a, b) => ((ultimo[b] && ultimo[b].ts) || 0) - ((ultimo[a] && ultimo[a].ts) || 0));
@@ -189,8 +213,8 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
       body.appendChild(row);
     });
     if (!ids.length) body.insertAdjacentHTML("beforeend", '<div style="padding:14px;opacity:.6">Sin conversaciones abiertas</div>');
-    const nuevo = Object.assign(document.createElement("div"), { textContent: "+ Iniciar chat" });
-    nuevo.style.cssText = "padding:12px 14px;cursor:pointer;color:var(--color-accent,#f472b6);border-top:1px solid var(--color-border-subtle,rgba(255,255,255,.07))";
+    const nuevo = Object.assign(document.createElement("div"), { innerHTML: IC.nuevo + " Iniciar chat" });
+    nuevo.style.cssText = "display:flex;align-items:center;gap:6px;padding:12px 14px;cursor:pointer;color:var(--color-accent,#f472b6);border-top:1px solid var(--color-border-subtle,rgba(255,255,255,.07))";
     nuevo.onclick = iniciarChat;
     body.appendChild(nuevo);
   }
@@ -201,12 +225,13 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
     return new Promise((resolve) => {
       const h = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
       const ov = Object.assign(document.createElement("div"), { id: "cs-elegir" });
-      ov.style.cssText = "position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px";
-      ov.innerHTML = `<div style="background:var(--color-surface,#252831);color:var(--color-text-primary,#dde1e8);border-radius:16px;width:100%;max-width:380px;max-height:80vh;display:flex;flex-direction:column;padding:16px;gap:10px">
+      const full = esFull();
+      ov.style.cssText = `position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:${full ? 0 : 16}px`;
+      ov.innerHTML = `<div style="background:var(--color-surface,#252831);color:var(--color-text-primary,#dde1e8);border-radius:${full ? "0;height:100%" : "16px"};width:100%;max-width:${full ? "none" : "380px"};max-height:${full ? "none" : "80vh"};display:flex;flex-direction:column;padding:16px;gap:10px">
         <b>${h(titulo)}</b>
         <input id="cs-buscar" placeholder="Buscar por nombre, rol o ciudad" style="padding:10px;border-radius:10px;border:1px solid rgba(127,127,127,.4);background:transparent;color:inherit">
-        <div id="cs-lista" style="overflow-y:auto;display:flex;flex-direction:column;gap:4px">${personas.map((p, i) => `<label data-i="${i}" data-q="${h(`${p.nombre} ${p.rol} ${p.ciudad || ""}`.toLowerCase())}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(127,127,127,.12);cursor:pointer">
-          <input type="${multiple ? "checkbox" : "radio"}" name="cs-p" value="${i}"><span><b>${h(p.nombre)}</b><br><small style="opacity:.7">${h(p.rol)}${p.ciudad ? " · " + h(p.ciudad) : ""}</small></span></label>`).join("")}</div>
+        <div id="cs-lista" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px">${personas.map((p, i) => `<label data-i="${i}" data-q="${h(`${p.nombre} ${p.rol} ${p.ciudad || ""}`.toLowerCase())}" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(127,127,127,.12);cursor:pointer">
+          <input type="${multiple ? "checkbox" : "radio"}" name="cs-p" value="${i}"><span><b>${h(p.nombre)}</b><br><small style="opacity:.7">${h(p.rol)}${p.ciudad && p.ciudad !== "*" ? " · " + h(p.ciudad) : ""}</small></span></label>`).join("")}</div>
         <div style="display:flex;gap:8px;justify-content:flex-end"><button id="cs-cancelar" type="button" style="padding:9px 14px;border-radius:10px;border:1px solid rgba(127,127,127,.4);background:none;color:inherit">Cancelar</button>
         <button id="cs-ok" type="button" disabled style="padding:9px 14px;border-radius:10px;border:0;background:var(--color-accent-solid,#e11d6a);color:#fff;font-weight:700">${multiple ? "Agregar" : "Elegir"}</button></div></div>`;
       document.body.appendChild(ov);
@@ -273,18 +298,18 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
     const otrosNombres = Object.entries(c.participantes || {}).filter(([uid]) => uid !== MI.uid).map(([, p]) => p.nombre).join(", ");
     body.innerHTML = `
       <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--color-border-subtle,rgba(255,255,255,.07))">
-        <span style="cursor:pointer;flex-shrink:0" id="cs-volver">←</span>
+        ${btn("cs-volver", "volver", "Volver")}
         <b id="cs-titulo" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px"></b>
-        <span style="flex-shrink:0">
-          <button id="cs-agregar" style="background:none;border:none;color:var(--color-info,#60a5fa);cursor:pointer">+ agregar</button>
-          ${rangoMio >= rangoMax ? '<button id="cs-finalizar" style="background:none;border:none;color:var(--color-error,#f87171);cursor:pointer">Finalizar</button>' : ""}
-          <button id="cs-cerrar" aria-label="Cerrar" style="background:none;border:none;color:inherit;opacity:.7;cursor:pointer;font-size:18px;line-height:1">✕</button>
+        <span style="flex-shrink:0;display:flex">
+          ${btn("cs-agregar", "agregar", "Agregar personas", "var(--color-info,#60a5fa)")}
+          ${rangoMio >= rangoMax ? btn("cs-finalizar", "finalizar", "Finalizar chat", "var(--color-error,#f87171)") : ""}
+          ${btnExpandir()}${btn("cs-cerrar", "cerrar", "Cerrar")}
         </span>
       </div>
       <div id="cs-mensajes" class="cs-msgs"></div>
       <div class="cs-comp">
         <textarea id="cs-input" rows="1" maxlength="1000" placeholder="Escribe un mensaje…" aria-label="Mensaje"></textarea>
-        <button id="cs-enviar" class="cs-ico" aria-label="Enviar">➤</button>
+        <button id="cs-enviar" class="cs-ico" aria-label="Enviar" title="Enviar">${IC.enviar}</button>
       </div>`;
     body.querySelector("#cs-titulo").textContent = otrosNombres || "Chat";
     body.querySelector("#cs-volver").onclick = renderLista;
