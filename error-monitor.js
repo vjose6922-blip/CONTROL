@@ -137,8 +137,11 @@
     );
   }
 
+  // Fallo de red del dispositivo (sin señal, red que se cae): no es un bug del panel. Chrome / Safari / Firefox.
+  const ES_FALLO_RED = /Failed to fetch|Load failed|NetworkError when attempting/;
+
   function handleRejection(payload) {
-    if (!payload.message || payload.message === 'undefined') return;
+    if (!payload.message || payload.message === 'undefined' || ES_FALLO_RED.test(payload.message)) return;
     report(
       'ERROR',
       'promise',
@@ -160,7 +163,7 @@
 
   function handleConsole(payload) {
     // Evitar bucles: nunca reportar los propios console.log de ZRMonitor
-    if (payload.message && payload.message.indexOf('ZRMonitor') !== -1) return;
+    if (payload.message && (payload.message.indexOf('ZRMonitor') !== -1 || ES_FALLO_RED.test(payload.message))) return;
     report(
       payload.level === 'ERROR' ? 'ERROR' : 'WARN',
       'console',
