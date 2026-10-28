@@ -84,6 +84,11 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
  if (typeof loadBeneficiarios === 'function') loadBeneficiarios();
  if (typeof loadSolicitudesBeneficiario === 'function') loadSolicitudesBeneficiario();
  if (typeof loadReportesBeneficiarios === 'function') loadReportesBeneficiarios();
+ if (typeof loadBeneficiariosAprobados === 'function') loadBeneficiariosAprobados();
+ // Sin esto sus contadores quedaban vacíos hasta abrir cada sección (admin.js, que los cuenta todos, no se carga en esta página)
+ if (typeof loadReportesPedidos === 'function') loadReportesPedidos();
+ if (typeof loadReportesHistorias === 'function') loadReportesHistorias();
+ if (typeof loadFeedbackReportes === 'function') loadFeedbackReportes();
 
  window.refreshAllAdminBadges = function() {
  window.refreshNotifPageKeepScroll && window.refreshNotifPageKeepScroll();
@@ -139,4 +144,4 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
  });
  });
 
-window.recargarBeneficiarios = () => { loadBeneficiarios(true); loadSolicitudesBeneficiario(true); loadReportesBeneficiarios(true); if (document.getElementById('ben-tab-aprobados')?.style.display !== 'none') loadBeneficiariosAprobados(); };
+window.recargarBeneficiarios = () => { loadBeneficiarios(true); loadSolicitudesBeneficiario(true); loadReportesBeneficiarios(true); loadBeneficiariosAprobados(); };

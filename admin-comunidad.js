@@ -134,6 +134,9 @@
             <button class="btn-stats" data-click="AdminComunidad.resetPasswordComprador" data-args="${dargs(r.telefono, ARG.THIS, true)}">Descartar</button>
           </div>
         </div>`).join('');
+      // Contador antes de cualquier return (sin vendedores también puede haber resets o cuentas nuevas de comprador)
+      const pending = vendors.filter(v => v.estado === 'pendiente' || v.resetSolicitado || v.telefonoPendiente).length + resets.length + registros.length; // mismo criterio que admin.js
+      if (typeof window._updateNotifTabBadge === 'function') window._updateNotifTabBadge('vendors', pending);
       if (!vendors.length) {
         container.innerHTML = resetsHtml || '<p style="color:var(--modal-soft);text-align:center">No hay vendedores registrados aún.</p>';
         return;
@@ -169,8 +172,6 @@
               <button class="btn-approve" data-click="AdminComunidad.reactivarVendedor" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg> Reactivar</button>` : ''}
           </div>
         </div>`).join('');
-      const pending = vendors.filter(v => v.estado === 'pendiente' || v.resetSolicitado || v.telefonoPendiente).length + resets.length;
-      if (typeof window._updateNotifTabBadge === 'function') window._updateNotifTabBadge('vendors', pending);
     } catch (err) {
       container.innerHTML = `<p style="color:#ef4444">Error: ${escapeHtml(err.message)}</p>`;
     }
