@@ -729,10 +729,67 @@ window.switchBenSubtab = function(tab, btn) {
     b.style.background = active ? b.dataset.benColor : '#f0f0f0';
     b.style.color = active ? '#fff' : '#555';
   });
-  ['nuevas', 'ediciones', 'reportes'].forEach(t => {
+  ['nuevas', 'ediciones', 'reportes', 'aprobados'].forEach(t => {
     const el = document.getElementById('ben-tab-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
   });
+  if (tab === 'aprobados') loadBeneficiariosAprobados();
+};
+
+// ── Admin: Beneficiarios aprobados (los que ya están en refugios.html): buscar, ver detalle y eliminar ──
+let _benAprobados = [];
+window.loadBeneficiariosAprobados = async function() {
+  const list = document.getElementById('admin-beneficiarios-aprobados-list');
+  if (!list) return;
+  list.innerHTML = window.znrSkeletonRows(3);
+  try {
+    const data = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action: 'obtenerBeneficiarios', estado: 'aprobado', token: getAdminToken() }).then(r => r.json());
+    if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${escapeHtml(data.error)}</p>`; return; }
+    _benAprobados = (data.beneficiarios || []).sort((a, b) => String(a.organizacion || a.nombre).localeCompare(String(b.organizacion || b.nombre), 'es'));
+    window._benCache = window._benCache || {};
+    _benAprobados.forEach(b => { window._benCache[b.id] = b; });
+    document.getElementById('ben-badge-aprobados').textContent = _benAprobados.length;
+    pintarBeneficiariosAprobados();
+  } catch (err) {
+    list.innerHTML = '<p style="color:#ef4444;text-align:center;padding:16px;">Error de conexión.</p>';
+  }
+};
+function pintarBeneficiariosAprobados() {
+  const list = document.getElementById('admin-beneficiarios-aprobados-list');
+  const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const q = norm(document.getElementById('ben-aprobados-buscar')?.value);
+  const bens = _benAprobados.filter(b => !q || norm([b.organizacion, b.nombre, b.ciudad, b.pais, b.telefono, b.id].join(' ')).includes(q));
+  list.innerHTML = bens.length ? bens.map(b => `
+    <div class="vendor-card" style="border-left:4px solid ${b.suspendido ? '#9ca3af' : '#16a34a'};">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;">
+        ${b.imagen1 ? `<img src="${escapeHtml(b.imagen1)}" alt="" loading="lazy" style="width:52px;height:52px;border-radius:12px;object-fit:cover;flex-shrink:0;">` : `<span style="width:52px;height:52px;border-radius:12px;background:#26262f;color:#f0566f;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${Icon('heart-fill',{size:20})}</span>`}
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(b.organizacion || b.nombre)}${b.suspendido ? ' <span style="font-size:.68rem;color:#9ca3af;">(suspendido)</span>' : ''}</div>
+          ${b.organizacion ? `<div style="font-size:.74rem;color:var(--modal-muted);">${escapeHtml(b.nombre)}</div>` : ''}
+          <div style="font-size:.72rem;color:var(--modal-muted);margin-top:2px;">${Icon('map-pin',{size:12})} ${escapeHtml(b.ciudad || b.ubicacion || '—')} · ${_icPhone} ${escapeHtml(b.telefono || '—')}</div>
+          <div style="font-size:.66rem;color:var(--modal-soft);margin-top:2px;">ID: ${escapeHtml(b.id)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+          <button data-click="openBeneficiarioModal" data-args="${dargs(b.id)}" style="padding:7px 12px;border:none;border-radius:20px;background:#e0e7ff;color:var(--notif-dark);font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('eye',{size:13})} Ver</button>
+          <button data-click="adminEliminarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" style="padding:7px 12px;border:none;border-radius:20px;background:#fee2e2;color:#b91c1c;font-weight:700;font-size:.75rem;cursor:pointer;">${Icon('trash',{size:13})} Eliminar</button>
+        </div>
+      </div>
+    </div>`).join('') : `<p style="color:var(--modal-soft);text-align:center;padding:32px;">${_benAprobados.length ? 'Ningún beneficiario coincide con la búsqueda.' : 'Aún no hay beneficiarios aprobados.'}</p>`;
+}
+document.addEventListener('input', e => { if (e.target.id === 'ben-aprobados-buscar') pintarBeneficiariosAprobados(); });
+
+window.adminEliminarBeneficiario = async function(id, btn) {
+  const b = (window._benCache || {})[id] || {};
+  if (!await askConfirm(`¿Eliminar a "${b.organizacion || b.nombre || id}"? Deja de aparecer en Refugios y sus artículos donados dejan de estar asignados. No se puede deshacer.`)) return;
+  const runFn = async () => {
+    try {
+      const data = await apiFetch(BENEFICIARIOS_API_URL_NOTIF, { action: 'eliminarBeneficiario', id_beneficiario: id, token: getAdminToken() }, true).then(r => r.json());
+      if (!data.ok) return askAlert('Error: ' + data.error);
+      loadBeneficiariosAprobados();
+    } catch (err) { askAlert('Error de conexión.'); }
+  };
+  if (btn && window.withButtonLoading) await window.withButtonLoading(btn, runFn, 'Eliminando…');
+  else await runFn();
 };
 
 // ── Admin: Beneficiarios ─────────────────────────────────────
@@ -831,10 +888,11 @@ window.openBeneficiarioModal = function(id) {
           ${fotos.map(url => `<img src="${escapeHtml(url)}" loading="lazy" style="width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.1);cursor:pointer;" data-open="${escapeAttr(url)}">`).join('')}
         </div>
       </div>` : ''}
+      ${b.estado === 'aprobado' ? `<button data-click="adminEliminarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" data-remove="ben-detail-modal" style="width:100%;margin-top:18px;padding:9px;border:none;border-radius:8px;background:#fee2e2;color:#b91c1c;font-weight:700;font-size:.8rem;cursor:pointer;">${Icon('trash',{size:13})} Eliminar beneficiario</button>` : `
       <div style="display:flex;gap:8px;margin-top:18px;">
         <button data-click="adminRechazarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" data-remove="ben-detail-modal" style="flex:1;padding:9px;border:none;border-radius:8px;background:#fee2e2;color:#b91c1c;font-weight:700;font-size:.8rem;cursor:pointer;">${_icX} Rechazar</button>
         <button data-click="adminAprobarBeneficiario" data-args="${dargs(b.id, ARG.THIS)}" data-remove="ben-detail-modal" style="flex:1;padding:9px;border:none;border-radius:8px;background:#22c55e;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;">${_icCheck} Aprobar</button>
-      </div>
+      </div>`}
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });

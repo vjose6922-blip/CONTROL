@@ -139,4 +139,4 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
  });
  });
 
-window.recargarBeneficiarios = () => { loadBeneficiarios(true); loadSolicitudesBeneficiario(true); loadReportesBeneficiarios(true); };
+window.recargarBeneficiarios = () => { loadBeneficiarios(true); loadSolicitudesBeneficiario(true); loadReportesBeneficiarios(true); if (document.getElementById('ben-tab-aprobados')?.style.display !== 'none') loadBeneficiariosAprobados(); };
