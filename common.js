@@ -556,41 +556,9 @@ const _miniSliderSt = document.createElement('style');
 _miniSliderSt.textContent = '.mini-slider{position:relative;width:100%;height:100%;overflow:hidden;touch-action:pan-y;}.mini-slider-track{display:flex;width:100%;height:100%;transition:transform .3s ease;}.mini-slider-slide{min-width:100%;height:100%;flex-shrink:0;}.mini-slider-dots{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:2;}.mini-slider-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.6);box-shadow:0 0 2px rgba(0,0,0,.4);transition:all .2s;}.mini-slider-dot.active{background:var(--color-accent-solid);width:12px;border-radius:3px;}';
 document.head.appendChild(_miniSliderSt);
 
-function optimizeDriveUrl(url, size = 400) {
-  if (!url) return "https://placehold.co/400x400/3b1f5f/white?text=Z%26R";
-  
-  if (!url.startsWith('http') && !url.startsWith('data:image')) {
-    return "https://placehold.co/400x400/3b1f5f/white?text=Z%26R";
-  }
-
-  const screenWidth = window.innerWidth;
-  let actualSize;
-  if (screenWidth < 480) {
-    actualSize = 300;
-  } else if (screenWidth < 768) {
-    actualSize = 400;
-  } else if (screenWidth < 1200) {
-    actualSize = 600;
-  } else {
-    actualSize = 800;
-  }
-  if (size && size < actualSize) {
-    actualSize = Math.min(size, 800);
-  }
-
-  const lh3Match = url.match(/lh3\.googleusercontent\.com\/d\/([-\w]{25,})/);
-  if (lh3Match) {
-    return `https://lh3.googleusercontent.com/d/${lh3Match[1]}=w${actualSize}`;
-  }
-
-  const match = url.match(/[-\w]{25,}/);
-  if (match) {
-    const id = match[0];
-    return `https://lh3.googleusercontent.com/d/${id}=w${actualSize}`;
-  }
-
-  return url;
-}
+// Las imágenes viven en Firebase Storage y se usan tal cual; sin imagen (o ruta inválida), el placeholder de Z&R.
+const sinImagen = (w) => `https://placehold.co/${w}x${w}/3b1f5f/white?text=Z%26R`;
+function urlImagen(url) { return url && /^(https?:|data:image)/.test(url) ? url : sinImagen(400); }
 
 function generateRequestId() {
 return 'REQ_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
@@ -903,7 +871,7 @@ const comunidadItems = items.filter(i =>  i._comunidad);
 function renderCartItem(item) {
 const row = document.createElement("div");
 row.className = "cart-item";
-const imgUrl = item.Imagen1 ? optimizeDriveUrl(item.Imagen1, 120) : '';
+const imgUrl = item.Imagen1 ? urlImagen(item.Imagen1) : '';
 const imgHtml = imgUrl
 ? `<div class="cart-item-img-wrap">
 <img class="cart-item-img" src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" data-fb="hide-parent">
@@ -1285,9 +1253,7 @@ function _renderMagazinePanel(modal) {
   modal.querySelector('.im-magazine-layout').classList.remove('im-no-panel');
   panel.innerHTML = `
     ${related.map(p => {
-      const thumbImg = typeof optimizeDriveUrl === 'function'
-        ? optimizeDriveUrl(p._imagen1, 200)
-        : (p._imagen1 || '');
+      const thumbImg = urlImagen(p._imagen1);
       const fullImg = getModalImageUrl(p._imagen1);
       const name = (p._nombre || 'Producto').substring(0, 28);
       const price = typeof formatCurrency === 'function'
@@ -3047,7 +3013,7 @@ container.innerHTML = `
 items.forEach((item) => {
 const row = document.createElement("div");
 row.className = "cart-item";
-const imgUrl = item.Imagen1 ? optimizeDriveUrl(item.Imagen1, 120) : '';
+const imgUrl = item.Imagen1 ? urlImagen(item.Imagen1) : '';
 const imgHtml = imgUrl
 ? `<div class="cart-item-img-wrap"><img class="cart-item-img" src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.name)}" loading="lazy"></div>`
 : `<div class="cart-item-img-wrap cart-item-img-placeholder"><span></span></div>`;
@@ -3472,23 +3438,7 @@ function intervalConJitter(fn, baseMs, jitterMs) {
 
   
 
-function getModalImageUrl(url) {
-  if (!url) return "https://placehold.co/900x900/3b1f5f/white?text=Z%26R";
-  if (!url.startsWith('http') && !url.startsWith('data:image')) {
-    return "https://placehold.co/900x900/3b1f5f/white?text=Z%26R";
-  }
-  const dpr = window.devicePixelRatio || 1;
-  const targetW = Math.round(Math.min(window.innerWidth, 900) * dpr);
-  const w = Math.max(targetW, 800); // nunca menos de 800px reales
-
-  const lh3Match = url.match(/lh3\.googleusercontent\.com\/d\/([-\w]{25,})/);
-  if (lh3Match) return `https://lh3.googleusercontent.com/d/${lh3Match[1]}=w${w}`;
-
-  const match = url.match(/[-\w]{25,}/);
-  if (match) return `https://lh3.googleusercontent.com/d/${match[0]}=w${w}`;
-
-  return url;
-}
+function getModalImageUrl(url) { return url && /^(https?:|data:image)/.test(url) ? url : sinImagen(900); }
 window.getModalImageUrl = getModalImageUrl;
 window.intervalConJitter = intervalConJitter;
 
