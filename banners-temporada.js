@@ -61,6 +61,7 @@
           <div class="fila"><label>Tamaño del texto<select name="escala"><option value="0.85">Chico</option><option value="1" selected>Normal</option><option value="1.15">Grande</option><option value="1.3">Muy grande</option></select></label>
             <label>Color del texto<select name="tema"><option value="oscuro">Oscuro (imagen clara)</option><option value="claro">Blanco (imagen oscura)</option></select></label></div>
           <label>Sombra detrás del texto<select name="degradado"><option value="si">Sí (se lee mejor)</option><option value="no">No</option></select></label>
+          <label>Dónde mostrar<select name="donde"><option value="ambos">Inicio y Comunidad</option><option value="inicio">Solo Inicio</option><option value="comunidad">Solo Comunidad</option></select></label>
           <label>Mostrar solo este banner<select name="exclusivo"><option value="no">No, rota junto con los demás</option><option value="si">Sí, oculta los demás (campañas fuertes)</option></select></label>
           <label>Temporada (para "Podría interesarte")<select name="temporada">${TEMPORADAS.map((t) => `<option>${esc(t)}</option>`).join('')}</select></label>
           <div class="fila"><label>Desde<input type="date" name="inicio" required value="${hoy}"></label><label>Hasta<input type="date" name="fin" required></label></div>
@@ -87,7 +88,7 @@
       lista.innerHTML = ids.length ? ids.map((id) => { const b = banners[id], vivo = b.inicio <= hoy && hoy <= b.fin; return `
         <div style="display:flex;gap:10px;align-items:center;border:1px solid var(--modal-border);border-radius:14px;padding:10px;margin-bottom:10px;">
           <img src="${esc(b.imagen)}" alt="" style="width:96px;height:40px;object-fit:cover;border-radius:8px;">
-          <div style="flex:1;min-width:0;font-size:.8rem;"><b>${esc(b.titulo)}</b> ${esc(b.subtitulo)}<br><span style="color:${vivo ? '#22c55e' : 'var(--modal-muted)'}">${vivo ? 'Visible · ' : ''}${b.exclusivo === 'si' ? 'Solo este · ' : ''}${esc(b.inicio)} → ${esc(b.fin)} · ${esc(b.temporada)}</span></div>
+          <div style="flex:1;min-width:0;font-size:.8rem;"><b>${esc(b.titulo)}</b> ${esc(b.subtitulo)}<br><span style="color:${vivo ? '#22c55e' : 'var(--modal-muted)'}">${vivo ? 'Visible · ' : ''}${b.exclusivo === 'si' ? 'Solo este · ' : ''}${{ inicio: 'Inicio · ', ambos: 'Inicio y Comunidad · ' }[b.donde] || 'Comunidad · '}${esc(b.inicio)} → ${esc(b.fin)} · ${esc(b.temporada)}</span></div>
           <button type="button" class="text-button" data-editar="${esc(id)}">Editar</button>
           <button type="button" class="text-button" data-borrar="${esc(id)}">×</button>
         </div>`; }).join('') : '<p style="text-align:center;color:var(--modal-soft);">Aún no hay banners.</p>';
