@@ -22,6 +22,8 @@
 .bt-chk { display: flex !important; align-items: center; gap: 6px; }`;
   const esc = (s) => escapeHtml(String(s ?? ''));
   const hoy = new Date().toLocaleDateString('en-CA');
+  // Mismas fechas un año después (29 feb → 28 feb); si venció hace más de un año, se sigue sumando hasta que quede vigente o futuro.
+  const masUnAno = (d) => { const [y, m, dd] = d.split('-'); return `${+y + 1}-${m}-${m === '02' && dd === '29' ? '28' : dd}`; };
   const pickPos = (name, def) => `<div class="bt-pos">${POS.map((p) => `<label title="${p}"><input type="radio" name="${name}" value="${p}"${p === def ? ' checked' : ''}><span></span></label>`).join('')}</div>`;
   // Reduce la imagen a 1600 px de ancho máx. en JPEG (proporción 12:5, ej. 1200×500).
   const comprimir = (file) => new Promise((ok, mal) => {
@@ -89,13 +91,22 @@
         <div style="display:flex;gap:10px;align-items:center;border:1px solid var(--modal-border);border-radius:14px;padding:10px;margin-bottom:10px;">
           <img src="${esc(b.imagen)}" alt="" style="width:96px;height:40px;object-fit:cover;border-radius:8px;">
           <div style="flex:1;min-width:0;font-size:.8rem;"><b>${esc(b.titulo)}</b> ${esc(b.subtitulo)}<br><span style="color:${vivo ? '#22c55e' : 'var(--modal-muted)'}">${vivo ? 'Visible · ' : ''}${b.exclusivo === 'si' ? 'Solo este · ' : ''}${{ inicio: 'Inicio · ', ambos: 'Inicio y Comunidad · ' }[b.donde] || 'Comunidad · '}${esc(b.inicio)} → ${esc(b.fin)} · ${esc(b.temporada)}</span></div>
+          ${b.fin < hoy ? `<button type="button" class="primary-button" style="padding:6px 12px;font-size:.75rem;" data-renovar="${esc(id)}">Renovar ${+b.fin.slice(0, 4) + 1}</button>` : ''}
           <button type="button" class="text-button" data-editar="${esc(id)}">Editar</button>
           <button type="button" class="text-button" data-borrar="${esc(id)}">×</button>
         </div>`; }).join('') : '<p style="text-align:center;color:var(--modal-soft);">Aún no hay banners.</p>';
     };
     form.onreset = () => setTimeout(() => { form.elements.id.value = ''; form.inicio.value = hoy; imgUrl = ''; document.getElementById('banner-form-t').textContent = 'Nuevo banner'; preview(); });
     lista.onclick = async (e) => {
-      const ed = e.target.dataset.editar, del = e.target.dataset.borrar;
+      const ed = e.target.dataset.editar, del = e.target.dataset.borrar, ren = e.target.dataset.renovar;
+      if (ren) { // vuelve a guardar el banner (misma imagen y texto) con las fechas del año siguiente
+        const { imagen, ...b } = banners[ren];
+        let { inicio, fin } = b;
+        do { inicio = masUnAno(inicio); fin = masUnAno(fin); } while (fin < hoy);
+        e.target.disabled = true;
+        const r = await apiFetch(window.ADMIN_API_URL, { action: 'guardarBannerTemporada', token: getAdminToken(), ...b, donde: b.donde || 'comunidad', id: ren, inicio, fin }, true).then((x) => x.json()).catch(() => ({}));
+        r.ok ? pintar() : (askAlert(r.error || 'No se pudo renovar'), e.target.disabled = false);
+      }
       if (ed) {
         form.reset();
         setTimeout(() => {
