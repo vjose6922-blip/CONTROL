@@ -1342,7 +1342,7 @@ function clearProductFormImages() {
 
 // Quita una sola imagen del formulario (por si el admin se equivocó al
 // subir), sin tocar las otras dos ni el resto del producto. Solo limpia
-// el estado local del formulario — el borrado real en Storage/Drive (si
+// el estado local del formulario — el borrado real en Storage (si
 // ya se había llegado a subir el archivo) ocurre al guardar, ya que
 // actualizarProductoZNR compara contra la imagen anterior y borra la que
 // cambió/desapareció.
@@ -1591,8 +1591,7 @@ function setupImageUpload(fileInputId, textInputId, previewId, progressId) {
             if (typeof window.znrPreprocesarFoto === 'function') {
                 try { file = await window.znrPreprocesarFoto(file, slot); } catch (e) { console.error(e); }
             }
-            // Usamos la función existente uploadImageToDrive que ya tiene la lógica de compresión y token
-            return await uploadImageToDrive(file);
+            return await subirImagen(file); // comprime y sube a Firebase Storage
         };
 
         // Callback para actualizar el progreso (opcional)
@@ -1644,7 +1643,7 @@ resolve(canvas.toDataURL("image/jpeg", 0.8));
 reader.readAsDataURL(file);
 });
 }
-async function uploadImageToDrive(file) {
+async function subirImagen(file) {
     const dataUrl = await compressImage(file); // data:image/jpeg;base64,....
     const base64 = dataUrl.split(',')[1];
     const fileName = (file.name || 'imagen').replace(/\.[^.]+$/, '') + '.jpg';
@@ -2127,7 +2126,7 @@ window.resetProductForm  = resetProductForm;
 window.clearImageUploads  = clearImageUploads;
 window.loadAdminProducts  = loadAdminProducts;
 window.initImageUploads  = initImageUploads;
-window.uploadImageToDrive = uploadImageToDrive;
+window.subirImagen = subirImagen;
 window.cargarEstadisticasStaff = cargarEstadisticasStaff;
 window.setStatsRolFiltro = setStatsRolFiltro;
 window.setStatsMetrica = setStatsMetrica;

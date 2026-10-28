@@ -83,10 +83,6 @@
   function _msg(text, type) {
     if (typeof showTemporaryMessage === 'function') showTemporaryMessage(text, type);
   }
-  function _optimizeDriveUrl(url, size) {
-    if (typeof optimizeDriveUrl === 'function') return optimizeDriveUrl(url, size);
-    return url;
-  }
 
   
   function init() {
@@ -346,7 +342,7 @@
       }
       container.innerHTML = products.map(p => `
         <div class="pending-product-row" id="prow-${escapeAttr(p.id)}">
-          <img src="${escapeHtml(p.imagen1 ? _optimizeDriveUrl(p.imagen1, 80) : '')}" alt="${escapeHtml(p.nombre)}" data-fb="hide">
+          <img src="${escapeHtml(p.imagen1 ? urlImagen(p.imagen1) : '')}" alt="${escapeHtml(p.nombre)}" data-fb="hide">
           <div class="info">
             <strong>${escapeHtml(p.nombre)}</strong>
             <span>$${Number(p.precio).toLocaleString()} · Stock: ${Number(p.stock) || 0} · ${escapeHtml(p.categoria || '')}</span><br>
@@ -422,7 +418,7 @@
 
     container.innerHTML = reportes.map(r => {
       const imgSrc       = r.imagen1 || r.imagen || '';
-      const imgOpt       = imgSrc ? _optimizeDriveUrl(imgSrc, 160) : '';
+      const imgOpt       = imgSrc ? urlImagen(imgSrc) : '';
       // Valores crudos para data-args (dargs ya escapa para atributo); las variables siguientes van escapadas para HTML.
       const raw = { vendorUid: r.vendedor_uid || r.vendedorUid || '', vendorNombre: r.vendedor_nombre || r.nombreVendedor || r.vendedorNombre || '', productId: String(r.productId || ''), reporteId: String(r.reporteId || r.id || ''), nombre: r.nombreProducto || '—' };
       const vendorUid    = escapeHtml(raw.vendorUid);

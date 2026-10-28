@@ -261,7 +261,7 @@
     txt.textContent = 'Subiendo imágenes (0 de ' + ins.length + ')…';
     try {
       await Promise.all(ins.map(async function (i) {
-        $('product-image' + i.id.slice(-1)).value = await uploadImageToDrive(i.files[0]);
+        $('product-image' + i.id.slice(-1)).value = await subirImagen(i.files[0]);
         i.value = '';   // ya subida: no se vuelve a subir si otra falla y se reintenta
         barra.style.width = (++hechas / ins.length * 100) + '%';
         txt.textContent = 'Subiendo imágenes (' + hechas + ' de ' + ins.length + ')…';

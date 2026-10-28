@@ -270,13 +270,6 @@ addStatusFilterUI();
 }
 applyStatusFilter();
 }
-function getOptimizedThumbnail(imagenUrl) {
-if (!imagenUrl) return 'https://placehold.co/70x70/eee/999?text=No+img';
-if (imagenUrl.includes('lh3.googleusercontent.com')) {
-return imagenUrl.replace(/=w[0-9]+/, '=w100').replace(/=s[0-9]+/, '=s100');
-}
-return imagenUrl;
-}
 function getStatusLabel(status, hasStock) {
 if (status === 'confirmed') return 'Confirmado';
 if (status === 'rejected')  return 'Rechazado';
@@ -333,7 +326,7 @@ function createOptimizedNotificationCard(group) {
         <div class="request-product-item ${!notif.hasStock ? 'out-of-stock' : ''}" data-product-id="${escapeHtml(String(notif.productId))}">
           <div class="request-product-image">
             <img class="lazy-notif"
-                 data-src="${escapeHtml(getOptimizedThumbnail(notif.imagen))}"
+                 data-src="${escapeHtml(notif.imagen || 'https://placehold.co/70x70/eee/999?text=No+img')}"
                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f8'/%3E%3C/svg%3E"
                  alt="${escapeHtml(notif.nombre)}"
                  data-fb="src" data-fb-src="https://via.placeholder.com/90?text=No+img">

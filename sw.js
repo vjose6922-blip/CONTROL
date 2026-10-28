@@ -1,5 +1,5 @@
-const CACHE_NAME    = 'zr-admin-cache-v20';
-const DYNAMIC_CACHE = 'zr-admin-dynamic-v20';
+const CACHE_NAME    = 'zr-admin-cache-v21';
+const DYNAMIC_CACHE = 'zr-admin-dynamic-v21';
 
 const STATIC_ASSETS = [
   './',
@@ -53,7 +53,7 @@ const API_DOMAINS      = [
   'beneficiarios-api-1038143238323.us-central1.run.app',
   'tienda-znr-api-1038143238323.us-central1.run.app',
 ];
-const IMAGE_CDN_HOSTS  = ['lh3.googleusercontent.com', 'googleusercontent.com'];
+const IMAGE_CDN_HOSTS  = ['firebasestorage.googleapis.com'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
