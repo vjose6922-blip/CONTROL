@@ -1697,7 +1697,7 @@ async function checkNotifications() {
     const PEDIDOS_API_BADGES = window.PEDIDOS_API_URL;
     const VENTAS_API_BADGES = window.VENTAS_API_URL;
     const HISTORIAS_API_BADGES = window.HISTORIAS_API_URL;
-    const [gasRes, vendRes, pendRes, repRes, benRes, benRepRes, plusRes, liveRes, pedRepRes, fbRes, histRepRes] = await Promise.all([
+    const [gasRes, vendRes, pendRes, repRes, benRes, benRepRes, plusRes, liveRes, pedRepRes, fbRes, histRepRes, benEdRes, resetsRes, registrosRes] = await Promise.all([
       apiFetch(TIENDA_API_BADGES, { action: 'notificationsBatch', page: 1, pageSize: 500, token })
         .then(r => r.json())
         .then(d => ({ ok: d.ok, solicitudes: d.ok ? (d.groups || []).filter(g => g.availableCount > 0).length : 0 }))
@@ -1712,17 +1712,23 @@ async function checkNotifications() {
       apiFetch(PEDIDOS_API_BADGES, { action: 'obtenerReportesPedido', token }).then(r => r.json()).catch(() => ({ ok: false })),
       apiFetch(VENTAS_API_BADGES, { action: 'listarFeedback', estado: 'abiertos', token }).then(r => r.json()).catch(() => ({ ok: false })),
       apiFetch(HISTORIAS_API_BADGES, { action: 'obtenerReportesHistorias', token }).then(r => r.json()).catch(() => ({ ok: false })),
+      apiFetch(BENEFICIARIOS_API_BADGES, { action: 'obtenerSolicitudesBeneficiario', token }).then(r => r.json()).catch(() => ({ ok: false })),
+      apiFetch(VENDEDORES_API_BADGES, { action: 'listarResetsComprador', token }).then(r => r.json()).catch(() => ({ ok: false })),
+      apiFetch(VENDEDORES_API_BADGES, { action: 'listarRegistrosComprador', token }).then(r => r.json()).catch(() => ({ ok: false })),
     ]);
 
     const vendors = vendRes.ok ? (vendRes.vendors || []) : [];
     const data = {
       ok: true,
       solicitudes: gasRes.ok ? gasRes.solicitudes : 0,
-      vendors: vendors.filter(v => v.estado === 'pendiente' || v.resetSolicitado).length,
+      // Mismo criterio que la sección Vendedores (admin-comunidad.js): registros, cambios de teléfono, resets y cuentas nuevas de comprador
+      vendors: vendors.filter(v => v.estado === 'pendiente' || v.resetSolicitado || v.telefonoPendiente).length
+        + (resetsRes.ok ? (resetsRes.solicitudes || []).length : 0) + (registrosRes.ok ? (registrosRes.registros || []).length : 0),
       pending: pendRes.ok ? (pendRes.products || []).length : 0,
       reportes: repRes.ok ? (repRes.reportes || []).length : 0,
       plus: plusRes.ok ? (plusRes.solicitudes || []).length : 0,
-      beneficiarios: benRes.ok ? (benRes.beneficiarios || []).length + (benRepRes.ok ? (benRepRes.reportes || []).length : 0) : 0,
+      // Nuevas + Ediciones + Reportes (antes faltaban las ediciones)
+      beneficiarios: (benRes.ok ? (benRes.beneficiarios || []).length : 0) + (benEdRes.ok ? (benEdRes.solicitudes || []).length : 0) + (benRepRes.ok ? (benRepRes.reportes || []).length : 0),
       reportesLive: liveRes.ok ? (liveRes.reportes || []).length : 0,
       reportesPedidos: pedRepRes.ok ? (pedRepRes.reportes || []).length : 0,
       reportesHistorias: histRepRes.ok ? (histRepRes.reportes || []).length : 0,
@@ -1753,6 +1759,8 @@ async function checkNotifications() {
       window._updateNotifTabBadge('reportes_pedidos', data.reportesPedidos);
       window._updateNotifTabBadge('reportes_historias', data.reportesHistorias);
       window._updateNotifTabBadge('feedback', data.feedback);
+      window._updateNotifTabBadge('plus', data.plus);
+      window._updateNotifTabBadge('beneficiarios', data.beneficiarios);
     }
     const secBadge = document.getElementById('notif-badge-header');
     if (secBadge) { secBadge.textContent = data.total; secBadge.style.display = data.total > 0 ? 'inline' : 'none'; }

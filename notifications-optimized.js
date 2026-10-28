@@ -792,6 +792,14 @@ window.adminEliminarBeneficiario = async function(id, btn) {
   else await runFn();
 };
 
+// Pendientes de Beneficiarios = Nuevas + Ediciones + Reportes (pestaña, encabezado de la sección y total de arriba).
+function _benContador(sub, n) {
+  const el = document.getElementById('ben-badge-' + sub);
+  if (el) el.textContent = n;
+  const total = ['nuevas', 'ediciones', 'reportes'].reduce((s, k) => s + (Number(document.getElementById('ben-badge-' + k)?.textContent) || 0), 0);
+  window._updateNotifTabBadge?.('beneficiarios', total);
+}
+
 // ── Admin: Beneficiarios ─────────────────────────────────────
 window.loadBeneficiarios = async function(force) {
   const list = document.getElementById('admin-beneficiarios-list');
@@ -805,16 +813,7 @@ window.loadBeneficiarios = async function(force) {
     const bens  = data.beneficiarios || [];
     window._benCache = window._benCache || {};
     bens.forEach(b => { window._benCache[b.id] = b; });
-    if (typeof window._updateNotifTabBadge === 'function') {
-      window._updateNotifTabBadge('beneficiarios', bens.length);
-    } else {
-      const cnt   = document.getElementById('sc-beneficiarios');
-      const badge = document.getElementById('tab-badge-beneficiarios');
-      if (cnt)   cnt.textContent   = bens.length;
-      if (badge) badge.textContent = bens.length;
-    }
-    const benBadgeNuevas = document.getElementById('ben-badge-nuevas');
-    if (benBadgeNuevas) benBadgeNuevas.textContent = bens.length;
+    _benContador('nuevas', bens.length);
     if (bens.length === 0) { list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:32px;">No hay solicitudes pendientes.</p>'; return; }
     list.innerHTML = bens.map(b => `
       <div class="vendor-card" style="border-left:4px solid #f97316;">
@@ -946,8 +945,7 @@ window.loadSolicitudesBeneficiario = async function(force) {
     const sols = data.solicitudes || [];
     const cnt = document.getElementById('sc-solicitudes-ben');
     if (cnt) cnt.textContent = sols.length;
-    const benBadgeEdiciones = document.getElementById('ben-badge-ediciones');
-    if (benBadgeEdiciones) benBadgeEdiciones.textContent = sols.length;
+    _benContador('ediciones', sols.length);
     if (sols.length === 0) { list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:20px;">No hay solicitudes de edición o eliminación.</p>'; return; }
 
     const campo = (label, actual, nuevo) => {
@@ -1061,8 +1059,7 @@ window.loadReportesBeneficiarios = async function(force) {
     const data  = await res.json();
     if (!data.ok) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:16px;">Error: ${escapeHtml(data.error)}</p>`; return; }
     const reportes = data.reportes || [];
-    const badge = document.getElementById('ben-badge-reportes');
-    if (badge) badge.textContent = reportes.length;
+    _benContador('reportes', reportes.length);
     if (reportes.length === 0) { list.innerHTML = '<p style="color:var(--modal-soft);text-align:center;padding:24px;">No hay reportes pendientes de revisar.</p>'; return; }
 
     reportes.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
