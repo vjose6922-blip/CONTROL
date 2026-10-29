@@ -18,6 +18,7 @@ import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast,
     databaseURL: "https://znr-live-default-rtdb.firebaseio.com",
     projectId: "znr-live",
   }, "chat-soporte");
+  await window.znrAppCheck?.(app);
   const db = getDatabase(app);
 
   async function api(action, extra) {
