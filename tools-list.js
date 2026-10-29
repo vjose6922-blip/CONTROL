@@ -67,3 +67,4 @@ window.actualizarContadoresHerramientas = () => {
 actualizarContadoresHerramientas();
 setInterval(() => !document.hidden && actualizarContadoresHerramientas(), 180000);
 window.addEventListener('znr:nueva-notificacion', actualizarContadoresHerramientas);
+document.addEventListener('visibilitychange', () => !document.hidden && actualizarContadoresHerramientas());
