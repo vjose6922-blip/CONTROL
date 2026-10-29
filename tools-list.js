@@ -65,5 +65,5 @@ window.actualizarContadoresHerramientas = () => {
   get(window.VENDEDORES_API_URL, 'obtenerSugerenciasConfiable').then((d) => d?.ok && pintarContador('confiable', (d.sugerencias || []).length));
 };
 actualizarContadoresHerramientas();
-setInterval(actualizarContadoresHerramientas, 180000);
+setInterval(() => !document.hidden && actualizarContadoresHerramientas(), 180000);
 window.addEventListener('znr:nueva-notificacion', actualizarContadoresHerramientas);
