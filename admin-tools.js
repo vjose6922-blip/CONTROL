@@ -1960,12 +1960,12 @@ window._renderVendorStatsList = function() {
   listEl.innerHTML = filtrados.map(v => {
       const { aprobados = 0, pendientes: pendProd = 0, stock = 0, total = 0 } = resumen[v.uid] || {};
       const esPlus    = v.plan === 'plus';
-      const limite    = v.limite != null ? v.limite : (esPlus ? 200 : 2);
+      const limite    = v.limite != null ? v.limite : (esPlus ? (v.planNivel === 'pro' ? 1000 : 400) : 20);
       const actuales  = v.productosActuales != null ? v.productosActuales : total;
       const diasRestantes = v.planVence ? Math.ceil((new Date(v.planVence) - new Date()) / 86400000) : null;
       const puedeSuspender = v.estado==='activo' && typeof AdminComunidad!=='undefined';
       const planBadge = esPlus
-        ? `<span style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">PLUS</span>`
+        ? `<span style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">${v.planNivel === 'pro' ? 'PRO' : 'PLUS'}</span>`
         : `<span style="background:#eee;color:#999;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;">FREE</span>`;
       const venceTxt = (esPlus && diasRestantes != null)
         ? `<div style="font-size:11px;color:${diasRestantes<=7?'#c62828':'#888'};margin-top:2px;">vence en ${diasRestantes}d</div>`
@@ -2078,8 +2078,10 @@ window.togglePlanVendedor = async function(uid, nombre, currentPlan) {
   if (!r) return;
   const dias = activar ? parseInt(r.dias, 10) : 0;
   if (activar && !(dias > 0)) return _msgVend('Número de días inválido.', 'error');
-  accionPlanVendedor({ action: 'marcarVendedorPlan', uid, plan: activar ? 'plus' : 'free', dias, razon: r.razon }, 'Actualizando plan...',
-    () => (activar ? `Plan Plus activado por ${dias} días para ${nombre}` : `Plan Plus removido de ${nombre}`));
+  const nivel = activar ? await new Promise((ok) => showCustomConfirm({ title: '¿Qué plan activar?', message: 'Plus: hasta 400 artículos · Pro: hasta 1,000 artículos.',
+    confirmText: 'Pro', cancelText: 'Plus', onConfirm: () => ok('pro'), onCancel: () => ok('plus') })) : '';
+  accionPlanVendedor({ action: 'marcarVendedorPlan', uid, plan: activar ? 'plus' : 'free', nivel, dias, razon: r.razon }, 'Actualizando plan...',
+    () => (activar ? `Plan ${nivel === 'pro' ? 'Pro' : 'Plus'} activado por ${dias} días para ${nombre}` : `Plan removido de ${nombre}`));
 };
 
 window.ajustarDiasPlus = async function(uid, nombre, diasActuales) {

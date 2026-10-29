@@ -130,6 +130,7 @@ async function confirmarRespuestaPlus(respuesta, btn) {
     const dias = parseInt(document.getElementById('plus-modal-dias').value) || 30;
     if (dias < 1) { errEl.textContent = 'Ingresa días válidos.'; errEl.style.display = ''; return; }
     body.dias = dias;
+    body.nivel = document.getElementById('plus-modal-nivel').value;
   } else {
     const motivo = document.getElementById('plus-modal-motivo').value.trim();
     if (!motivo) { errEl.textContent = 'Ingresa el motivo del rechazo.'; errEl.style.display = ''; return; }
