@@ -1,5 +1,5 @@
-const CACHE_NAME    = 'zr-admin-cache-v24';
-const DYNAMIC_CACHE = 'zr-admin-dynamic-v24';
+const CACHE_NAME    = 'zr-admin-cache-v25';
+const DYNAMIC_CACHE = 'zr-admin-dynamic-v25';
 
 const STATIC_ASSETS = [
   './',
@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
   'Tools.html',
   'styles.css',
   'image-modal.css',
+  'app-check.js',
   'api-config.js',
   'common.js',
   'admin.js',

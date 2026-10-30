@@ -5,15 +5,15 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' https://www.gstatic.com https://cdnjs.cloudflare.com https://unpkg.com;
+      script-src 'self' https://www.gstatic.com https://cdnjs.cloudflare.com https://unpkg.com https://www.google.com ;
       style-src 'self' 'unsafe-inline' https://unpkg.com;
       font-src 'self' https://unpkg.com data:;
       img-src 'self' data: blob: https://unpkg.com;
-      connect-src 'self' https://catalogo-api-1038143238323.us-central1.run.app https://beneficiarios-api-1038143238323.us-central1.run.app https://live-api-1038143238323.us-central1.run.app https://pedidos-api-1038143238323.us-central1.run.app https://historias-api-1038143238323.us-central1.run.app https://ventas-api-1038143238323.us-central1.run.app https://admin-api-1038143238323.us-central1.run.app;
+      connect-src 'self' https://catalogo-api-1038143238323.us-central1.run.app https://beneficiarios-api-1038143238323.us-central1.run.app https://live-api-1038143238323.us-central1.run.app https://pedidos-api-1038143238323.us-central1.run.app https://historias-api-1038143238323.us-central1.run.app https://ventas-api-1038143238323.us-central1.run.app https://admin-api-1038143238323.us-central1.run.app https://content-firebaseappcheck.googleapis.com https://www.google.com ;
       frame-ancestors 'none';
       object-src 'none';
-      base-uri 'self';
-    ">
+      base-uri 'self'; frame-src https://www.google.com;">
+<script src="app-check.js"></script>
     <script src="error-bootstrap.js"></script>
     <script src="theme-boot.js" data-default="dark"></script>
     <link rel="stylesheet" href="styles.css">
