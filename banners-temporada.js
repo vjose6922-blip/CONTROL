@@ -88,6 +88,8 @@
               <label>Texto<input name="avisoTexto" placeholder="Vacío = descripción" maxlength="140"></label></div>
             <label>Imagen de la notificación (horizontal 2:1, ej. 1024×512; vacía = la del banner)<input type="file" name="archivoAviso" accept="image/*"></label>
             <div id="aviso-prev"></div>
+            <div class="fila"><input name="pruebaTel" type="tel" maxlength="10" placeholder="Tu número (10 dígitos)"><button type="button" id="btn-prueba-aviso" class="text-button">Enviarme una prueba</button></div>
+            <span id="prueba-msg" style="font-size:12px;font-weight:600;"></span>
           </div></details>
           <div style="display:flex;gap:8px;"><button type="submit" class="primary-button" style="flex:1">Guardar</button><button type="reset" class="text-button">Limpiar</button></div>
         </form>
@@ -109,6 +111,19 @@
         <b>${esc(d.avisoTitulo || d.titulo || 'Título')}</b>${esc(d.avisoTexto || d.descripcion || d.subtitulo)}${img ? `<img src="${esc(img)}" alt="">` : ''}</div></div>`;
     };
     form.addEventListener('invalid', (e) => e.target === form.querySelector(':invalid') && e.target.closest('details')?.setAttribute('open', ''), true); // abre la sección del primer campo obligatorio que falta
+    // Prueba: manda el aviso (texto actual del formulario) solo a los dispositivos de ese número y dice cómo le fue.
+    document.getElementById('btn-prueba-aviso').onclick = async (e) => {
+      const d = Object.fromEntries(new FormData(form)), msg = document.getElementById('prueba-msg');
+      const imagen = [avisoUrl, imgUrl].find((u) => /^https:/.test(u)) || ''; // una imagen recién elegida aún no está subida: se usa la guardada
+      try { localStorage.setItem('znr_prueba_tel', d.pruebaTel); } catch (_) {}
+      e.target.disabled = true; msg.style.color = ''; msg.textContent = 'Enviando…';
+      const r = await apiFetch(window.ADMIN_API_URL, { action: 'probarAvisoTemporada', token: getAdminToken(), telefono: d.pruebaTel,
+        titulo: d.avisoTitulo || d.titulo, texto: d.avisoTexto || d.descripcion || d.subtitulo, imagen }, true).then((x) => x.json()).catch(() => ({ error: 'Error de red' }));
+      msg.style.color = r.ok && r.enviados ? '#22c55e' : '#ef4444';
+      msg.textContent = r.ok ? `Enviada a ${r.enviados} de ${r.dispositivos} dispositivo(s)${r.errores?.length ? ' · Firebase: ' + r.errores.join(', ') : ''}${/^blob:/.test(avisoUrl) ? ' · con la imagen guardada (guarda para usar la nueva)' : ''}` : r.error || 'No se pudo enviar';
+      e.target.disabled = false;
+    };
+    try { form.pruebaTel.value = localStorage.getItem('znr_prueba_tel') || ''; } catch (_) {}
     form.oninput = (e) => {
       if (e.target.name === 'archivoAviso' && e.target.files[0]) avisoUrl = URL.createObjectURL(e.target.files[0]);
       if (e.target.name === 'archivo' && e.target.files[0]) imgUrl = URL.createObjectURL(e.target.files[0]);
@@ -127,7 +142,7 @@
           <button type="button" class="text-button" data-borrar="${esc(id)}">×</button>
         </div>`; }).join('') : '<p style="text-align:center;color:var(--modal-soft);">Aún no hay banners.</p>';
     };
-    form.onreset = () => setTimeout(() => { form.elements.id.value = ''; form.inicio.value = hoy; imgUrl = ''; avisoUrl = ''; document.getElementById('banner-form-t').textContent = 'Nuevo banner'; preview(); });
+    form.onreset = () => setTimeout(() => { form.elements.id.value = ''; form.inicio.value = hoy; imgUrl = ''; avisoUrl = ''; try { form.pruebaTel.value = localStorage.getItem('znr_prueba_tel') || ''; } catch (_) {} document.getElementById('banner-form-t').textContent = 'Nuevo banner'; preview(); });
     lista.onclick = async (e) => {
       const ed = e.target.dataset.editar, del = e.target.dataset.borrar, ren = e.target.dataset.renovar;
       if (ren) { // vuelve a guardar el banner (misma imagen y texto) con las fechas del año siguiente
@@ -161,7 +176,7 @@
       btn.disabled = true; btn.textContent = 'Guardando…';
       try {
         const datos = Object.fromEntries(new FormData(form));
-        delete datos.archivo; delete datos.archivoAviso;
+        delete datos.archivo; delete datos.archivoAviso; delete datos.pruebaTel;
         if (form.archivo.files[0]) datos.imagen = await comprimir(form.archivo.files[0]);
         if (form.archivoAviso.files[0]) datos.avisoImagen = await comprimir(form.archivoAviso.files[0]);
         const r = await apiFetch(window.ADMIN_API_URL, { action: 'guardarBannerTemporada', token: getAdminToken(), ...datos }, true).then((x) => x.json());
