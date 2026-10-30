@@ -118,7 +118,7 @@
       try { localStorage.setItem('znr_prueba_tel', d.pruebaTel); } catch (_) {}
       e.target.disabled = true; msg.style.color = ''; msg.textContent = 'Enviando…';
       const r = await apiFetch(window.ADMIN_API_URL, { action: 'probarAvisoTemporada', token: getAdminToken(), telefono: d.pruebaTel,
-        titulo: d.avisoTitulo || d.titulo, texto: d.avisoTexto || d.descripcion || d.subtitulo, imagen }, true).then((x) => x.json()).catch(() => ({ error: 'Error de red' }));
+        titulo: d.avisoTitulo || d.titulo, texto: d.avisoTexto || d.descripcion || d.subtitulo, imagen, temporada: d.temporada }, true).then((x) => x.json()).catch(() => ({ error: 'Error de red' }));
       msg.style.color = r.ok && r.enviados ? '#22c55e' : '#ef4444';
       msg.textContent = r.ok ? `Enviada a ${r.enviados} de ${r.dispositivos} dispositivo(s)${r.errores?.length ? ' · Firebase: ' + r.errores.join(', ') : ''}${/^blob:/.test(avisoUrl) ? ' · con la imagen guardada (guarda para usar la nueva)' : ''}` : r.error || 'No se pudo enviar';
       e.target.disabled = false;
