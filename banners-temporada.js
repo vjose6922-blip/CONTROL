@@ -3,8 +3,11 @@
 // Los nombres de temporada deben coincidir con temporadas.js del sitio.
 (function () {
   const RTDB = 'https://znr-live-default-rtdb.firebaseio.com/banners_temporada.json';
-  const TEMPORADAS = ['Año Nuevo', 'Día de Reyes', 'Día de la Candelaria', 'San Valentín (Amor y Amistad)', 'Día Internacional de la Mujer', 'Semana Santa', 'Día del Niño', 'Día de las Madres', 'Día del Padre', 'Día del Maestro', 'Fiestas Patrias (Septiembre)', 'Halloween', 'Día de Muertos', 'Acción de Gracias', 'Posadas', 'Navidad', 'Fin de Año',
-    'Regreso a clases', 'Vacaciones de verano', 'Vacaciones de invierno', 'Graduaciones', 'Temporada de bodas', 'Hot Sale', 'Buen Fin', 'Black Friday', 'Rebajas de fin de temporada'];
+  const TEMPORADAS = {
+    Festividades: ['Año Nuevo', 'Día de Reyes', 'Día de la Candelaria', 'San Valentín (Amor y Amistad)', 'Día Internacional de la Mujer', 'Semana Santa', 'Día del Niño', 'Día de las Madres', 'Día del Padre', 'Día del Maestro', 'Fiestas Patrias (Septiembre)', 'Halloween', 'Día de Muertos', 'Acción de Gracias', 'Posadas', 'Navidad', 'Fin de Año'],
+    'Festivales escolares': ['Día de la Bandera', 'Festival de primavera', 'Festival del Día del Niño', 'Festival del Día de las Madres', 'Clausura y fin de curso', 'Desfile y kermés de Fiestas Patrias', 'Altar de muertos', 'Desfile de la Revolución', 'Pastorela y posada escolar'],
+    Temporadas: ['Regreso a clases', 'Vacaciones de verano', 'Vacaciones de invierno', 'Graduaciones', 'Temporada de bodas', 'Hot Sale', 'Buen Fin', 'Black Friday', 'Rebajas de fin de temporada']
+  };
   const POS = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
   const CSS = `@font-face { font-family: 'ZNR Serif'; font-weight: 700; src: url('fonts/playfair-display-latin-700-normal.woff2') format('woff2'); }
 #banner-form { display: grid; gap: 12px; border: 1px solid var(--modal-border, #eee); border-radius: 16px; padding: 16px; margin-bottom: 18px; }
@@ -79,7 +82,7 @@
           <details name="bt"><summary>Dónde y cuándo <small data-res="cuando"></small></summary><div class="bt-cuerpo">
             <label>Dónde mostrar<select name="donde"><option value="ambos">Inicio y Comunidad</option><option value="inicio">Solo Inicio</option><option value="comunidad">Solo Comunidad</option></select></label>
             <label>Mostrar solo este banner<select name="exclusivo"><option value="no">No, rota junto con los demás</option><option value="si">Sí, oculta los demás (campañas fuertes)</option></select></label>
-            <label>Temporada (para "Podría interesarte")<select name="temporada">${TEMPORADAS.map((t) => `<option>${esc(t)}</option>`).join('')}</select></label>
+            <label>Temporada (para "Podría interesarte")<select name="temporada">${Object.entries(TEMPORADAS).map(([g, l]) => `<optgroup label="${esc(g)}">${l.map((t) => `<option>${esc(t)}</option>`).join('')}</optgroup>`).join('')}</select></label>
             <div class="fila"><label>Desde<input type="date" name="inicio" required value="${hoy}"></label><label>Hasta<input type="date" name="fin" required></label></div>
           </div></details>
           <details name="bt"><summary>Notificación <small data-res="aviso"></small></summary><div class="bt-cuerpo">
