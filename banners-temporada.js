@@ -67,6 +67,10 @@
           <label>Mostrar solo este banner<select name="exclusivo"><option value="no">No, rota junto con los demás</option><option value="si">Sí, oculta los demás (campañas fuertes)</option></select></label>
           <label>Temporada (para "Podría interesarte")<select name="temporada">${TEMPORADAS.map((t) => `<option>${esc(t)}</option>`).join('')}</select></label>
           <div class="fila"><label>Desde<input type="date" name="inicio" required value="${hoy}"></label><label>Hasta<input type="date" name="fin" required></label></div>
+          <label>Notificación cuando empiece<select name="aviso"><option value="si">Sí, avisar a compradores y vendedores</option><option value="no">No avisar</option></select></label>
+          <div class="fila"><label>Título de la notificación<input name="avisoTitulo" placeholder="Vacío = título del banner" maxlength="60"></label>
+            <label>Texto<input name="avisoTexto" placeholder="Vacío = descripción" maxlength="140"></label></div>
+          <label>Imagen de la notificación (horizontal 2:1, ej. 1024×512; vacía = la del banner)<input type="file" name="archivoAviso" accept="image/*"></label>
           <div style="display:flex;gap:8px;"><button type="submit" class="primary-button" style="flex:1">Guardar</button><button type="reset" class="text-button">Limpiar</button></div>
         </form>
         <div id="banners-lista">Cargando…</div>
@@ -90,7 +94,7 @@
       lista.innerHTML = ids.length ? ids.map((id) => { const b = banners[id], vivo = b.inicio <= hoy && hoy <= b.fin; return `
         <div style="display:flex;gap:10px;align-items:center;border:1px solid var(--modal-border);border-radius:14px;padding:10px;margin-bottom:10px;">
           <img src="${esc(b.imagen)}" alt="" style="width:96px;height:40px;object-fit:cover;border-radius:8px;">
-          <div style="flex:1;min-width:0;font-size:.8rem;"><b>${esc(b.titulo)}</b> ${esc(b.subtitulo)}<br><span style="color:${vivo ? '#22c55e' : 'var(--modal-muted)'}">${vivo ? 'Visible · ' : ''}${b.exclusivo === 'si' ? 'Solo este · ' : ''}${{ inicio: 'Inicio · ', ambos: 'Inicio y Comunidad · ' }[b.donde] || 'Comunidad · '}${esc(b.inicio)} → ${esc(b.fin)} · ${esc(b.temporada)}</span></div>
+          <div style="flex:1;min-width:0;font-size:.8rem;"><b>${esc(b.titulo)}</b> ${esc(b.subtitulo)}<br><span style="color:${vivo ? '#22c55e' : 'var(--modal-muted)'}">${vivo ? 'Visible · ' : ''}${b.exclusivo === 'si' ? 'Solo este · ' : ''}${{ inicio: 'Inicio · ', ambos: 'Inicio y Comunidad · ' }[b.donde] || 'Comunidad · '}${b.aviso === 'si' ? (b.avisado === b.inicio ? 'Notificación enviada · ' : 'Notificará al empezar · ') : ''}${esc(b.inicio)} → ${esc(b.fin)} · ${esc(b.temporada)}</span></div>
           ${b.fin < hoy ? `<button type="button" class="primary-button" style="padding:6px 12px;font-size:.75rem;" data-renovar="${esc(id)}">Renovar ${+b.fin.slice(0, 4) + 1}</button>` : ''}
           <button type="button" class="text-button" data-editar="${esc(id)}">Editar</button>
           <button type="button" class="text-button" data-borrar="${esc(id)}">×</button>
@@ -129,8 +133,9 @@
       btn.disabled = true; btn.textContent = 'Guardando…';
       try {
         const datos = Object.fromEntries(new FormData(form));
-        delete datos.archivo;
+        delete datos.archivo; delete datos.archivoAviso;
         if (form.archivo.files[0]) datos.imagen = await comprimir(form.archivo.files[0]);
+        if (form.archivoAviso.files[0]) datos.avisoImagen = await comprimir(form.archivoAviso.files[0]);
         const r = await apiFetch(window.ADMIN_API_URL, { action: 'guardarBannerTemporada', token: getAdminToken(), ...datos }, true).then((x) => x.json());
         if (!r.ok) throw new Error(r.error || 'Error del servidor');
         form.reset();
