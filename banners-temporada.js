@@ -19,7 +19,10 @@
 .bt-pos input { display: none; }
 .bt-pos span { display: block; height: 20px; border-radius: 5px; background: var(--modal-border, #e5e5e5); cursor: pointer; }
 .bt-pos input:checked + span { background: #ff4f81; }
-.bt-chk { display: flex !important; align-items: center; gap: 6px; }`;
+.bt-chk { display: flex !important; align-items: center; gap: 6px; }
+.bt-noti { display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding: 12px; border-radius: 20px; background: #3a3a3c; color: #fff; font-size: 13px; }
+.bt-noti i { width: 34px; height: 34px; border-radius: 9px; background: #ff4f81; display: grid; place-items: center; font: 700 11px Georgia, serif; font-style: normal; }
+.bt-noti small { opacity: .7; } .bt-noti b { display: block; font-size: 14px; } .bt-noti img { width: 100%; aspect-ratio: 2; object-fit: cover; border-radius: 12px; margin-top: 8px; display: block; }`;
   const esc = (s) => escapeHtml(String(s ?? ''));
   const hoy = new Date().toLocaleDateString('en-CA');
   // Mismas fechas un año después (29 feb → 28 feb); si venció hace más de un año, se sigue sumando hasta que quede vigente o futuro.
@@ -71,6 +74,7 @@
           <div class="fila"><label>Título de la notificación<input name="avisoTitulo" placeholder="Vacío = título del banner" maxlength="60"></label>
             <label>Texto<input name="avisoTexto" placeholder="Vacío = descripción" maxlength="140"></label></div>
           <label>Imagen de la notificación (horizontal 2:1, ej. 1024×512; vacía = la del banner)<input type="file" name="archivoAviso" accept="image/*"></label>
+          <div id="aviso-prev"></div>
           <div style="display:flex;gap:8px;"><button type="submit" class="primary-button" style="flex:1">Guardar</button><button type="reset" class="text-button">Limpiar</button></div>
         </form>
         <div id="banners-lista">Cargando…</div>
@@ -78,12 +82,17 @@
     document.body.appendChild(modal);
     document.getElementById('btn-close-banners').onclick = () => modal.remove();
     const form = document.getElementById('banner-form'), lista = document.getElementById('banners-lista'), prev = document.getElementById('banner-prev');
-    let banners = {}, imgUrl = '';
+    let banners = {}, imgUrl = '', avisoUrl = ''; // avisoUrl: imagen propia de la notificación (guardada o recién elegida)
     const preview = () => {
-      prev.innerHTML = znrBanner.html({ ...Object.fromEntries(new FormData(form)), imagen: imgUrl });
+      const d = Object.fromEntries(new FormData(form)), img = avisoUrl || imgUrl;
+      prev.innerHTML = znrBanner.html({ ...d, imagen: imgUrl });
       document.getElementById('banner-aviso').hidden = !znrBanner.desborda(prev.firstElementChild);
+      // Así se verá la notificación en Android (en iPhone sale sin imagen).
+      document.getElementById('aviso-prev').innerHTML = d.aviso === 'no' ? '' : `<div class="bt-noti"><i>Z&amp;R</i><div><small>Z&amp;R Comunidad · ${avisoUrl ? 'imagen propia' : 'imagen del banner'}</small>
+        <b>${esc(d.avisoTitulo || d.titulo || 'Título')}</b>${esc(d.avisoTexto || d.descripcion || d.subtitulo)}${img ? `<img src="${esc(img)}" alt="">` : ''}</div></div>`;
     };
     form.oninput = (e) => {
+      if (e.target.name === 'archivoAviso' && e.target.files[0]) avisoUrl = URL.createObjectURL(e.target.files[0]);
       if (e.target.name === 'archivo' && e.target.files[0]) imgUrl = URL.createObjectURL(e.target.files[0]);
       preview();
     };
@@ -100,7 +109,7 @@
           <button type="button" class="text-button" data-borrar="${esc(id)}">×</button>
         </div>`; }).join('') : '<p style="text-align:center;color:var(--modal-soft);">Aún no hay banners.</p>';
     };
-    form.onreset = () => setTimeout(() => { form.elements.id.value = ''; form.inicio.value = hoy; imgUrl = ''; document.getElementById('banner-form-t').textContent = 'Nuevo banner'; preview(); });
+    form.onreset = () => setTimeout(() => { form.elements.id.value = ''; form.inicio.value = hoy; imgUrl = ''; avisoUrl = ''; document.getElementById('banner-form-t').textContent = 'Nuevo banner'; preview(); });
     lista.onclick = async (e) => {
       const ed = e.target.dataset.editar, del = e.target.dataset.borrar, ren = e.target.dataset.renovar;
       if (ren) { // vuelve a guardar el banner (misma imagen y texto) con las fechas del año siguiente
@@ -117,6 +126,7 @@
           Object.entries(banners[ed]).forEach(([k, v]) => form.elements[k] && (form.elements[k].value = v));
           form.elements.id.value = ed;
           imgUrl = banners[ed].imagen;
+          avisoUrl = banners[ed].avisoImagen || '';
           document.getElementById('banner-form-t').textContent = 'Editar banner (deja la imagen vacía para conservarla)';
           preview();
           form.scrollIntoView({ behavior: 'smooth' });
