@@ -12,6 +12,12 @@
 #banner-form :is(input:not([type=radio]), select) { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--modal-border, #e0e0e0); border-radius: 12px; background: var(--modal-input-bg, transparent); color: var(--modal-text, inherit); font: inherit; font-size: 14px; }
 #banner-form :is(input, select):focus { outline: none; border-color: #ff4f81; box-shadow: 0 0 0 3px rgba(255, 79, 129, .12); }
 #banner-form .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#banner-form details { border: 1px solid var(--modal-border, #eee); border-radius: 12px; }
+#banner-form summary { display: flex; align-items: center; gap: 8px; padding: 12px 14px; cursor: pointer; list-style: none; font-weight: 700; font-size: 14px; }
+#banner-form summary::-webkit-details-marker { display: none; }
+#banner-form summary small { margin-left: auto; font-weight: 500; font-size: 12px; color: var(--modal-soft, #888); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
+#banner-form summary:after { content: '›'; font-size: 18px; color: var(--modal-soft, #aaa); transition: transform .2s; } #banner-form details[open] summary:after { transform: rotate(90deg); }
+#banner-form .bt-cuerpo { display: grid; gap: 12px; padding: 0 14px 14px; }
 .bt-prev { position: sticky; top: 58px; z-index: 1; display: flex; padding: 6px 0; background: var(--modal-bg, #fff); }
 .bt-prev .com-banner { background: repeating-conic-gradient(#0001 0 25%, #0000 0 50%) 0 0 / 16px 16px; }
 .bt-aviso { font-size: 12px; color: #ef4444; font-weight: 600; }
@@ -56,25 +62,33 @@
           <div class="bt-prev" id="banner-prev"></div>
           <span class="bt-aviso" id="banner-aviso" hidden>El texto no cabe completo: acórtalo, baja el tamaño o muévelo.</span>
           <input type="hidden" name="id">
-          <label>Imagen (sin texto, 1200×500 recomendado)<input type="file" name="archivo" accept="image/*"></label>
-          <label>Título<input name="titulo" placeholder="Ej. Halloween" maxlength="60" required></label>
-          <label>Subtítulo<input name="subtitulo" placeholder="Ej. Season" maxlength="40"></label>
-          <label>Descripción<input name="descripcion" placeholder="Ej. Artículos para esta temporada" maxlength="140"></label>
-          <label>Texto del botón (vacío = sin botón)<input name="boton" placeholder="Ej. Ver productos" maxlength="30"></label>
-          <div class="fila"><label>Posición del texto${pickPos('pos', 'ml')}</label>
-            <label>Posición del botón${pickPos('botonPos', '')}<span class="bt-chk"><input type="radio" name="botonPos" value="txt" checked> Debajo del texto</span></label></div>
-          <div class="fila"><label>Tamaño del texto<select name="escala"><option value="0.85">Chico</option><option value="1" selected>Normal</option><option value="1.15">Grande</option><option value="1.3">Muy grande</option></select></label>
-            <label>Color del texto<select name="tema"><option value="oscuro">Oscuro (imagen clara)</option><option value="claro">Blanco (imagen oscura)</option></select></label></div>
-          <label>Sombra detrás del texto<select name="degradado"><option value="si">Sí (se lee mejor)</option><option value="no">No</option></select></label>
-          <label>Dónde mostrar<select name="donde"><option value="ambos">Inicio y Comunidad</option><option value="inicio">Solo Inicio</option><option value="comunidad">Solo Comunidad</option></select></label>
-          <label>Mostrar solo este banner<select name="exclusivo"><option value="no">No, rota junto con los demás</option><option value="si">Sí, oculta los demás (campañas fuertes)</option></select></label>
-          <label>Temporada (para "Podría interesarte")<select name="temporada">${TEMPORADAS.map((t) => `<option>${esc(t)}</option>`).join('')}</select></label>
-          <div class="fila"><label>Desde<input type="date" name="inicio" required value="${hoy}"></label><label>Hasta<input type="date" name="fin" required></label></div>
-          <label>Notificación cuando empiece<select name="aviso"><option value="si">Sí, avisar a compradores y vendedores</option><option value="no">No avisar</option></select></label>
-          <div class="fila"><label>Título de la notificación<input name="avisoTitulo" placeholder="Vacío = título del banner" maxlength="60"></label>
-            <label>Texto<input name="avisoTexto" placeholder="Vacío = descripción" maxlength="140"></label></div>
-          <label>Imagen de la notificación (horizontal 2:1, ej. 1024×512; vacía = la del banner)<input type="file" name="archivoAviso" accept="image/*"></label>
-          <div id="aviso-prev"></div>
+          <details name="bt" open><summary>Imagen y texto <small data-res="texto"></small></summary><div class="bt-cuerpo">
+            <label>Imagen (sin texto, 1200×500 recomendado)<input type="file" name="archivo" accept="image/*"></label>
+            <label>Título<input name="titulo" placeholder="Ej. Halloween" maxlength="60" required></label>
+            <label>Subtítulo<input name="subtitulo" placeholder="Ej. Season" maxlength="40"></label>
+            <label>Descripción<input name="descripcion" placeholder="Ej. Artículos para esta temporada" maxlength="140"></label>
+            <label>Texto del botón (vacío = sin botón)<input name="boton" placeholder="Ej. Ver productos" maxlength="30"></label>
+          </div></details>
+          <details name="bt"><summary>Diseño del texto <small data-res="diseno"></small></summary><div class="bt-cuerpo">
+            <div class="fila"><label>Posición del texto${pickPos('pos', 'ml')}</label>
+              <label>Posición del botón${pickPos('botonPos', '')}<span class="bt-chk"><input type="radio" name="botonPos" value="txt" checked> Debajo del texto</span></label></div>
+            <div class="fila"><label>Tamaño del texto<select name="escala"><option value="0.85">Chico</option><option value="1" selected>Normal</option><option value="1.15">Grande</option><option value="1.3">Muy grande</option></select></label>
+              <label>Color del texto<select name="tema"><option value="oscuro">Oscuro (imagen clara)</option><option value="claro">Blanco (imagen oscura)</option></select></label></div>
+            <label>Sombra detrás del texto<select name="degradado"><option value="si">Sí (se lee mejor)</option><option value="no">No</option></select></label>
+          </div></details>
+          <details name="bt"><summary>Dónde y cuándo <small data-res="cuando"></small></summary><div class="bt-cuerpo">
+            <label>Dónde mostrar<select name="donde"><option value="ambos">Inicio y Comunidad</option><option value="inicio">Solo Inicio</option><option value="comunidad">Solo Comunidad</option></select></label>
+            <label>Mostrar solo este banner<select name="exclusivo"><option value="no">No, rota junto con los demás</option><option value="si">Sí, oculta los demás (campañas fuertes)</option></select></label>
+            <label>Temporada (para "Podría interesarte")<select name="temporada">${TEMPORADAS.map((t) => `<option>${esc(t)}</option>`).join('')}</select></label>
+            <div class="fila"><label>Desde<input type="date" name="inicio" required value="${hoy}"></label><label>Hasta<input type="date" name="fin" required></label></div>
+          </div></details>
+          <details name="bt"><summary>Notificación <small data-res="aviso"></small></summary><div class="bt-cuerpo">
+            <label>Notificación cuando empiece<select name="aviso"><option value="si">Sí, avisar a compradores y vendedores</option><option value="no">No avisar</option></select></label>
+            <div class="fila"><label>Título de la notificación<input name="avisoTitulo" placeholder="Vacío = título del banner" maxlength="60"></label>
+              <label>Texto<input name="avisoTexto" placeholder="Vacío = descripción" maxlength="140"></label></div>
+            <label>Imagen de la notificación (horizontal 2:1, ej. 1024×512; vacía = la del banner)<input type="file" name="archivoAviso" accept="image/*"></label>
+            <div id="aviso-prev"></div>
+          </div></details>
           <div style="display:flex;gap:8px;"><button type="submit" class="primary-button" style="flex:1">Guardar</button><button type="reset" class="text-button">Limpiar</button></div>
         </form>
         <div id="banners-lista">Cargando…</div>
@@ -87,10 +101,14 @@
       const d = Object.fromEntries(new FormData(form)), img = avisoUrl || imgUrl;
       prev.innerHTML = znrBanner.html({ ...d, imagen: imgUrl });
       document.getElementById('banner-aviso').hidden = !znrBanner.desborda(prev.firstElementChild);
+      const fecha = (f) => f ? new Date(f + 'T12:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : '?';
+      Object.entries({ texto: d.titulo || 'Falta el título', diseno: { '0.85': 'Chico', 1: 'Normal', '1.15': 'Grande', '1.3': 'Muy grande' }[d.escala] + ' · ' + (d.tema === 'claro' ? 'blanco' : 'oscuro'),
+        cuando: `${fecha(d.inicio)} → ${fecha(d.fin)}`, aviso: d.aviso === 'no' ? 'No avisar' : 'Avisar al empezar' }).forEach(([k, v]) => { form.querySelector(`[data-res="${k}"]`).textContent = v; });
       // Así se verá la notificación en Android (en iPhone sale sin imagen).
       document.getElementById('aviso-prev').innerHTML = d.aviso === 'no' ? '' : `<div class="bt-noti"><i>Z&amp;R</i><div><small>Z&amp;R Comunidad · ${avisoUrl ? 'imagen propia' : 'imagen del banner'}</small>
         <b>${esc(d.avisoTitulo || d.titulo || 'Título')}</b>${esc(d.avisoTexto || d.descripcion || d.subtitulo)}${img ? `<img src="${esc(img)}" alt="">` : ''}</div></div>`;
     };
+    form.addEventListener('invalid', (e) => e.target === form.querySelector(':invalid') && e.target.closest('details')?.setAttribute('open', ''), true); // abre la sección del primer campo obligatorio que falta
     form.oninput = (e) => {
       if (e.target.name === 'archivoAviso' && e.target.files[0]) avisoUrl = URL.createObjectURL(e.target.files[0]);
       if (e.target.name === 'archivo' && e.target.files[0]) imgUrl = URL.createObjectURL(e.target.files[0]);
