@@ -5,7 +5,7 @@
   const RTDB = 'https://znr-live-default-rtdb.firebaseio.com/banners_temporada.json';
   const TEMPORADAS = {
     Festividades: ['Año Nuevo', 'Día de Reyes', 'Día de la Candelaria', 'San Valentín (Amor y Amistad)', 'Día Internacional de la Mujer', 'Semana Santa', 'Día del Niño', 'Día de las Madres', 'Día del Padre', 'Día del Maestro', 'Fiestas Patrias (Septiembre)', 'Halloween', 'Día de Muertos', 'Acción de Gracias', 'Posadas', 'Navidad', 'Fin de Año'],
-    'Festivales escolares': ['Día de la Bandera', 'Festival de primavera', 'Festival del Día del Niño', 'Festival del Día de las Madres', 'Clausura y fin de curso', 'Desfile y kermés de Fiestas Patrias', 'Altar de muertos', 'Desfile de la Revolución', 'Pastorela y posada escolar'],
+    'Festivales escolares': ['Día de la Constitución', 'Día de la Bandera', 'Festival del Amor y la Amistad', 'Festival de primavera', 'Festival del Día del Niño', 'Batalla de Puebla', 'Festival del Día de las Madres', 'Clausura y fin de curso', 'Desfile y kermés de Fiestas Patrias', 'Día de la Raza', 'Día de las Naciones Unidas', 'Festival de Halloween y Día de Muertos', 'Desfile de la Revolución', 'Pastorela y posada escolar'],
     Temporadas: ['Regreso a clases', 'Vacaciones de verano', 'Vacaciones de invierno', 'Graduaciones', 'Temporada de bodas', 'Hot Sale', 'Buen Fin', 'Black Friday', 'Rebajas de fin de temporada']
   };
   const POS = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
