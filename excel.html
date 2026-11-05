@@ -21,8 +21,7 @@ input,textarea{font-family:inherit}
 
 /* Modo vista: solo la tabla, sin edición ni teclado */
 body.vista #titlebar,body.vista #ribbon,body.vista #toolbar,body.vista #formulabar,body.vista #statusbar,body.vista #addsheet,body.vista #celleditor,body.vista #selectionoverlay{display:none!important}
-#vistabtn,#filtrobtn{position:fixed;right:12px;bottom:40px;z-index:60;background:var(--green);color:#fff;border-radius:18px;padding:7px 14px;box-shadow:var(--shadow);font-weight:600}
-#filtrobtn{right:120px}
+#vistabtn{position:fixed;right:12px;bottom:40px;z-index:60;background:var(--green);color:#fff;border-radius:18px;padding:7px 14px;box-shadow:var(--shadow);font-weight:600}
 
 /* Title bar */
 #titlebar{height:32px;background:var(--green);color:#fff;display:flex;align-items:center;padding:0 12px;font-size:13px;font-weight:600}
@@ -171,7 +170,7 @@ body.vista #titlebar,body.vista #ribbon,body.vista #toolbar,body.vista #formulab
 <div id="commentpopup"></div>
 <div id="colorpicker"></div>
 <div id="dialogs"></div>
-<button id="vistabtn"></button><button id="filtrobtn">🔽 Filtrar</button>
+<button id="vistabtn"></button>
 <script>
 "use strict";
 /* ================================================================
@@ -616,7 +615,7 @@ const valid = Validation.getValidation(sheet, r, c);
       
       ctx.fillRect(x,0,w,this.headerH);
       ctx.strokeStyle='#ccc';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,this.headerH);ctx.stroke();
-      ctx.fillStyle='#333';ctx.fillText(U.colToLetter(c),x+w/2,this.headerH/2);
+      ctx.fillStyle='#333';ctx.fillText(U.colToLetter(c)+(getActiveSheet().autoFilter?.filters[c]?' 🔽':''),x+w/2,this.headerH/2);
     }
     ctx.restore();
     ctx.save();ctx.beginPath();ctx.rect(0,this.headerH,this.cornerW,vh);ctx.clip();
@@ -2236,6 +2235,12 @@ const Filter = {
       }
       sheet.rowHidden[r]=!visible;
     }
+  },
+
+  remove(col){
+    const sh=getActiveSheet(),af=sh.autoFilter;if(!af)return;delete af.filters[col];
+    if(!Object.keys(af.filters).length)return this.clear();
+    sh.rowHidden={};this.applyFilters(sh);Grid.needsRender=true;
   },
 
   clear(){
@@ -4360,7 +4365,7 @@ UI.freezeDialog=function(){
   });
 };
 
-UI.filterDialog=function(){
+UI.filterDialog=function(colFijo){
   // Sin rango seleccionado (una sola celda) → toda la tabla, con la fila 1 como encabezado
   const sh=getActiveSheet(),rows=ExcelClone.getRows();let rg=sh.autoFilter?.range||Sel.getSelectedRange();
   if(rg.r0===rg.r1&&rg.c0===rg.c1)rg={r0:0,r1:rows.length-1,c0:0,c1:(rows[0]||[]).length-1};
@@ -4370,8 +4375,10 @@ UI.filterDialog=function(){
     <div class="drow"><label>Criterio</label><select id="flt_type"><option value="contains">Contiene</option><option value="equals">Es igual a</option><option value="greater">Mayor que</option><option value="less">Menor que</option></select></div>
     <div class="drow"><label>Valor</label><input type="text" id="flt_value" list="flt_vals"><datalist id="flt_vals"></datalist></div>
   `;
-  const footer='<button class="dbtn primary" id="flt_apply">Aplicar filtro</button><button class="dbtn" onclick="Filter.clear();this.closest(\'.dialog\').remove()">Quitar</button><button class="dbtn" onclick="this.closest(\'.dialog\').remove()">Cancelar</button>';
-  const d=this.dialog('Autofiltro',body,footer);
+  const footer='<button class="dbtn primary" id="flt_apply">Aplicar filtro</button><button class="dbtn" id="flt_clear">Quitar</button><button class="dbtn" onclick="this.closest(\'.dialog\').remove()">Cancelar</button>';
+  const fijo=colFijo!=null,d=this.dialog(fijo?'Filtrar: '+head(colFijo):'Autofiltro',body,footer);
+  if(fijo){const sel=d.querySelector('#flt_col'),prev=sh.autoFilter?.filters[colFijo];sel.value=colFijo;sel.closest('.drow').style.display='none';if(prev){d.querySelector('#flt_type').value=prev.type;d.querySelector('#flt_value').value=prev.value;}}
+  d.querySelector('#flt_clear').onclick=()=>{fijo?Filter.remove(colFijo):Filter.clear();d.remove();};
   const vals=()=>{const c=+d.querySelector('#flt_col').value;d.querySelector('#flt_vals').innerHTML=[...new Set(rows.slice(r0+1,r1+1).map(f=>String(f[c]??'')))].filter(Boolean).slice(0,200).map(v=>`<option value="${v.replace(/"/g,'&quot;')}">`).join('');};
   d.querySelector('#flt_col').addEventListener('change',vals);vals();
   d.querySelector('#flt_apply').addEventListener('click',()=>{
@@ -4646,9 +4653,14 @@ function init(){
 
   EMBED.apply();
   // Modo vista: bloquea toda interacción con la hoja (en captura) salvo scroll, pestañas y el propio botón
-  ['keydown','mousedown','pointerdown','touchstart','click','dblclick','contextmenu'].forEach(t=>window.addEventListener(t,e=>{if(EMBED.vista&&!e.target.closest?.('#vistabtn,#filtrobtn,.shtab,.dialog'))e.stopImmediatePropagation();},true));
+  ['keydown','mousedown','pointerdown','touchstart','click','dblclick','contextmenu'].forEach(t=>window.addEventListener(t,e=>{
+    if(!EMBED.vista||e.target.closest?.('#vistabtn,.shtab,.dialog'))return;
+    e.stopImmediatePropagation();
+    if(t!=='click'||!e.target.closest?.('#gridwrap')||document.querySelector('.dialog'))return;
+    const rc=e.target.closest('#gridwrap').getBoundingClientRect(),h=Grid.hitTest(e.clientX-rc.left,e.clientY-rc.top),y=(e.clientY-rc.top)/State.zoom;
+    if(h.type==='colheader'||(h.type==='cell'&&(h.row===0||(getActiveSheet().freeze.rows&&y<Grid.headerH+Grid.rowHeight(0)))))UI.filterDialog(h.col);
+  },true));
   document.getElementById('vistabtn').onclick=()=>ExcelClone.setVista(!EMBED.vista);
-  document.getElementById('filtrobtn').onclick=()=>UI.filterDialog();
   ExcelClone.setVista(EMBED.vista);
   History.snapshot(true);
 
