@@ -5,102 +5,20 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' https://www.gstatic.com https://cdnjs.cloudflare.com https://unpkg.com https://www.google.com ;
-      style-src 'self' 'unsafe-inline' https://unpkg.com;
-      font-src 'self' https://unpkg.com data:;
-      img-src 'self' data: blob: https://unpkg.com;
+      script-src 'self' https://www.gstatic.com https://cdnjs.cloudflare.com https://www.google.com ;
+      style-src 'self' 'unsafe-inline';
+      font-src 'self' data:;
+      img-src 'self' data: blob:;
       connect-src 'self' https://catalogo-api-1038143238323.us-central1.run.app https://beneficiarios-api-1038143238323.us-central1.run.app https://live-api-1038143238323.us-central1.run.app https://pedidos-api-1038143238323.us-central1.run.app https://historias-api-1038143238323.us-central1.run.app https://ventas-api-1038143238323.us-central1.run.app https://admin-api-1038143238323.us-central1.run.app https://content-firebaseappcheck.googleapis.com https://www.google.com ;
       frame-ancestors 'none';
       object-src 'none';
-      base-uri 'self'; frame-src https://www.google.com;">
+      base-uri 'self'; frame-src 'self' https://www.google.com;">
 <script src="app-check.js"></script>
     <script src="error-bootstrap.js"></script>
     <script src="theme-boot.js" data-default="dark"></script>
     <link rel="stylesheet" href="styles.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Panel de Auditoría de Tareas - Usuario Master</title>
-
-<!-- =========================================================
-     DEPENDENCIAS OFICIALES DE UNIVER - UMD
-     ========================================================= -->
-
-<script
-    crossorigin="anonymous"
-    integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z"
-    src="https://unpkg.com/react@18.3.1/umd/react.production.min.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1"
-    src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    integrity="sha384-Opyi337NBU4M11Xx1aRUN4dZejlRWsq277uHWHyysNm4frJzmqu7KvgkHu4YWTqk"
-    src="https://unpkg.com/rxjs@7.8.1/dist/bundles/rxjs.umd.min.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    integrity="sha384-pPi0zxBAoDu6+JXW/C68UZLvBUUtU+7zonhif43rqj7pxsGyqyqzcian2Rj37Rss"
-    src="https://unpkg.com/echarts@5.6.0/dist/echarts.min.js">
-</script>
-
-
-<!-- =========================================================
-     UNIVER PRESETS
-     ========================================================= -->
-
-<script
-    crossorigin="anonymous"
-    integrity="sha384-BDd7ql2X08VvSTz2HKj9lKvgL9i7QyWCJbD7FoisWYtkv0Kq/s9hjkgKxPsuoRDx"
-    src="https://unpkg.com/@univerjs/presets@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    integrity="sha384-pRHREf4ZZTzE2RZqRqRWYV/Ffl2uf9ThS0/9J7b6BH+eLBuCewI2/HWNMrSKZpeW"
-    src="https://unpkg.com/@univerjs/preset-sheets-core@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    integrity="sha384-r7iYNJ6oMnajJZHmzKBGkwGw/lAxZd1l+3NWn5WtEIbgjvOWaRnt6zCgUCh+QY0B"
-    src="https://unpkg.com/@univerjs/preset-sheets-core@0.25.1/lib/umd/locales/en-US.js">
-</script>
-
-
-<script
-    crossorigin="anonymous"
-    integrity="sha384-QeBtLGYREDVgluD7nrFR6tX2Nd5JVRY+DKXIrhCTxVyNj1tI+vFZsdRb/z2N+vZ0"
-    src="https://unpkg.com/@univerjs/preset-sheets-filter@0.25.1/lib/umd/index.js">
-</script>
-
-<script
-    crossorigin="anonymous"
-    integrity="sha384-cMYDnTNvtop9HY+08/7VXG5A/5LXVVz6mJ4xeq9t2UAOXKrmfQRwa5eZimGqnLIB"
-    src="https://unpkg.com/@univerjs/preset-sheets-filter@0.25.1/lib/umd/locales/en-US.js">
-</script>
-
-<link
-    crossorigin="anonymous"
-    rel="stylesheet"
-    integrity="sha384-tUmY0zlchxCdhEmkGEGXovXcQjQoZa1aLKTPlwnjd8vqqxfAydehH8oZY3/CMHQC"
-    href="https://unpkg.com/@univerjs/preset-sheets-filter@0.25.1/lib/index.css">
-
-
-<!-- =========================================================
-     CSS DE UNIVER SHEETS
-     ========================================================= -->
-
-<link
-    crossorigin="anonymous"
-    rel="stylesheet"
-    integrity="sha384-1lQF0XQofHM1h8Y9mSXiS0RqJ5KzWnpTvfLJIln1Z+8d8rX+duRZtEoxfXpDg2NT"
-    href="https://unpkg.com/@univerjs/preset-sheets-core@0.25.1/lib/index.css">
-
 
 <!-- =========================================================
      ESTILOS DEL PANEL
@@ -164,9 +82,6 @@
             font-size: 0.9rem;
         }
 
-        #debug-log {
-            font-size: 11px;
-        }
     }
 
     p {
@@ -175,49 +90,10 @@
         margin-bottom: 15px;
     }
 
-    #status {
-        padding: 10px 14px;
 
-        margin-bottom: 15px;
 
-        border-radius: 6px;
-
-        background: var(--color-accent-soft);
-
-        color: var(--color-accent);
-
-        border:
-            1px solid var(--color-border);
-
-        font-weight: 600;
-    }
-
-    #error-log {
-        display: none;
-
-        padding: 14px;
-
-        margin-bottom: 15px;
-
-        border-radius: 6px;
-
-        background: #f8d7da;
-
-        color: #842029;
-
-        border:
-            1px solid #f1aeb5;
-
-        white-space: pre-wrap;
-
-        font-family:
-            Consolas,
-            monospace;
-
-        font-size: 13px;
-    }
-
-    #univer-container {
+    #excel {
+        display: block;
         width: 100%;
 
         height: 650px;
@@ -241,43 +117,16 @@
 
     @media (max-width: 600px) {
 
-        #univer-container {
+        #excel {
+        display: block;
             height: min(500px, 70vh);
 
             border-radius: 6px;
         }
     }
 
-    #debug-log {
-        margin-top: 15px;
 
-        padding: 12px;
 
-        background: var(--color-surface);
-
-        border:
-            1px solid var(--color-border);
-
-        border-radius: 6px;
-
-        font-family:
-            Consolas,
-            monospace;
-
-        font-size: 12px;
-
-        line-height: 1.6;
-
-        color: var(--color-text-muted);
-    }
-
-    .debug-ok {
-        color: #198754;
-    }
-
-    .debug-error {
-        color: #dc3545;
-    }
 
 </style>
 </head>
@@ -299,26 +148,7 @@
 </p>
 
 
-<div id="status">
-    ⏳ Verificando Univer...
-</div>
-
-
-<div id="error-log"></div>
-
-
-<div id="univer-container"></div>
-
-
-<div id="debug-log">
-
-    <strong>Diagnóstico:</strong>
-
-    <div id="debug-content">
-        Iniciando...
-    </div>
-
-</div>
+<iframe id="excel" src="excel.html?guardar=0&vista=1" title="Registro de auditoría"></iframe>
 
 
 <!-- =========================================================
