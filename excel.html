@@ -21,7 +21,8 @@ input,textarea{font-family:inherit}
 
 /* Modo vista: solo la tabla, sin edición ni teclado */
 body.vista #titlebar,body.vista #ribbon,body.vista #toolbar,body.vista #formulabar,body.vista #statusbar,body.vista #addsheet,body.vista #celleditor,body.vista #selectionoverlay{display:none!important}
-#vistabtn{position:fixed;right:12px;bottom:40px;z-index:60;background:var(--green);color:#fff;border-radius:18px;padding:7px 14px;box-shadow:var(--shadow);font-weight:600}
+#vistabtn,#filtrobtn{position:fixed;right:12px;bottom:40px;z-index:60;background:var(--green);color:#fff;border-radius:18px;padding:7px 14px;box-shadow:var(--shadow);font-weight:600}
+#filtrobtn{right:120px}
 
 /* Title bar */
 #titlebar{height:32px;background:var(--green);color:#fff;display:flex;align-items:center;padding:0 12px;font-size:13px;font-weight:600}
@@ -170,7 +171,7 @@ body.vista #titlebar,body.vista #ribbon,body.vista #toolbar,body.vista #formulab
 <div id="commentpopup"></div>
 <div id="colorpicker"></div>
 <div id="dialogs"></div>
-<button id="vistabtn"></button>
+<button id="vistabtn"></button><button id="filtrobtn">🔽 Filtrar</button>
 <script>
 "use strict";
 /* ================================================================
@@ -4645,8 +4646,9 @@ function init(){
 
   EMBED.apply();
   // Modo vista: bloquea toda interacción con la hoja (en captura) salvo scroll, pestañas y el propio botón
-  ['keydown','mousedown','pointerdown','touchstart','click','dblclick','contextmenu'].forEach(t=>window.addEventListener(t,e=>{if(EMBED.vista&&!e.target.closest?.('#vistabtn,.shtab'))e.stopImmediatePropagation();},true));
+  ['keydown','mousedown','pointerdown','touchstart','click','dblclick','contextmenu'].forEach(t=>window.addEventListener(t,e=>{if(EMBED.vista&&!e.target.closest?.('#vistabtn,#filtrobtn,.shtab,.dialog'))e.stopImmediatePropagation();},true));
   document.getElementById('vistabtn').onclick=()=>ExcelClone.setVista(!EMBED.vista);
+  document.getElementById('filtrobtn').onclick=()=>UI.filterDialog();
   ExcelClone.setVista(EMBED.vista);
   History.snapshot(true);
 
