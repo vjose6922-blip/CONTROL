@@ -137,7 +137,7 @@ let datosListos = false;
 function pintarSiListo() {
     const sub = document.getElementById('audit-subtitle');
     try { if (datosListos && document.getElementById('excel').contentWindow.ExcelClone?.getData()) pintar(auditRows); }
-    catch (err) { console.error(err); sub.textContent = '⚠️ Error al mostrar la tabla: ' + err.message; sub.style.color = '#b02a37'; }
+    catch (err) { console.error(err); sub.textContent = '⚠️ Error al mostrar la tabla: ' + err.message; }
 }
 window.addEventListener('message', (e) => { if (e.data?.type === 'excel:ready') pintarSiListo(); });
 
@@ -145,11 +145,9 @@ async function arrancar() {
     const subtitle = document.getElementById('audit-subtitle');
     try {
         auditRows = await obtenerFilasAuditoria(30);
-        subtitle.textContent = 'Usuario Master · Registro real de actividad (últimos 30 días)';
     } catch (err) {
         console.warn('No se pudo cargar el registro real de auditoría, usando datos de ejemplo:', err);
-        subtitle.textContent = '⚠️ No se encontró el endpoint de auditoría en el backend — mostrando datos de ejemplo';
-        subtitle.style.color = '#b02a37';
+        subtitle.textContent = '⚠️ Sin conexión con auditoría — datos de ejemplo';
     }
     datosListos = true;
     pintarSiListo();

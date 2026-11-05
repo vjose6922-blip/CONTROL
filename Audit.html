@@ -20,143 +20,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Panel de Auditoría de Tareas - Usuario Master</title>
 
-<!-- =========================================================
-     ESTILOS DEL PANEL
-     ========================================================= -->
-
 <style>
-
-    * {
-        box-sizing: border-box;
-    }
-
-    html,
-    body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        min-height: 100%;
-    }
-
-    body {
-        padding: 20px;
-
-        font-family:
-            'Segoe UI',
-            Tahoma,
-            Geneva,
-            Verdana,
-            sans-serif;
-
-        background: var(--page-bg);
-
-        color: var(--color-text-main);
-
-        overflow-x: hidden;
-    }
-
-    h1 {
-        margin-top: 0;
-
-        font-size: 1.5rem;
-
-        color: var(--ink-title);
-
-        border-bottom:
-            2px solid var(--color-accent-solid);
-
-        padding-bottom: 10px;
-    }
-
-    @media (max-width: 600px) {
-
-        body {
-            padding: 10px;
-        }
-
-        h1 {
-            font-size: 1.15rem;
-        }
-
-        p {
-            font-size: 0.9rem;
-        }
-
-    }
-
-    p {
-        color: var(--color-text-muted);
-
-        margin-bottom: 15px;
-    }
-
-
-
-    #excel {
-        display: block;
-        width: 100%;
-
-        height: 650px;
-        height: min(650px, 75vh);
-
-        background: var(--color-surface);
-
-        border:
-            1px solid var(--color-border);
-
-        border-radius: 8px;
-
-        overflow: hidden;
-
-        touch-action: manipulation;
-
-        box-shadow:
-            0 4px 12px
-            var(--shadow-soft);
-    }
-
-    @media (max-width: 600px) {
-
-        #excel {
-        display: block;
-            height: min(500px, 70vh);
-
-            border-radius: 6px;
-        }
-    }
-
-
-
-
+    html, body { margin: 0; height: 100%; background: var(--page-bg); font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { display: flex; flex-direction: column; height: 100dvh; }
+    #barra { padding: 6px 10px; font-size: 13px; display: flex; gap: 10px; align-items: center; }
+    #barra a { color: var(--color-accent); text-decoration: none; font-weight: 600; white-space: nowrap; }
+    #audit-subtitle { color: #e05a6a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #excel { flex: 1; width: 100%; border: 0; display: block; }
 </style>
 </head>
-
 <body>
-
 <script src="audit-guard.js"></script>
-
-<a href="index.html" style="display:inline-block;margin-bottom:12px;color:var(--color-accent);text-decoration:none;font-weight:600;">
-    ← Volver al panel
-</a>
-
-<h1>
-    Panel de Auditoría de Tareas
-</h1>
-
-<p id="audit-subtitle">
-    Usuario Master · Cargando registro real de actividad...
-</p>
-
-
-<iframe id="excel" src="excel.html?v=3&guardar=0&vista=1" title="Registro de auditoría"></iframe>
-
-
-<!-- =========================================================
-     DATOS DE AUDITORÍA
-     ========================================================= -->
-
-<script src="audit.js?v=3"></script>
-
-
+<!-- Sin texto: solo "Volver" y, si algo falla, el aviso a su lado -->
+<div id="barra"><a href="index.html">← Volver al panel</a><span id="audit-subtitle"></span></div>
+<iframe id="excel" src="excel.html?v=5&guardar=0&vista=1" title="Registro de auditoría"></iframe>
+<script src="audit.js?v=5"></script>
 </body>
 </html>
