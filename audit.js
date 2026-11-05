@@ -132,9 +132,17 @@ function pintar(filas) {
     sh.freeze = { rows: 1, cols: 0 }; wb.sheets = [sh]; X.setData(wb);
 }
 
+// Pinta cuando hay datos Y el Excel ya arrancó, en el orden que lleguen (también si el iframe se recarga).
+let datosListos = false;
+function pintarSiListo() {
+    const sub = document.getElementById('audit-subtitle');
+    try { if (datosListos && document.getElementById('excel').contentWindow.ExcelClone?.getData()) pintar(auditRows); }
+    catch (err) { console.error(err); sub.textContent = '⚠️ Error al mostrar la tabla: ' + err.message; sub.style.color = '#b02a37'; }
+}
+window.addEventListener('message', (e) => { if (e.data?.type === 'excel:ready') pintarSiListo(); });
+
 async function arrancar() {
     const subtitle = document.getElementById('audit-subtitle');
-    const listo = new Promise((ok) => document.getElementById('excel').addEventListener('load', ok, { once: true }));
     try {
         auditRows = await obtenerFilasAuditoria(30);
         subtitle.textContent = 'Usuario Master · Registro real de actividad (últimos 30 días)';
@@ -143,8 +151,8 @@ async function arrancar() {
         subtitle.textContent = '⚠️ No se encontró el endpoint de auditoría en el backend — mostrando datos de ejemplo';
         subtitle.style.color = '#b02a37';
     }
-    if (!document.getElementById('excel').contentWindow.ExcelClone?.getData()) await listo;
-    pintar(auditRows);
+    datosListos = true;
+    pintarSiListo();
 }
 
 arrancar();
