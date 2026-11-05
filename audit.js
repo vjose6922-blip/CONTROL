@@ -143,7 +143,7 @@ async function arrancar() {
         subtitle.textContent = '⚠️ No se encontró el endpoint de auditoría en el backend — mostrando datos de ejemplo';
         subtitle.style.color = '#b02a37';
     }
-    if (!document.getElementById('excel').contentWindow.ExcelClone) await listo;
+    if (!document.getElementById('excel').contentWindow.ExcelClone?.getData()) await listo;
     pintar(auditRows);
 }
 
