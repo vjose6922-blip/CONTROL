@@ -1170,9 +1170,8 @@ function _accionClipLive(r) {
     case 'pendiente':
       return '<span class="clip-nota-fila">Preparando clip… (unos minutos)</span>';
     case 'sin_grabacion':
-      return '<span class="clip-nota-fila">Sin grabación disponible</span>';
-    case 'omitido_limite':
-      return '<span class="clip-nota-fila">Sin clip (muchos reportes en este live)</span>';
+    case 'omitido_limite': // sin video, pero el chat de esos minutos sí se guarda
+      return `<span class="clip-nota-fila">${r.clipEstado === 'sin_grabacion' ? 'Sin grabación' : 'Sin clip (muchos reportes)'}</span> <button class="btn-marcar-revisado" style="background:#e3f2fd;color:#1565c0;" data-click="adminVerClipReporteLive" data-args="${dargs(r.reporteId, ARG.THIS)}">${Icon('chat-bubble',{size:13})} Ver chat</button>`;
     case 'error':
       return '<span class="clip-nota-fila">No se pudo preparar el clip</span>';
     default:
@@ -1266,7 +1265,11 @@ window.adminVerClipReporteLive = async function(reporteId, btn) {
       omitido_limite: 'No se armó clip porque este live recibió demasiados reportes.',
       error: 'No se pudo preparar el clip.'
     };
-    aviso(msgs[data.estado] || 'Este reporte no tiene clip.');
+    const chatSolo = (data.chat || []).map((m) => `<div class="clip-msg"><span class="t">${_fmtRelClip(((m.ts || 0) - data.tReporteMs) / 1000)}</span><span><span class="a">${escapeHtml(m.author)}${m.isVendor ? ' (vendedor)' : ''}:</span> ${escapeHtml(m.text)}</span></div>`);
+    if (!chatSolo.length) { aviso(msgs[data.estado] || 'Este reporte no tiene clip.'); return; }
+    body.innerHTML = `<p class="clip-nota">${escapeHtml(msgs[data.estado] || 'Este reporte no tiene video.')}</p>
+      <div class="clip-chat-titulo">Chat de esos minutos (2 antes y 2 después del reporte)</div>
+      <div class="clip-chat">${chatSolo.join('')}</div>`;
     return;
   }
 
