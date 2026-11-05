@@ -2208,10 +2208,10 @@ const Sort = {
 
 // === MODULE: Data Features — Filter ===
 const Filter = {
-  apply(col,criteria){
+  apply(col,criteria,range){
     const sheet=getActiveSheet();
     History.snapshot();
-    if(!sheet.autoFilter){sheet.autoFilter={range:Sel.getSelectedRange(),filters:{}};}
+    if(!sheet.autoFilter){sheet.autoFilter={range:range||Sel.getSelectedRange(),filters:{}};}
     sheet.autoFilter.filters[col]=criteria;
     this.applyFilters(sheet);
     Grid.needsRender=true;
@@ -2229,7 +2229,7 @@ const Filter = {
         const cell=getCell(sheet,r,parseInt(col));
         const val=cell?String(cell.v??''):'';
         if(crit.type==='equals'&&val!==crit.value)visible=false;
-        if(crit.type==='contains'&&!val.includes(crit.value))visible=false;
+        if(crit.type==='contains'&&!val.toLowerCase().includes(String(crit.value).toLowerCase()))visible=false;
         if(crit.type==='greater'&&parseFloat(val)<=parseFloat(crit.value))visible=false;
         if(crit.type==='less'&&parseFloat(val)>=parseFloat(crit.value))visible=false;
       }
@@ -4360,19 +4360,24 @@ UI.freezeDialog=function(){
 };
 
 UI.filterDialog=function(){
-  const{r0,r1,c0,c1}=Sel.getSelectedRange();
+  // Sin rango seleccionado (una sola celda) → toda la tabla, con la fila 1 como encabezado
+  const sh=getActiveSheet(),rows=ExcelClone.getRows();let rg=sh.autoFilter?.range||Sel.getSelectedRange();
+  if(rg.r0===rg.r1&&rg.c0===rg.c1)rg={r0:0,r1:rows.length-1,c0:0,c1:(rows[0]||[]).length-1};
+  const{r0,r1,c0,c1}=rg,head=(c)=>String(getCell(sh,r0,c)?.v||'Col '+U.colToLetter(c)).replace(/</g,'&lt;');
   const body=`
-    <div class="drow"><label>Columna</label><select id="flt_col">${Array.from({length:c1-c0+1},(_,i)=>`<option value="${c0+i}">Col ${U.colToLetter(c0+i)}</option>`).join('')}</select></div>
+    <div class="drow"><label>Columna</label><select id="flt_col">${Array.from({length:c1-c0+1},(_,i)=>`<option value="${c0+i}">${head(c0+i)}</option>`).join('')}</select></div>
     <div class="drow"><label>Criterio</label><select id="flt_type"><option value="contains">Contiene</option><option value="equals">Es igual a</option><option value="greater">Mayor que</option><option value="less">Menor que</option></select></div>
-    <div class="drow"><label>Valor</label><input type="text" id="flt_value"></div>
+    <div class="drow"><label>Valor</label><input type="text" id="flt_value" list="flt_vals"><datalist id="flt_vals"></datalist></div>
   `;
   const footer='<button class="dbtn primary" id="flt_apply">Aplicar filtro</button><button class="dbtn" onclick="Filter.clear();this.closest(\'.dialog\').remove()">Quitar</button><button class="dbtn" onclick="this.closest(\'.dialog\').remove()">Cancelar</button>';
   const d=this.dialog('Autofiltro',body,footer);
+  const vals=()=>{const c=+d.querySelector('#flt_col').value;d.querySelector('#flt_vals').innerHTML=[...new Set(rows.slice(r0+1,r1+1).map(f=>String(f[c]??'')))].filter(Boolean).slice(0,200).map(v=>`<option value="${v.replace(/"/g,'&quot;')}">`).join('');};
+  d.querySelector('#flt_col').addEventListener('change',vals);vals();
   d.querySelector('#flt_apply').addEventListener('click',()=>{
     const col=parseInt(d.querySelector('#flt_col').value);
     const type=d.querySelector('#flt_type').value;
     const value=d.querySelector('#flt_value').value;
-    Filter.apply(col,{type,value});
+    Filter.apply(col,{type,value},rg);
     d.remove();
   });
 };
