@@ -1980,7 +1980,7 @@ window._renderVendorStatsList = function() {
             <div style="font-size:12px;color:var(--modal-muted);margin-top:2px;">${escapeHtml(v.telefono||'—')} · <span style="color:${v.estado==='activo'?'#2e7d32':'#f57f17'}">${escapeHtml(v.estado)}</span></div>
             ${venceTxt}
           </div>
-          <button class="btn-row-menu" data-uid="${escapeAttr(v.uid)}" data-plan="${escapeAttr(v.plan||'free')}" data-nombre="${escapeHtml(v.nombre||'')}" data-dias="${diasRestantes != null ? diasRestantes : 0}" data-suspendible="${puedeSuspender ? '1':'0'}" style="flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid #eee;background:#fafafa;color:#555;font-size:16px;font-weight:700;line-height:1;cursor:pointer;">⋮</button>
+          <button class="btn-row-menu" data-uid="${escapeAttr(v.uid)}" data-plan="${escapeAttr(v.plan||'free')}" data-nivel="${v.planNivel === 'pro' ? 'pro' : 'plus'}" data-nombre="${escapeHtml(v.nombre||'')}" data-dias="${diasRestantes != null ? diasRestantes : 0}" data-suspendible="${puedeSuspender ? '1':'0'}" style="flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid #eee;background:#fafafa;color:#555;font-size:16px;font-weight:700;line-height:1;cursor:pointer;">⋮</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:11.5px;color:var(--modal-muted);flex-wrap:wrap;">
           <span style="font-weight:700;color:var(--modal-text);">${actuales}/${limite} productos</span>
@@ -2020,6 +2020,7 @@ window._renderVendorStatsList = function() {
       menuEl.innerHTML = [
         itemHtml(esPlus ? 'Quitar Plus' : 'Activar Plus', '#7c3aed', 'data-act="toggle-plan"'),
         esPlus ? itemHtml('Ajustar días', '#7c3aed', 'data-act="adjust-days"') : '',
+        esPlus && esMasterPanel() ? itemHtml(this.dataset.nivel === 'pro' ? 'Bajar a Plus' : 'Subir a Pro', '#d97706', 'data-act="nivel"') : '',
         puedeSuspender ? itemHtml('Suspender', '#555', 'data-act="suspend"') : '',
         itemHtml('Eliminar cuenta', '#dc2626', 'data-act="delete"'),
       ].join('');
@@ -2031,6 +2032,7 @@ window._renderVendorStatsList = function() {
           const act = this.dataset.act;
           if (act === 'toggle-plan') window.togglePlanVendedor(uid, nombre, plan);
           else if (act === 'adjust-days') window.ajustarDiasPlus(uid, nombre, dias);
+          else if (act === 'nivel') window.cambiarNivelPlan(uid, nombre, btn.dataset.nivel === 'pro' ? 'plus' : 'pro');
           else if (act === 'suspend') AdminComunidad.suspenderVendedor(uid, nombre);
           else if (act === 'delete') window.eliminarCuentaVendedorAdmin(uid, nombre);
         });
@@ -2078,10 +2080,19 @@ window.togglePlanVendedor = async function(uid, nombre, currentPlan) {
   if (!r) return;
   const dias = activar ? parseInt(r.dias, 10) : 0;
   if (activar && !(dias > 0)) return _msgVend('Número de días inválido.', 'error');
-  const nivel = activar ? await new Promise((ok) => showCustomConfirm({ title: '¿Qué plan activar?', message: 'Plus: hasta 400 artículos · Pro: hasta 1,000 artículos.',
-    confirmText: 'Pro', cancelText: 'Plus', onConfirm: () => ok('pro'), onCancel: () => ok('plus') })) : '';
+  // Solo el master elige Pro; un admin de ciudad activa Plus.
+  const nivel = !activar ? '' : !esMasterPanel() ? 'plus' : await new Promise((ok) => showCustomConfirm({ title: '¿Qué plan activar?', message: 'Plus: hasta 400 artículos · Pro: hasta 1,000 artículos.',
+    confirmText: 'Pro', cancelText: 'Plus', onConfirm: () => ok('pro'), onCancel: () => ok('plus') }));
   accionPlanVendedor({ action: 'marcarVendedorPlan', uid, plan: activar ? 'plus' : 'free', nivel, dias, razon: r.razon }, 'Actualizando plan...',
     () => (activar ? `Plan ${nivel === 'pro' ? 'Pro' : 'Plus'} activado por ${dias} días para ${nombre}` : `Plan removido de ${nombre}`));
+};
+
+const esMasterPanel = () => (sessionStorage.getItem('admin_rol') || 'master') === 'master';
+
+// Solo master: cambia Plus ⇄ Pro sin tocar los días que le quedan.
+window.cambiarNivelPlan = async function(uid, nombre, nivel) {
+  const r = await pedirMotivo(nivel === 'pro' ? 'Subir a Pro' : 'Bajar a Plus', `¿Cambiar a "${nombre}" al plan ${nivel === 'pro' ? 'Pro (1,000 artículos)' : 'Plus (400 artículos)'}? Conserva sus días restantes.`, 'Cambiar');
+  if (r) accionPlanVendedor({ action: 'marcarVendedorPlan', uid, plan: 'plus', nivel, soloNivel: true, razon: r.razon }, 'Cambiando plan...', () => `${nombre} ahora es ${nivel === 'pro' ? 'Pro' : 'Plus'}`);
 };
 
 window.ajustarDiasPlus = async function(uid, nombre, diasActuales) {
