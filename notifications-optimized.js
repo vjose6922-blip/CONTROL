@@ -1412,10 +1412,10 @@ window.adminSuspenderVendedorDesdeReporte = async function(vendedorUid, reporteI
 // (pedidos-api). El staff solo ve la conversación de un caso reportado y cada apertura
 // queda registrada (quién, cuándo y por qué). Moderador: sin teléfonos y sin poder cancelar.
 const PEDIDOS_API_URL_NOTIF = window.PEDIDOS_API_URL;
-const _ESTADOS_PED_ABIERTOS = ['solicitado', 'cotizado', 'aceptado', 'en_elaboracion', 'listo'];
+const _ESTADOS_PED_ABIERTOS = ['solicitado', 'cotizado', 'aceptado', 'en_elaboracion', 'listo', 'en_renta'];
 const _TEXTO_ESTADO_PED = {
   solicitado: 'Solicitado', cotizado: 'Cotizado', aceptado: 'Aceptado', en_elaboracion: 'En elaboración',
-  listo: 'Listo', entregado: 'Entregado', rechazado: 'Rechazado', cancelado: 'Cancelado', expirado: 'Expirado'
+  listo: 'Listo', entregado: 'Entregado', en_renta: 'En renta', devuelto: 'Renta terminada', rechazado: 'Rechazado', cancelado: 'Cancelado', expirado: 'Expirado'
 };
 
 async function _postPedidosApi(params) {
