@@ -14,6 +14,7 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   rechazarVendedor: VENDEDORES_API_URL_ADMIN,
   vendedoresAdmin: VENDEDORES_API_URL_ADMIN,
   loginAdmin: VENDEDORES_API_URL_ADMIN,
+  crearCuentaMaster: VENDEDORES_API_URL_ADMIN,
   verificarSesionAdmin: VENDEDORES_API_URL_ADMIN,
   crearAdmin: VENDEDORES_API_URL_ADMIN,
   listarAdmins: VENDEDORES_API_URL_ADMIN,
@@ -203,7 +204,10 @@ sessionStorage.setItem("admin_session", "true");
 sessionStorage.setItem("admin_rol", "master");
 sessionStorage.setItem("admin_ciudad", "*");
 sessionStorage.removeItem("admin_nombre");
-_guardarSesionEnDispositivo();
+// Acceso de emergencia: ADMIN_TOKEN es la llave de todos los servicios, así que no se guarda en el dispositivo
+// (antes quedaba en localStorage sin cifrar y sin vencer; la huella era solo un candado visual).
+sessionStorage.setItem("admin_legacy", "1");
+_borrarSesionDelDispositivo();
 document.getElementById("admin-login-view").hidden = true;
 document.getElementById("admin-panel-view").hidden = false;
 initImageUploads();
@@ -211,7 +215,6 @@ loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
 aplicarVisibilidadPorRol();
-await _ofrecerActivarBiometrico("Master");
 _irADestinoPendiente();
 } catch (err) {
 console.error(err);
@@ -251,6 +254,7 @@ adminSession = "ok";
 sessionStorage.setItem("admin_token", data.token);
 sessionStorage.setItem("admin_session", "true");
 sessionStorage.setItem("admin_rol", data.rol || "admin");
+sessionStorage.removeItem("admin_legacy");
 sessionStorage.setItem("admin_ciudad", data.ciudad || "");
 sessionStorage.setItem("admin_nombre", data.nombre || "");
 _guardarSesionEnDispositivo();
@@ -330,12 +334,11 @@ function aplicarVisibilidadPorRol() {
     if (listaTitulo) listaTitulo.textContent = "Cuentas existentes";
   }
 
-  // "Mi cuenta": todos ven Cerrar sesión; contraseña y datos bancarios no aplican al
-  // Master heredado (sin doc en `admins`, no puede usar cambiarPasswordAdmin).
-  ["admin-cambiar-password-section", "admin-datos-bancarios-section", "admin-pregunta-secreta-section"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = rol === "master" ? "none" : "";
-  });
+  // "Mi cuenta": la sesión heredada (contraseña + token) no tiene cuenta: solo ve "Crear mi cuenta de master".
+  // Un master con cuenta (teléfono) cambia su contraseña y ve su correo de recuperación; los datos bancarios son del staff de ciudad.
+  const legacy = sessionStorage.getItem("admin_legacy") === "1";
+  const ver = { "admin-cambiar-password-section": !legacy, "admin-pregunta-secreta-section": !legacy, "admin-datos-bancarios-section": rol !== "master", "admin-crear-master-section": legacy };
+  Object.entries(ver).forEach(([id, si]) => { const el = document.getElementById(id); if (el) el.style.display = si ? "" : "none"; });
   if (rol !== "master") { cargarDatosBancarios(); cargarCobroTarjeta(); }
   // Cabecera de perfil de "Mi cuenta"
   const nombre = sessionStorage.getItem("admin_nombre") || (rol === "master" ? "Master" : "Mi cuenta");
@@ -958,6 +961,28 @@ async function handleDatosBancariosSubmit(e) {
 // Política de contraseñas elegidas (misma regla que vendedores-api): mínimo 8, con mayúscula, número y símbolo.
 const POLITICA_PASSWORD = "La contraseña debe tener al menos 8 caracteres, con una mayúscula, un número y un carácter especial (por ejemplo ! @ $ *).";
 const passwordValida = (p) => p.length >= 8 && /\p{Lu}/u.test(p) && /\d/.test(p) && /[^\p{L}\p{N}\s]/u.test(p);
+
+// ---------- Crear mi cuenta de master (solo con la sesión heredada) ----------
+const _formMaster = document.getElementById("crear-master-form");
+if (_formMaster) {
+  const pais = document.getElementById("crear-master-pais"), ciudad = document.getElementById("crear-master-ciudad");
+  if (pais && ciudad && typeof enlazarPaisCiudad === "function") enlazarPaisCiudad(pais, ciudad);
+  _formMaster.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const v = (id) => document.getElementById(id).value;
+    if (!passwordValida(v("crear-master-password"))) return showCustomAlert({ title: " Contraseña", message: POLITICA_PASSWORD, icon: "", confirmText: "Aceptar" });
+    if (v("crear-master-password") !== v("crear-master-password2")) return showCustomAlert({ title: " Contraseña", message: "Las contraseñas no coinciden.", icon: "", confirmText: "Aceptar" });
+    showLoader("Creando tu cuenta...");
+    try {
+      const d = await apiRequest("POST", { action: "crearCuentaMaster", nombre: v("crear-master-nombre"), telefono: v("crear-master-telefono"), pais: v("crear-master-pais"), ciudad: v("crear-master-ciudad"), password: v("crear-master-password") });
+      if (!d || !d.ok) return showCustomAlert({ title: " No se pudo crear", message: (d && d.error) || "Intenta de nuevo.", icon: "", confirmText: "Aceptar" });
+      e.target.reset();
+      await showCustomAlert({ title: " Cuenta creada", message: "Cierra sesión y entra con tu teléfono y esta contraseña. Después configura tu correo de recuperación en tu cuenta de vendedor (Ajustes → Seguridad).", icon: "", confirmText: "Listo" });
+    } catch (err) {
+      showCustomAlert({ title: " Error", message: "Error de conexión. Intenta de nuevo.", icon: "", confirmText: "Aceptar" });
+    } finally { hideLoader(); }
+  });
+}
 
 // ---------- "¿Olvidaste tu contraseña?" (admin / moderador) ----------
 // Paso 1: teléfono → si tiene correo verificado en su cuenta de vendedor le llega un código, y siempre se avisa al master.
@@ -1917,6 +1942,7 @@ renderAdminProductsWithFilters();
 // Si esta pestaña no tiene sesión pero el dispositivo sí tiene una
 // guardada (localStorage), la restauramos antes de decidir qué mostrar.
 // Así la sesión sobrevive a cerrar la página/el navegador.
+if (localStorage.getItem("admin_rol") === "master" && !localStorage.getItem("admin_nombre")) _borrarSesionDelDispositivo(); // ADMIN_TOKEN guardado por versiones anteriores
 if (!sessionStorage.getItem("admin_session") && localStorage.getItem("admin_session") === "true") {
 LS_SESSION_KEYS.forEach((k) => {
 const v = localStorage.getItem(k);

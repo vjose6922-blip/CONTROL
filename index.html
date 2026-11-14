@@ -114,12 +114,12 @@ body[data-rol="moderador"] #product-form select {
  <main class="admin-main" id="admin-login-view">
  <div class="admin-card" id="login-forms-card" style="max-width: 400px; margin: 40px auto;">
  <div class="admin-card-header" style="text-align: center;">
- <h2 id="login-view-title">Admin / Moderador</h2>
+ <h2 id="login-view-title">Staff</h2>
  <p style="color: rgba(255,255,255,0.8); margin-top: 8px;">Ingresa tus credenciales para continuar</p>
  </div>
  <div id="login-role-switch" class="login-switch">
- <button type="button" id="login-switch-cuenta" class="login-switch-btn is-active" data-role="cuenta">Admin / Moderador</button>
- <button type="button" id="login-switch-master" class="login-switch-btn" data-role="master">Master</button>
+ <button type="button" id="login-switch-cuenta" class="login-switch-btn is-active" data-role="cuenta">Con teléfono</button>
+ <button type="button" id="login-switch-master" class="login-switch-btn" data-role="master">Emergencia (token)</button>
  </div>
  <form id="admin-login-form-cuenta" class="form-vertical">
  <div class="form-row">
@@ -174,6 +174,18 @@ body[data-rol="moderador"] #product-form select {
  </div>
  <div class="mi-perfil" id="mi-perfil"><div class="mp-av" id="mi-perfil-av"></div><div class="mp-info"><div class="mp-name" id="mi-perfil-nombre"></div><div class="mp-meta" id="mi-perfil-meta"></div></div></div>
  <div class="admin-cards-grid admin-cards-grid-compact">
+ <div class="admin-card" id="admin-crear-master-section" style="display:none;">
+ <div class="admin-card-header"><h2 class="tile-title">Crear mi cuenta de master</h2></div>
+ <form id="crear-master-form" class="form-vertical">
+ <p style="font-size:.85rem;color:var(--color-text-soft);margin:0 0 10px;line-height:1.5;">Entraste con el acceso de emergencia (contraseña + token), que es la llave de todos los servicios. Crea tu cuenta de master con teléfono y contraseña y úsala a diario: tiene sesión que vence, recuperación por correo y queda en la auditoría con tu nombre.</p>
+ <div class="form-row"><label>Nombre</label><input type="text" id="crear-master-nombre" required maxlength="80" /></div>
+ <div class="form-row"><label>Teléfono</label><input type="tel" id="crear-master-telefono" required placeholder="10 dígitos" /></div>
+ <div class="form-row"><label>País y ciudad (de tu cuenta de vendedor)</label><select id="crear-master-pais" required></select><select id="crear-master-ciudad" required></select></div>
+ <div class="form-row"><label>Contraseña</label><input type="password" id="crear-master-password" required autocomplete="new-password" placeholder="Mín. 8, A-Z, 0-9 y símbolo" /></div>
+ <div class="form-row"><label>Repite la contraseña</label><input type="password" id="crear-master-password2" required autocomplete="new-password" /></div>
+ <button type="submit" class="primary-button full-width" style="margin-top:10px;">Crear mi cuenta</button>
+ </form>
+ </div>
  <div class="admin-card grid-tile" id="admin-cambiar-password-section">
  <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-cambiar-password-section","cambiar-password-body"]'>
  <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-lock"/></svg></span>
