@@ -4,7 +4,7 @@
  <meta charset="UTF-8" />
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'wasm-unsafe-eval' https://*.firebaseio.com https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://apis.google.com https://www.google.com ;
+  script-src 'self' 'wasm-unsafe-eval' https://*.firebaseio.com https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com https://www.google.com ;
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob: 
     https://placehold.co 
@@ -35,7 +35,7 @@
 <meta name="apple-mobile-web-app-title" content="Z&R">
 <link rel="apple-touch-icon" href="logo.svg">
 <meta name="mobile-web-app-capable" content="yes">
- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+ <script src="chart.umd.min.js"></script> <!-- Chart.js 4.4.1 servido desde el repo (npm): sin depender de un CDN externo -->
 <style>
 /* Botón "quitar imagen" por slot (Imagen 1/2/3) — para poder deshacer una
    subida por error sin tener que borrar/recrear todo el producto. */

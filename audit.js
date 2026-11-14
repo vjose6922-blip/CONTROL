@@ -72,7 +72,7 @@ async function leerPendientes(token) {
 async function obtenerFilasAuditoria(dias) {
     const token = sessionStorage.getItem("admin_token") || "";
     const params = new URLSearchParams({ action: "obtenerAuditoriaStaff", dias: dias || 30, token });
-    const res = await fetch(ADMIN_API_URL_AUDIT + "?" + params.toString());
+    const res = await fetch(ADMIN_API_URL_AUDIT, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: params.toString() });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     if (!data || !data.ok || !Array.isArray(data.registros)) {
