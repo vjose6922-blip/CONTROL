@@ -233,19 +233,14 @@ body[data-rol="moderador"] #product-form select {
  <div class="admin-card grid-tile" id="admin-pregunta-secreta-section">
  <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-pregunta-secreta-section","pregunta-secreta-body"]'>
  <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-lock"/></svg></span>
- <h2 class="tile-title">Pregunta secreta</h2>
+ <h2 class="tile-title">Correo de recuperación</h2>
  <div class="tile-actions">
  <button type="button" class="tile-close-btn" aria-label="Cerrar" data-stop data-click="closeGridTile" data-args='["admin-pregunta-secreta-section","pregunta-secreta-body"]'>✕</button>
  </div>
  </div>
  <div id="pregunta-secreta-body" style="display:none;">
- <form id="pregunta-secreta-form" class="form-vertical">
- <p style="font-size:.8rem;color:var(--color-text-soft);margin:0 0 10px;">Te permite recuperar tu cuenta si olvidas tu contraseña. Guárdala solo si recordarás la respuesta.</p>
- <div class="form-row"><label>Pregunta</label><select id="pregunta-secreta-idx"></select></div>
- <div class="form-row"><label>Respuesta</label><input type="text" id="pregunta-secreta-respuesta" autocomplete="off" minlength="3" required /></div>
- <div class="form-row"><label>Contraseña actual</label><input type="password" id="pregunta-secreta-password" autocomplete="current-password" required /></div>
- <button type="submit" class="primary-button full-width" style="margin-top: 10px;">Guardar pregunta secreta</button>
- </form>
+ <p style="font-size:.85rem;color:var(--color-text-soft);margin:0 0 10px;line-height:1.5;">Si olvidas tu contraseña, en "¿Olvidaste tu contraseña?" te llega un código al <b>correo de tu cuenta de vendedor</b> (la que tiene tu mismo teléfono) para elegir una nueva tú mismo. Si no tienes correo, avisamos al master para que te la restablezca.</p>
+ <a class="primary-button full-width" href="https://znrcommunity.com/vendedor.html" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;margin-top:10px;">Configurar mi correo (Ajustes → Seguridad)</a>
  </div>
  </div>
  </div>
