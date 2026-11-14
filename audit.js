@@ -32,7 +32,7 @@ const TIPO_LABELS = {
     eliminarProductosDeAdmin: "Eliminar productos ZNR de un admin", actualizarProductoZNR: "Actualizar producto ZNR",
     eliminarProductoZNR: "Eliminar producto ZNR", deleteProductoComunidadAdmin: "Eliminar producto de comunidad (admin)",
     marcarProductoConfiable: "Marcar producto confiable", eliminarBeneficiario: "Eliminar beneficiario",
-    guardarDatosBancariosAdmin: "Actualizar datos bancarios", guardarPreguntaSecretaAdmin: "Guardar pregunta secreta", recuperarCuentaAdmin: "Recuperar cuenta con pregunta secreta", marcarPagoAdminMes: "Marcar pago mensual a admin",
+    guardarDatosBancariosAdmin: "Actualizar datos bancarios", resetPasswordAdminConCodigo: "Cambió su contraseña con código del correo", guardarPreguntaSecretaAdmin: "Guardar pregunta secreta", recuperarCuentaAdmin: "Recuperar cuenta con pregunta secreta", marcarPagoAdminMes: "Marcar pago mensual a admin",
     sincronizarPlanPlusAdminsExistentes: "Sincronizar Plan Plus retroactivo (admins)",
     confirmGroupPurchase: "Confirmar compra grupal (tienda)", cancelGroupPurchase: "Cancelar compra grupal (tienda)",
     removeOutOfStockNotifications: "Quitar productos sin stock (tienda)",
@@ -72,7 +72,7 @@ async function leerPendientes(token) {
 async function obtenerFilasAuditoria(dias) {
     const token = sessionStorage.getItem("admin_token") || "";
     const params = new URLSearchParams({ action: "obtenerAuditoriaStaff", dias: dias || 30, token });
-    const res = await fetch(ADMIN_API_URL_AUDIT + "?" + params.toString());
+    const res = await fetch(ADMIN_API_URL_AUDIT, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: params.toString() });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     if (!data || !data.ok || !Array.isArray(data.registros)) {

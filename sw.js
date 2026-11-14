@@ -82,6 +82,9 @@ self.addEventListener('activate', event => {
           .filter(n => n !== CACHE_NAME && n !== DYNAMIC_CACHE)
           .map(n => caches.delete(n))
       );
+      // Respuestas de admin guardadas por versiones anteriores con el token en la URL (p. ej. la auditoría del staff).
+      const dyn = await caches.open(DYNAMIC_CACHE);
+      await Promise.all((await dyn.keys()).filter(r => new URL(r.url).searchParams.has('token')).map(r => dyn.delete(r)));
       await self.clients.claim();
       const clients = await self.clients.matchAll();
       clients.forEach(c => c.postMessage({ type: 'SW_ACTIVATED' }));
@@ -182,7 +185,7 @@ async function networkFirst(request) {
                          'responderSolicitudPlus', 'solicitudesPlus', 'obtenerResumenPlanPlus',
                          'obtenerReportesLive', 'obtenerClipReporteLive', 'obtenerReportesPedido',
                          'obtenerReportesHistorias', 'resolverReporteHistoria'];
-      if (!action || !sensitive.includes(action)) {
+      if ((!action || !sensitive.includes(action)) && !url.searchParams.has('token')) { // con token: datos de admin, no se guardan
         const cache = await caches.open(DYNAMIC_CACHE);
         cache.put(request, net.clone());
       }

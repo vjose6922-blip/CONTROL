@@ -2326,7 +2326,7 @@ listoBtn2.addEventListener('click', () => { modal.remove(); resolve(true); });
 showStatus(' No pudimos notificar a este vendedor. Intenta de nuevo más tarde o búscalo en Comunidad.', 'error');
 sendBtn.disabled = false;
 sendBtn.style.opacity = '1';
-sendBtn.innerHTML = `${Icon('bell')} Enviar pedido a ${nombre}`;
+sendBtn.innerHTML = `${Icon('bell')} Enviar pedido a ${escapeHtml(nombre)}`;
 }
 });
 }
