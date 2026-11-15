@@ -1440,6 +1440,7 @@ window.loadErrorLog = function() {
         action:   e.accion    || e.Accion    || e.action   || '',
         message:  e.mensaje   || e.Mensaje   || e.message  || '',
         url:      e.url       || e.URL       || '',
+        ua:       e.ua        || '',
         filename: e.archivo   || e.Archivo   || e.filename || '',
         lineno:   e.linea     || e.Linea     || e.lineno   || 0,
         colno:    e.columna   || e.Columna   || e.colno    || 0,
@@ -1489,6 +1490,7 @@ window.renderErrorLog = function() {
       </div>
       <div style="color:var(--modal-text);font-size:12px;word-break:break-word;">${msg}</div>
       ${file||line ? `<div style="color:var(--modal-muted);font-size:11px;margin-top:3px;">${file}${line?':'+line+':'+col:''}</div>` : ''}
+      ${e.url||e.ua ? `<div style="color:var(--modal-muted);font-size:11px;margin-top:3px;word-break:break-all;">${escapeHtml([e.url, e.ua].filter(Boolean).join(' · '))}</div>` : ''}
       ${stk ? `<details style="margin-top:5px;"><summary style="color:var(--modal-muted);font-size:11px;cursor:pointer;">Stack trace</summary><pre style="color:var(--modal-muted);font-size:10px;margin:4px 0 0;white-space:pre-wrap;word-break:break-all;">${stk}</pre></details>` : ''}
     </div>`;
   }).join('');
