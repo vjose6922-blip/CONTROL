@@ -504,8 +504,9 @@
       title: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-trash"/></svg> Eliminar producto',
       message: `¿Eliminar "${nombreProducto}" y marcar todos sus reportes como revisados?`,
       icon: '', confirmText: 'Eliminar', cancelText: 'Cancelar',
-      askReason: true,
-      reasonPlaceholder: 'Motivo de la eliminación (opcional)',
+      // Sin motivo del reporte, la razón del staff es obligatoria (el servidor exige una para Auditoría)
+      askReason: true, requireReason: !motivoReporte,
+      reasonPlaceholder: motivoReporte ? 'Motivo de la eliminación (opcional)' : 'Motivo de la eliminación (obligatorio)',
       onConfirm: async (razon) => {
         try {
           const razonFinal = combinarRazonReporte(motivoReporte, razon);

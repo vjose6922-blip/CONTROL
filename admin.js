@@ -92,6 +92,7 @@ throw err;
 const LS_SESSION_KEYS = ["admin_session", "admin_token", "admin_rol", "admin_ciudad", "admin_nombre"];
 
 function _guardarSesionEnDispositivo() {
+  sessionStorage.removeItem("bio_pendiente"); // sesión recién iniciada con contraseña en esta pestaña
   LS_SESSION_KEYS.forEach((k) => {
     const v = sessionStorage.getItem(k);
     if (v !== null) localStorage.setItem(k, v);
@@ -108,6 +109,7 @@ function _irADestinoPendiente() {
 }
 
 function _borrarSesionDelDispositivo() {
+  sessionStorage.removeItem("bio_pendiente");
   LS_SESSION_KEYS.forEach((k) => localStorage.removeItem(k));
   localStorage.removeItem("biometric_enabled");
   localStorage.removeItem("biometric_credential_id");
@@ -1917,6 +1919,7 @@ bioUnlockBtn.disabled = true;
 bioUnlockBtn.textContent = "Verificando…";
 const ok = await _pedirDesbloqueoBiometrico();
 if (ok) {
+sessionStorage.removeItem("bio_pendiente");
 document.getElementById("biometric-unlock-card").hidden = true;
 _continuarConSesionGuardada();
 } else {
@@ -2021,7 +2024,11 @@ renderAdminProductsWithFilters();
 // guardada (localStorage), la restauramos antes de decidir qué mostrar.
 // Así la sesión sobrevive a cerrar la página/el navegador.
 if (localStorage.getItem("admin_rol") === "master" && !localStorage.getItem("admin_nombre")) _borrarSesionDelDispositivo(); // ADMIN_TOKEN guardado por versiones anteriores
+// La huella solo se pide al restaurar la sesión del dispositivo (pestaña o navegador nuevo); al ir y volver entre
+// páginas de CONTROL en la misma pestaña ya está desbloqueada y no se vuelve a pedir. "bio_pendiente" sigue puesto
+// hasta desbloquear: recargar en la pantalla de huella o abrir otra página de CONTROL no se la salta.
 if (!sessionStorage.getItem("admin_session") && localStorage.getItem("admin_session") === "true") {
+if (localStorage.getItem("biometric_enabled") === "true") sessionStorage.setItem("bio_pendiente", "1");
 LS_SESSION_KEYS.forEach((k) => {
 const v = localStorage.getItem(k);
 if (v !== null) sessionStorage.setItem(k, v);
@@ -2085,7 +2092,7 @@ window.dispatchEvent(new CustomEvent('adminReady'));
 }
 }
 if (hasSession === "true" && savedToken && document.getElementById("admin-panel-view")) {
-if (localStorage.getItem("biometric_enabled") === "true") {
+if (sessionStorage.getItem("bio_pendiente") === "1" && localStorage.getItem("biometric_enabled") === "true") {
 // Hay huella activada en este dispositivo: pedimos el desbloqueo
 // ANTES de restaurar la sesión, en vez de entrar directo.
 const loginFormsCard = document.getElementById("login-forms-card");
