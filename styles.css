@@ -2999,3 +2999,7 @@ button, input, select, textarea { font-family: inherit; }
 .field-group input::placeholder, .field-group textarea::placeholder { color: var(--color-text-soft); opacity: 1; }
 :root { --color-bg-secondary: rgba(255,255,255,0.05); }
 [data-theme="light"] { --color-bg-secondary: #fbf5f2; }
+
+/* Mi cuenta → Huella para entrar */
+.huella-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--color-border-subtle,rgba(255,255,255,.08))}
+.huella-vacia{font-size:.85rem;color:var(--color-text-soft);margin:0}

@@ -35,7 +35,6 @@
 <meta name="apple-mobile-web-app-title" content="Z&R">
 <link rel="apple-touch-icon" href="logo.svg">
 <meta name="mobile-web-app-capable" content="yes">
- <script src="chart.umd.min.js"></script> <!-- Chart.js 4.4.1 servido desde el repo (npm): sin depender de un CDN externo -->
 <style>
 /* Botón "quitar imagen" por slot (Imagen 1/2/3) — para poder deshacer una
    subida por error sin tener que borrar/recrear todo el producto. */
@@ -185,6 +184,20 @@ body[data-rol="moderador"] #product-form select {
  <div class="form-row"><label>Repite la contraseña</label><input type="password" id="crear-master-password2" required autocomplete="new-password" /></div>
  <button type="submit" class="primary-button full-width" style="margin-top:10px;">Crear mi cuenta</button>
  </form>
+ </div>
+ <div class="admin-card grid-tile" id="admin-huella-section" style="display:none;">
+ <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-huella-section","huella-body"]'>
+ <span class="tile-icon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" aria-hidden="true"><use href="#ic-fingerprint"/></svg></span>
+ <h2 class="tile-title">Huella para entrar</h2>
+ <div class="tile-actions">
+ <button type="button" class="tile-close-btn" aria-label="Cerrar" data-stop data-click="closeGridTile" data-args='["admin-huella-section","huella-body"]'>✕</button>
+ </div>
+ </div>
+ <div id="huella-body" style="display:none;">
+ <p style="font-size:.85rem;color:var(--color-text-soft);margin:0 0 10px;line-height:1.5;">Con la huella activada, para entrar a CONTROL se pide tu contraseña <b>y</b> la huella o Face ID de un dispositivo registrado: quien sepa tu contraseña no puede entrar. Si pierdes el dispositivo, "¿Olvidaste tu contraseña?" la quita con un código a tu correo.</p>
+ <div id="huella-lista"></div>
+ <button type="button" id="btn-huella-activar" class="primary-button full-width" style="margin-top:10px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-fingerprint"/></svg> Activar en este dispositivo</button>
+ </div>
  </div>
  <div class="admin-card grid-tile" id="admin-cambiar-password-section">
  <div class="admin-card-header tile-header" data-click="openGridTile" data-args='["admin-cambiar-password-section","cambiar-password-body"]'>

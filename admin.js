@@ -14,6 +14,10 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   rechazarVendedor: VENDEDORES_API_URL_ADMIN,
   vendedoresAdmin: VENDEDORES_API_URL_ADMIN,
   loginAdmin: VENDEDORES_API_URL_ADMIN,
+  adminHuellaOpciones: VENDEDORES_API_URL_ADMIN,
+  adminHuellaRegistrar: VENDEDORES_API_URL_ADMIN,
+  adminHuellaListar: VENDEDORES_API_URL_ADMIN,
+  adminHuellaQuitar: VENDEDORES_API_URL_ADMIN,
   crearCuentaMaster: VENDEDORES_API_URL_ADMIN,
   verificarSesionAdmin: VENDEDORES_API_URL_ADMIN,
   crearAdmin: VENDEDORES_API_URL_ADMIN,
@@ -37,7 +41,6 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   agregarParticipanteChat: ADMIN_API_URL_ADMIN,
   finalizarChatSoporte: ADMIN_API_URL_ADMIN,
   login: AUTH_API_URL_ADMIN,
-  verificarAdmin: AUTH_API_URL_ADMIN,
   list: CATALOGO_API_URL_ADMIN,
   create: CATALOGO_API_URL_ADMIN,
   update: CATALOGO_API_URL_ADMIN,
@@ -125,40 +128,90 @@ function _base64ABuffer(b64) {
   return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
 }
 
+// ── Huella validada por el servidor (S11) ──
+// El servidor guarda la llave pública; al entrar pide contraseña + firma de la huella. La misma llave se usa de
+// candado local de la sesión guardada (biometric_credential_id). Opciones/respuestas viajan en base64url (JSON).
+const _b64u = {
+  aBuf: (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(s.length / 4) * 4, "=")), (c) => c.charCodeAt(0)).buffer,
+  deBuf: (b) => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
+};
+const _llaves = (l) => (l || []).map((x) => ({ ...x, id: _b64u.aBuf(x.id) }));
+function _recordarLlaveLocal(rawId) { localStorage.setItem("biometric_credential_id", _bufferABase64(rawId)); localStorage.setItem("biometric_enabled", "true"); }
+
+async function _firmarHuella(o) {
+  const c = await navigator.credentials.get({ publicKey: { ...o, challenge: _b64u.aBuf(o.challenge), allowCredentials: _llaves(o.allowCredentials) } });
+  _recordarLlaveLocal(c.rawId);
+  const r = c.response;
+  return JSON.stringify({ id: c.id, rawId: _b64u.deBuf(c.rawId), type: c.type, clientExtensionResults: c.getClientExtensionResults(), response: {
+    clientDataJSON: _b64u.deBuf(r.clientDataJSON), authenticatorData: _b64u.deBuf(r.authenticatorData), signature: _b64u.deBuf(r.signature),
+    userHandle: r.userHandle ? _b64u.deBuf(r.userHandle) : undefined } });
+}
+
+function _nombreDispositivo() {
+  const ua = navigator.userAgent;
+  return (/iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Android/.test(ua) ? "Android" : /Mac/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "Dispositivo") +
+    " · " + new Date().toLocaleDateString("es-MX");
+}
+
+// Registra la huella de ESTE dispositivo en el servidor. Devuelve true si quedó activa.
+async function _activarHuellaServidor() {
+  const op = await apiRequest("POST", { action: "adminHuellaOpciones" });
+  if (!op || !op.ok) { showTemporaryMessage(op && op.error || "No se pudo iniciar", "error"); return false; }
+  let credential;
+  try {
+    const o = op.options, c = await navigator.credentials.create({ publicKey: { ...o, challenge: _b64u.aBuf(o.challenge),
+      user: { ...o.user, id: _b64u.aBuf(o.user.id) }, excludeCredentials: _llaves(o.excludeCredentials) } });
+    credential = JSON.stringify({ id: c.id, rawId: _b64u.deBuf(c.rawId), type: c.type, clientExtensionResults: c.getClientExtensionResults(), response: {
+      clientDataJSON: _b64u.deBuf(c.response.clientDataJSON), attestationObject: _b64u.deBuf(c.response.attestationObject),
+      transports: c.response.getTransports ? c.response.getTransports() : [] } });
+    _recordarLlaveLocal(c.rawId);
+  } catch (err) {
+    showTemporaryMessage(err && err.name === "InvalidStateError" ? "Este dispositivo ya tiene la huella activada" : "Se canceló la huella", "error");
+    return false;
+  }
+  showLoader("Guardando huella...");
+  try {
+    const r = await apiRequest("POST", { action: "adminHuellaRegistrar", credential, deviceLabel: _nombreDispositivo() });
+    if (!r || !r.ok) { showTemporaryMessage(r && r.error || "No se pudo guardar la huella", "error"); return false; }
+    showTemporaryMessage(" Huella activada: desde ahora se pide al entrar", "success");
+    return true;
+  } finally { hideLoader(); cargarHuellasStaff(); }
+}
+
 async function _ofrecerActivarBiometrico(nombreCuenta) {
-  if (localStorage.getItem("biometric_enabled") === "true") return;
   if (!(await _biometricoDisponible())) return;
   const quiere = await new Promise((resolve) => {
     showCustomConfirm({
-      title: " Desbloqueo con huella",
-      message: `¿Quieres activar el desbloqueo con huella o Face ID en este dispositivo para ${nombreCuenta || "esta cuenta"}? Así no tienes que volver a escribir tu contraseña aquí.`,
-      icon: "",
-      confirmText: "Sí, activar",
-      cancelText: "No, gracias",
-      onConfirm: () => resolve(true),
-      onCancel: () => resolve(false),
+      title: " Huella para entrar",
+      message: `¿Activar la huella o Face ID para ${nombreCuenta || "tu cuenta"}? Al entrar a CONTROL se pedirá tu contraseña y además la huella de este dispositivo. Si lo pierdes, "¿Olvidaste tu contraseña?" la quita con un código a tu correo.`,
+      icon: "", confirmText: "Sí, activar", cancelText: "Ahora no",
+      onConfirm: () => resolve(true), onCancel: () => resolve(false),
     });
   });
-  if (!quiere) return;
-  try {
-    const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const userId = crypto.getRandomValues(new Uint8Array(16));
-    const credential = await navigator.credentials.create({
-      publicKey: {
-        challenge,
-        rp: { name: "ZNR Admin" },
-        user: { id: userId, name: nombreCuenta || "admin-znr", displayName: nombreCuenta || "Admin ZNR" },
-        pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
-        authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-        timeout: 60000,
-      },
-    });
-    if (!credential) return;
-    localStorage.setItem("biometric_credential_id", _bufferABase64(credential.rawId));
-    localStorage.setItem("biometric_enabled", "true");
-  } catch (err) {
-    console.warn("No se pudo activar la huella:", err);
-  }
+  if (quiere) await _activarHuellaServidor();
+}
+
+// Tarjeta "Huella para entrar" de Mi cuenta: lista los dispositivos y permite activar este o quitar uno (con contraseña)
+async function cargarHuellasStaff() {
+  const lista = document.getElementById("huella-lista");
+  if (!lista || sessionStorage.getItem("admin_legacy") === "1") return;
+  const r = await apiRequest("POST", { action: "adminHuellaListar" }).catch(() => null);
+  const ds = (r && r.ok && r.dispositivos) || [];
+  lista.innerHTML = ds.length ? ds.map((d) => `<div class="huella-item"><span>${escapeHtml(d.deviceLabel)}</span><button type="button" class="text-button" data-quitar="${escapeHtml(d.id)}">Quitar</button></div>`).join("")
+    : '<p class="huella-vacia">Sin huella: entras solo con tu contraseña.</p>';
+  lista.querySelectorAll("[data-quitar]").forEach((b) => (b.onclick = () => _quitarHuella(b.dataset.quitar)));
+}
+
+function _quitarHuella(id) {
+  showCustomPrompt({ title: "Quitar huella", message: "Escribe tu contraseña para quitar la huella de este dispositivo.", confirmText: "Quitar",
+    onConfirm: async (password) => {
+      if (!password) return;
+      const r = await apiRequest("POST", { action: "adminHuellaQuitar", credentialId: id, password }).catch(() => null);
+      showTemporaryMessage(r && r.ok ? "Huella quitada" : (r && r.error) || "No se pudo quitar", r && r.ok ? "success" : "error");
+      cargarHuellasStaff();
+    } });
+  const i = document.getElementById("custom-prompt-input");
+  if (i) { i.type = "password"; i.autocomplete = "current-password"; }
 }
 
 async function _pedirDesbloqueoBiometrico() {
@@ -240,7 +293,19 @@ const telefono = document.getElementById("cuenta-telefono").value;
 const password = document.getElementById("cuenta-password").value;
 showLoader("Verificando credenciales...");
 try {
-const data = await apiRequest("POST", { action: "loginAdmin", telefono, password });
+let data = await apiRequest("POST", { action: "loginAdmin", telefono, password });
+// Cuenta con huella: la contraseña fue correcta y el servidor pide la firma de un dispositivo registrado
+if (data && data.requiereHuella) {
+hideLoader();
+let credential = null;
+try { credential = await _firmarHuella(data.options); } catch (err) { console.warn("Huella cancelada:", err); }
+if (!credential) {
+await showCustomAlert({ title: " Huella requerida", message: "Esta cuenta tiene la huella activada: confírmala en un dispositivo registrado. Si lo perdiste, usa \"¿Olvidaste tu contraseña?\" (el código de tu correo quita la huella).", icon: "", confirmText: "Entendido" });
+return;
+}
+showLoader("Verificando huella...");
+data = await apiRequest("POST", { action: "loginAdmin", telefono, password, credential });
+}
 if (!data || !data.ok) {
 await showCustomAlert({
 title: " Acceso denegado",
@@ -265,7 +330,8 @@ loadAdminProducts();
 startNotificationMonitoring();
 initAdminViewToggle();
 aplicarVisibilidadPorRol();
-await _ofrecerActivarBiometrico(data.nombre || "tu cuenta");
+cargarHuellasStaff();
+if (!data.usoHuella) await _ofrecerActivarBiometrico(data.nombre || "tu cuenta");
 _irADestinoPendiente();
 } catch (err) {
 console.error(err);
@@ -337,9 +403,10 @@ function aplicarVisibilidadPorRol() {
   // "Mi cuenta": la sesión heredada (contraseña + token) no tiene cuenta: solo ve "Crear mi cuenta de master".
   // Un master con cuenta (teléfono) cambia su contraseña y ve su correo de recuperación; los datos bancarios son del staff de ciudad.
   const legacy = sessionStorage.getItem("admin_legacy") === "1";
-  const ver = { "admin-cambiar-password-section": !legacy, "admin-pregunta-secreta-section": !legacy, "admin-datos-bancarios-section": rol !== "master", "admin-crear-master-section": legacy };
+  const ver = { "admin-huella-section": !legacy, "admin-cambiar-password-section": !legacy, "admin-pregunta-secreta-section": !legacy, "admin-datos-bancarios-section": rol !== "master", "admin-crear-master-section": legacy };
   Object.entries(ver).forEach(([id, si]) => { const el = document.getElementById(id); if (el) el.style.display = si ? "" : "none"; });
   if (rol !== "master") { cargarDatosBancarios(); cargarCobroTarjeta(); }
+  if (!legacy) cargarHuellasStaff();
   // Cabecera de perfil de "Mi cuenta"
   const nombre = sessionStorage.getItem("admin_nombre") || (rol === "master" ? "Master" : "Mi cuenta");
   const ciudad = sessionStorage.getItem("admin_ciudad");
@@ -518,8 +585,14 @@ function renderStatsMasterNote(master) {
   el.textContent = `${master.nombre}: ${partes.join(" · ")} (referencia, no compite por ciudad)`;
 }
 
+// Chart.js (200 KB) se baja solo al dibujar la primera gráfica: ya no frena la carga del panel.
+let _chartJs = null;
 function dibujarStatsChart(labels, data, label, color) {
-  if (!window.Chart) return; // Chart.js no cargó (offline, bloqueado, etc.) — la lista de arriba sigue funcionando igual.
+  if (!window.Chart) {
+    _chartJs = _chartJs || new Promise((ok) => { const s = document.createElement("script"); s.src = "chart.umd.min.js"; s.onload = s.onerror = ok; document.head.appendChild(s); });
+    _chartJs.then(() => { if (window.Chart) dibujarStatsChart(labels, data, label, color); }); // si no cargó, la lista de arriba sigue igual
+    return;
+  }
   const ctx = document.getElementById("stats-chart");
   if (!ctx) return;
   if (_statsChart) _statsChart.destroy();
@@ -1866,6 +1939,11 @@ const cambiarPasswordForm = document.getElementById("cambiar-password-form");
 if (cambiarPasswordForm) cambiarPasswordForm.addEventListener("submit", handleCambiarPasswordSubmit);
 const datosBancariosForm = document.getElementById("datos-bancarios-form");
 if (datosBancariosForm) datosBancariosForm.addEventListener("submit", handleDatosBancariosSubmit);
+const btnHuellaActivar = document.getElementById("btn-huella-activar");
+if (btnHuellaActivar) btnHuellaActivar.addEventListener("click", async () => {
+if (!(await _biometricoDisponible())) return showTemporaryMessage("Este dispositivo no tiene huella ni Face ID disponibles", "error");
+_activarHuellaServidor();
+});
 const btnDesactivarHuella = document.getElementById("btn-desactivar-huella");
 if (btnDesactivarHuella) {
 if (localStorage.getItem("biometric_enabled") === "true") btnDesactivarHuella.style.display = "";
@@ -1965,20 +2043,13 @@ adminSession = null;
 }
 async function _continuarConSesionGuardada() {
 try {
-let sesionValida = false;
-if (savedRol === "master") {
-const apiUrl = resolverApiUrlAdmin("verificarAdmin");
-if (!apiUrl) { _forceAdminLogout(); return; }
-const res = await apiFetch(apiUrl, { action: "verificarAdmin", token: savedToken });
-const data = await res.json();
-sesionValida = !!(data && (data.valid === true || data.ok === true));
-} else {
-const data = await apiRequest("GET", { action: "verificarSesionAdmin" });
-sesionValida = !!(data && data.ok);
+// verificarSesionAdmin acepta las cuentas (también la de master) y el acceso heredado; verificarAdmin (auth-api)
+// solo conocía ADMIN_TOKEN y sacaba al master con cuenta cada vez que reabría el panel.
+const data = await apiRequest("GET", { action: "verificarSesionAdmin", token: savedToken });
+const sesionValida = !!(data && data.ok);
 if (sesionValida) {
 sessionStorage.setItem("admin_rol", data.rol || savedRol);
 sessionStorage.setItem("admin_ciudad", data.ciudad || "");
-}
 }
 
 if (sesionValida) {
