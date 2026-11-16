@@ -4,9 +4,9 @@
 // que el chat de los lives). auth.uid de RTDB viene de un custom token que
 // entrega admin-api (tokenChatSoporte) — este panel no usaba Firebase Auth
 // para nada más.
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast, orderByKey, endBefore } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { getDatabase, ref, push, get, onValue, onChildAdded, query, limitToLast, orderByKey, endBefore } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
 (async function () {
   if (!getAdminToken()) return;
