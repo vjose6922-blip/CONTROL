@@ -41,7 +41,6 @@ const MAPA_ACCIONES_MIGRADAS_ADMIN = {
   agregarParticipanteChat: ADMIN_API_URL_ADMIN,
   finalizarChatSoporte: ADMIN_API_URL_ADMIN,
   login: AUTH_API_URL_ADMIN,
-  verificarAdmin: AUTH_API_URL_ADMIN,
   list: CATALOGO_API_URL_ADMIN,
   create: CATALOGO_API_URL_ADMIN,
   update: CATALOGO_API_URL_ADMIN,
@@ -586,8 +585,14 @@ function renderStatsMasterNote(master) {
   el.textContent = `${master.nombre}: ${partes.join(" · ")} (referencia, no compite por ciudad)`;
 }
 
+// Chart.js (200 KB) se baja solo al dibujar la primera gráfica: ya no frena la carga del panel.
+let _chartJs = null;
 function dibujarStatsChart(labels, data, label, color) {
-  if (!window.Chart) return; // Chart.js no cargó (offline, bloqueado, etc.) — la lista de arriba sigue funcionando igual.
+  if (!window.Chart) {
+    _chartJs = _chartJs || new Promise((ok) => { const s = document.createElement("script"); s.src = "chart.umd.min.js"; s.onload = s.onerror = ok; document.head.appendChild(s); });
+    _chartJs.then(() => { if (window.Chart) dibujarStatsChart(labels, data, label, color); }); // si no cargó, la lista de arriba sigue igual
+    return;
+  }
   const ctx = document.getElementById("stats-chart");
   if (!ctx) return;
   if (_statsChart) _statsChart.destroy();
@@ -2038,20 +2043,13 @@ adminSession = null;
 }
 async function _continuarConSesionGuardada() {
 try {
-let sesionValida = false;
-if (savedRol === "master") {
-const apiUrl = resolverApiUrlAdmin("verificarAdmin");
-if (!apiUrl) { _forceAdminLogout(); return; }
-const res = await apiFetch(apiUrl, { action: "verificarAdmin", token: savedToken });
-const data = await res.json();
-sesionValida = !!(data && (data.valid === true || data.ok === true));
-} else {
-const data = await apiRequest("GET", { action: "verificarSesionAdmin" });
-sesionValida = !!(data && data.ok);
+// verificarSesionAdmin acepta las cuentas (también la de master) y el acceso heredado; verificarAdmin (auth-api)
+// solo conocía ADMIN_TOKEN y sacaba al master con cuenta cada vez que reabría el panel.
+const data = await apiRequest("GET", { action: "verificarSesionAdmin", token: savedToken });
+const sesionValida = !!(data && data.ok);
 if (sesionValida) {
 sessionStorage.setItem("admin_rol", data.rol || savedRol);
 sessionStorage.setItem("admin_ciudad", data.ciudad || "");
-}
 }
 
 if (sesionValida) {

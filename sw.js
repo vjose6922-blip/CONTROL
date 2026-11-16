@@ -1,5 +1,6 @@
-const CACHE_NAME    = 'zr-admin-cache-v25';
-const DYNAMIC_CACHE = 'zr-admin-dynamic-v25';
+const CACHE_NAME    = 'zr-admin-cache-v26';
+const DYNAMIC_CACHE = 'zr-admin-dynamic-v26';
+const MAX_DINAMICO  = 200; // imágenes y respuestas guardadas: solo las más recientes, para no llenar el teléfono
 
 const STATIC_ASSETS = [
   './',
@@ -130,10 +131,7 @@ async function cacheFirst(request) {
   if (cached) return cached;
   try {
     const net = await fetch(request);
-    if (net?.status === 200) {
-      const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, net.clone());
-    }
+    if (net?.status === 200) guardarDinamico(request, net.clone());
     return net;
   } catch {
     return new Response('Offline', { status: 404 });
@@ -149,23 +147,27 @@ async function networkOnly(request) {
   }
 }
 
-// Red primero con un parámetro que cambia en cada intento, para que el CDN de GitHub Pages
-// no devuelva una copia vieja. Se guarda bajo la URL original para el respaldo sin conexión.
+// HTML y JS: red primero, pero sin volver a bajar lo que no cambió (con su ETag el CDN responde 304) y, si la red
+// tarda más de 1.5 s, se muestra la copia guardada mientras la nueva se termina de bajar (se usará en la siguiente carga).
+// Antes se bajaba todo completo en cada carga (no-store + parámetro único) y con mala señal el panel tardaba o salía en blanco.
 async function networkFirstFresh(request) {
-  const bustUrl = new URL(request.url);
-  bustUrl.searchParams.set('_swfresh', Date.now().toString());
-  try {
-    const net = await fetch(bustUrl.toString(), { cache: 'no-store' });
-    if (net?.status === 200) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, net.clone());
-    }
+  const cached = await caches.match(request);
+  const headers = cached?.headers.get('ETag') ? { 'If-None-Match': cached.headers.get('ETag') } : {};
+  const red = fetch(request.url, { cache: 'no-cache', credentials: 'same-origin', headers }).then(async (net) => {
+    if (net.status === 304 && cached) return cached;
+    if (net.ok) await (await caches.open(CACHE_NAME)).put(request, net.clone());
     return net;
-  } catch {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    throw new Error('Offline');
-  }
+  });
+  if (!cached) return red;
+  return Promise.race([red.catch(() => cached), new Promise((ok) => setTimeout(ok, 1500, cached))]);
+}
+
+// Guarda en la caché dinámica y borra las entradas más viejas por encima de MAX_DINAMICO
+async function guardarDinamico(request, response) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+  await cache.put(request, response);
+  const keys = await cache.keys();
+  await Promise.all(keys.slice(0, Math.max(0, keys.length - MAX_DINAMICO)).map((k) => cache.delete(k)));
 }
 
 async function networkFirst(request) {
@@ -186,8 +188,7 @@ async function networkFirst(request) {
                          'obtenerReportesLive', 'obtenerClipReporteLive', 'obtenerReportesPedido',
                          'obtenerReportesHistorias', 'resolverReporteHistoria'];
       if ((!action || !sensitive.includes(action)) && !url.searchParams.has('token')) { // con token: datos de admin, no se guardan
-        const cache = await caches.open(DYNAMIC_CACHE);
-        cache.put(request, net.clone());
+        guardarDinamico(request, net.clone());
       }
     }
     return net;
