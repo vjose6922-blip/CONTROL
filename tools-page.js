@@ -1,5 +1,5 @@
 // Guard: sin token de admin, de vuelta al login.
-if (!sessionStorage.getItem('admin_token')) location.href = 'index.html';
+if (!sessionStorage.getItem('admin_token') || sessionStorage.getItem('bio_pendiente')) location.href = 'index.html'; // sin desbloquear con huella
 
 // Modales que las funciones de admin-tools.js crean; los "desmontamos" para que
 // vivan como contenido de la página en vez de overlay flotante.

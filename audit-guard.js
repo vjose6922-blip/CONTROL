@@ -3,7 +3,7 @@
 // "master", se regresa a index.html antes de pintar nada.
 (function () {
     const rol = sessionStorage.getItem('admin_rol') || 'master';
-    if (!sessionStorage.getItem('admin_token') || rol !== 'master') {
+    if (!sessionStorage.getItem('admin_token') || sessionStorage.getItem('bio_pendiente') || rol !== 'master') {
         location.href = 'index.html';
     }
 })();
