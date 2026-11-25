@@ -185,7 +185,7 @@
     m.className = 'custom-alert-modal';
     m.innerHTML = `<div class="custom-alert-content" style="max-height:86vh;display:flex;flex-direction:column"><div class="custom-alert-header"><h3>Productos de ${escapeHtml(nombre)}</h3></div>
       <div class="custom-alert-body" style="overflow:auto">${!r.ok ? escapeHtml(r.error || 'Error') : lista || '<p>Todavía no sube productos.</p>'}
-      <p style="font-size:12px;opacity:.75">Si apruebas la cuenta, estos productos se publican en ese momento.</p></div>
+      <p style="font-size:12px;opacity:.75">Si apruebas la cuenta, se publican cuando el vendedor entre con la contraseña que le llega por WhatsApp (así se confirma que el número es suyo).</p></div>
       <div class="custom-alert-footer"><button class="custom-alert-btn confirm">Cerrar</button></div></div>`;
     document.body.appendChild(m);
     m.querySelector('.confirm').onclick = () => document.body.removeChild(m);
@@ -207,15 +207,15 @@
       }
       const data = await _apiPost({ action, uid, token: getAdminToken() });
       if (!data.ok) { if (waWindow) waWindow.close(); throw new Error(data.error); }
-      if (action === 'aprobarVendedor' && data.telefono) {
+      if (action === 'aprobarVendedor' && data.codigo && data.telefono) {
         const row    = document.getElementById(`vrow-${uid}`);
         const nombre = row ? row.querySelector('.info strong')?.textContent?.trim() || 'Vendedor' : 'Vendedor';
         const mensaje =
           ` *¡Cuenta aprobada!* \n\n` +
           `Hola ${nombre}, tu cuenta de vendedor en Z&R Comunidad ha sido *aprobada*.\n\n` +
-          (data.codigo ? `*Tu contraseña temporal es:* ${data.codigo}\n\n` +
-          `Puedes cambiarla después de iniciar sesión. No la compartas con nadie, ni con soporte de Z&R.\n\n`
-          : `Entra con la contraseña que creaste al registrarte.${data.publicados ? ` Tus ${data.publicados} productos ya están publicados.` : ''}\n\n`) +
+          `*Tu contraseña temporal es:* ${data.codigo}\n\n` +
+          `Puedes cambiarla después de iniciar sesión. No la compartas con nadie, ni con soporte de Z&R.\n\n` +
+          (data.enEspera ? `Al entrar con ella se publican los ${data.enEspera} productos que ya subiste.\n\n` : '') +
           ` Accede aquí: znrcommunity.com/vendedor.html\n\n` +
           `¡Bienvenido! `;
         if (isMobile) {
