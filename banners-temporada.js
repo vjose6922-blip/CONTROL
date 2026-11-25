@@ -24,6 +24,9 @@
 .bt-prev { position: sticky; top: 58px; z-index: 1; display: flex; padding: 6px 0; background: var(--modal-bg, #fff); }
 .bt-prev .com-banner { background: repeating-conic-gradient(#0001 0 25%, #0000 0 50%) 0 0 / 16px 16px; }
 .bt-aviso { font-size: 12px; color: #ef4444; font-weight: 600; }
+.bt-sug { font-size: 12px; line-height: 1.4; padding: 8px 10px; border-radius: 10px; margin: 6px 0; background: rgba(34,197,94,.12); color: var(--modal-text); }
+.bt-sug.mal { background: rgba(239,68,68,.12); }
+.bt-sug button { padding: 0 4px; font-weight: 700; }
 .bt-pos { display: grid; grid-template-columns: repeat(3, 28px); gap: 4px; padding: 6px; border: 1px solid var(--modal-border, #e0e0e0); border-radius: 10px; width: max-content; }
 .bt-pos input { display: none; }
 .bt-pos span { display: block; height: 20px; border-radius: 5px; background: var(--modal-border, #e5e5e5); cursor: pointer; }
@@ -64,6 +67,7 @@
           <b id="banner-form-t">Nuevo banner</b>
           <div class="bt-prev" id="banner-prev"></div>
           <span class="bt-aviso" id="banner-aviso" hidden>El texto no cabe completo: acórtalo, baja el tamaño o muévelo.</span>
+          <div class="bt-sug" id="banner-sug" hidden></div>
           <input type="hidden" name="id">
           <details name="bt" open><summary>Imagen y texto <small data-res="texto"></small></summary><div class="bt-cuerpo">
             <label>Imagen (sin texto, 1200×500 recomendado)<input type="file" name="archivo" accept="image/*"></label>
@@ -77,7 +81,7 @@
               <label>Posición del botón${pickPos('botonPos', '')}<span class="bt-chk"><input type="radio" name="botonPos" value="txt" checked> Debajo del texto</span></label></div>
             <div class="fila"><label>Tamaño del texto<select name="escala"><option value="0.85">Chico</option><option value="1" selected>Normal</option><option value="1.15">Grande</option><option value="1.3">Muy grande</option></select></label>
               <label>Color del texto<select name="tema"><option value="oscuro">Oscuro (imagen clara)</option><option value="claro">Blanco (imagen oscura)</option></select></label></div>
-            <label>Sombra detrás del texto<select name="degradado"><option value="si">Sí (se lee mejor)</option><option value="no">No</option></select></label>
+            <label>Fondo detrás del texto<select name="degradado"><option value="si">Sombra suave</option><option value="recuadro">Recuadro (se lee sobre cualquier foto)</option><option value="no">Nada</option></select></label>
           </div></details>
           <details name="bt"><summary>Dónde y cuándo <small data-res="cuando"></small></summary><div class="bt-cuerpo">
             <label>Dónde mostrar<select name="donde"><option value="ambos">Inicio y Comunidad</option><option value="inicio">Solo Inicio</option><option value="comunidad">Solo Comunidad</option></select></label>
@@ -102,9 +106,42 @@
     document.getElementById('btn-close-banners').onclick = () => modal.remove();
     const form = document.getElementById('banner-form'), lista = document.getElementById('banners-lista'), prev = document.getElementById('banner-prev');
     let banners = {}, imgUrl = '', avisoUrl = ''; // avisoUrl: imagen propia de la notificación (guardada o recién elegida)
-    const preview = () => {
+    // Sugerencia de color y fondo: mide la zona de la foto donde va el texto (brillo medio y qué tan variada es)
+    // y avisa si con lo elegido se va a leer mal. Con una imagen nueva se aplica sola; siempre se puede cambiar.
+    const medidas = {}, sug = document.getElementById('banner-sug');
+    const medir = (url, pos) => medidas[url + pos] || (medidas[url + pos] = new Promise((ok) => {
+      const im = new Image();
+      if (!/^blob:/.test(url)) im.crossOrigin = 'anonymous';
+      im.onload = () => {
+        try {
+          const W = 120, H = 50, c = Object.assign(document.createElement('canvas'), { width: W, height: H }), x = c.getContext('2d', { willReadFrequently: true });
+          x.drawImage(im, 0, 0, W, H);
+          const f = { l: [0, .6], c: [.2, .8], r: [.4, 1] }[pos[1]], g = { t: [0, .6], m: [.2, .8], b: [.4, 1] }[pos[0]];
+          const px = x.getImageData(f[0] * W, g[0] * H, (f[1] - f[0]) * W, (g[1] - g[0]) * H).data;
+          let s1 = 0, s2 = 0, n = px.length / 4;
+          for (let i = 0; i < px.length; i += 4) { const l = (.299 * px[i] + .587 * px[i + 1] + .114 * px[i + 2]) / 255; s1 += l; s2 += l * l; }
+          const L = s1 / n; ok({ L, S: Math.sqrt(Math.max(0, s2 / n - L * L)) });
+        } catch (_) { ok(null); } // imagen guardada sin permiso de lectura (CORS): sin sugerencia
+      };
+      im.onerror = () => ok(null);
+      im.src = url;
+    }));
+    const sugerir = async (d, aplicar) => {
+      const pos = /^[tmb][lcr]$/.test(d.pos || '') ? d.pos : 'ml', m = imgUrl && await medir(imgUrl, pos);
+      if (!m) { sug.hidden = true; return; }
+      const tema = m.L > .55 ? 'oscuro' : 'claro', fondo = m.S > .17 || (m.L > .4 && m.L < .62) ? 'recuadro' : 'si';
+      if (aplicar) { form.tema.value = tema; form.degradado.value = fondo; preview(true); d = Object.fromEntries(new FormData(form)); }
+      const mal = d.degradado !== 'recuadro' && ((d.tema === 'claro' && m.L > .55) || (d.tema !== 'claro' && m.L < .45) || m.S > .17);
+      const zona = (m.L > .55 ? 'clara' : m.L < .45 ? 'oscura' : 'de tono medio') + (m.S > .17 ? ' y con muchos tonos' : '');
+      sug.hidden = false; sug.className = 'bt-sug' + (mal ? ' mal' : '');
+      sug.innerHTML = (aplicar ? `✨ La zona del texto es ${zona}: ajusté el color y el fondo para que se lea (puedes cambiarlos).` : mal ? `⚠️ El texto puede leerse mal: la zona del texto es ${zona}.` : `✅ Se lee bien: la zona del texto es ${zona}.`)
+        + (mal ? ` Sugerido: texto ${tema === 'claro' ? 'blanco' : 'oscuro'} + ${fondo === 'recuadro' ? 'recuadro' : 'sombra suave'}. <button type="button" class="text-button">Aplicar</button>` : '');
+      sug.querySelector('button')?.addEventListener('click', () => sugerir(Object.fromEntries(new FormData(form)), true));
+    };
+    const preview = (sinSugerencia) => {
       const d = Object.fromEntries(new FormData(form)), img = avisoUrl || imgUrl;
       prev.innerHTML = znrBanner.html({ ...d, imagen: imgUrl });
+      if (sinSugerencia !== true) sugerir(d, false);
       document.getElementById('banner-aviso').hidden = !znrBanner.desborda(prev.firstElementChild);
       const fecha = (f) => f ? new Date(f + 'T12:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : '?';
       Object.entries({ texto: d.titulo || 'Falta el título', diseno: { '0.85': 'Chico', 1: 'Normal', '1.15': 'Grande', '1.3': 'Muy grande' }[d.escala] + ' · ' + (d.tema === 'claro' ? 'blanco' : 'oscuro'),
@@ -129,7 +166,7 @@
     try { form.pruebaTel.value = localStorage.getItem('znr_prueba_tel') || ''; } catch (_) {}
     form.oninput = (e) => {
       if (e.target.name === 'archivoAviso' && e.target.files[0]) avisoUrl = URL.createObjectURL(e.target.files[0]);
-      if (e.target.name === 'archivo' && e.target.files[0]) imgUrl = URL.createObjectURL(e.target.files[0]);
+      if (e.target.name === 'archivo' && e.target.files[0]) { imgUrl = URL.createObjectURL(e.target.files[0]); preview(true); return sugerir(Object.fromEntries(new FormData(form)), true); }
       preview();
     };
     document.fonts?.load("700 20px 'ZNR Serif'").then(preview, () => {});
