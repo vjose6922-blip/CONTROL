@@ -885,7 +885,7 @@ if (!data || !data.ok) {
 await showCustomAlert({ title: " No se pudo crear", message: (data && data.error) || "Intenta de nuevo.", icon: "", confirmText: "Aceptar" });
 return;
 }
-const msg = `*Cuenta creada*\n\nHola ${nombre}, tu acceso a Z&R:\n\nTeléfono: ${data.telefono}\nContraseña temporal: *${data.codigo}*\n\nCámbiala después de iniciar sesión.`;
+const msg = `*Cuenta creada*\n\nHola ${nombre}, tu acceso a Z&R:\n\nTeléfono: ${data.telefono}\nContraseña temporal: *${data.codigo}*\n\nCámbiala después de iniciar sesión. No la compartas con nadie, ni con soporte de Z&R.`;
 const waLink = `https://wa.me/52${data.telefono}?text=${encodeURIComponent(msg)}`;
 const cred = document.getElementById("nuevo-admin-credenciales");
 cred.style.display = "block";

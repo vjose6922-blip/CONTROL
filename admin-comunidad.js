@@ -197,7 +197,7 @@
           ` *¡Cuenta aprobada!* \n\n` +
           `Hola ${nombre}, tu cuenta de vendedor en Z&R Comunidad ha sido *aprobada*.\n\n` +
           `*Tu contraseña temporal es:* ${data.codigo}\n\n` +
-          `Puedes cambiarla después de iniciar sesión.\n\n` +
+          `Puedes cambiarla después de iniciar sesión. No la compartas con nadie, ni con soporte de Z&R.\n\n` +
           ` Accede aquí: znrcommunity.com/vendedor.html\n\n` +
           `¡Bienvenido! `;
         if (isMobile) {
@@ -370,12 +370,18 @@
     const sel = document.getElementById(`confiable-sel-${id}`);
     await _productAction(id, 'aprobarProductoComunidad', ' Producto aprobado', sel ? sel.value : 'false', btn, 'Aprobando…');
   }
-  async function rechazarProducto(id, btn) { await _productAction(id, 'rechazarProductoComunidad', ' Producto rechazado', null, btn, 'Rechazando…'); }
+  // El vendedor ve el motivo y puede corregir y reenviar el producto (vuelve a pendientes).
+  const MOTIVOS_RECHAZO = ['Foto borrosa', 'Foto copiada de internet', 'Precio incorrecto', 'Producto prohibido', 'Descripción insuficiente', 'Otro'];
+  async function rechazarProducto(id, btn) {
+    const razon = await new Promise((ok) => showCustomConfirm({ title: 'Rechazar producto', message: 'El vendedor verá el motivo y podrá corregirlo y reenviarlo.',
+      confirmText: 'Rechazar', motivos: MOTIVOS_RECHAZO, onConfirm: ok, onCancel: () => ok(null) }));
+    if (razon) await _productAction(id, 'rechazarProductoComunidad', ' Producto rechazado', null, btn, 'Rechazando…', { razon });
+  }
 
-  async function _productAction(id, action, msg, confiable, btn, loadingText) {
+  async function _productAction(id, action, msg, confiable, btn, loadingText, extra) {
     const runFn = async () => {
     try {
-      const payload = { action, id, token: getAdminToken() };
+      const payload = { action, id, token: getAdminToken(), ...extra };
       if (confiable !== null && confiable !== undefined) payload.confiable = confiable;
       const data = await _apiPost(payload);
       if (!data.ok) throw new Error(data.error);

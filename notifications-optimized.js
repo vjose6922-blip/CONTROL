@@ -900,7 +900,7 @@ window.adminAprobarBeneficiario = async function(id, btn) {
     if (!data.ok) { askAlert('Error: ' + data.error); return; }
     if (data.codigo && data.telefono) {
       const urlVendedor = 'https://znrcommunity.com/vendedor.html';
-      const msg = `¡Felicidades ${data.nombre || ''}! 🎉\n\nTu solicitud de beneficiario en Z&R fue *aprobada*.\n\nTu contraseña temporal:\n*${data.codigo}*\n\nIngresa en:\n${urlVendedor}\n\nUsa tu número de WhatsApp como usuario.`;
+      const msg = `¡Felicidades ${data.nombre || ''}! 🎉\n\nTu solicitud de beneficiario en Z&R fue *aprobada*.\n\nTu contraseña temporal:\n*${data.codigo}*\n\nIngresa en:\n${urlVendedor}\n\nUsa tu número de WhatsApp como usuario. No la compartas con nadie, ni con soporte de Z&R.`;
       window.open(`https://wa.me/52${data.telefono}?text=${encodeURIComponent(msg)}`, '_blank');
     }
     loadBeneficiarios(true);
