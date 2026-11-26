@@ -65,6 +65,7 @@
     suspenderVendedor: VENDEDORES_API_URL_COMUNIDAD,
     reactivarVendedor: VENDEDORES_API_URL_COMUNIDAD,
     productosPendientes: CATALOGO_API_URL_COMUNIDAD,
+    productosPorVendedor: CATALOGO_API_URL_COMUNIDAD,
     listarTodoComunidad: CATALOGO_API_URL_COMUNIDAD,
     aprobarProductoComunidad: CATALOGO_API_URL_COMUNIDAD,
     rechazarProductoComunidad: CATALOGO_API_URL_COMUNIDAD,
@@ -151,6 +152,7 @@
           </div>
           <div class="actions" style="flex-wrap:wrap;gap:6px;">
             ${v.estado === 'pendiente' ? `
+              <button class="btn-stats" data-click="AdminComunidad.verProductosSolicitud" data-args="${dargs(v.uid, v.nombre)}">Ver sus productos</button>
               <button class="btn-approve" data-click="AdminComunidad.aprobarVendedor" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-check"/></svg> Aprobar</button>
               <button class="btn-reject"  data-click="AdminComunidad.rechazarVendedor" data-args="${dargs(v.uid, ARG.THIS)}"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"><use href="#ic-x"/></svg> Rechazar</button>` : ''}
             ${v.estado === 'activo' ? `
@@ -173,6 +175,21 @@
     }
   }
 
+  // Mejora 22: el vendedor nuevo sube hasta 10 productos mientras se revisa su cuenta; se publican al aprobarla.
+  async function verProductosSolicitud(uid, nombre) {
+    const r = await _apiGet({ action: 'productosPorVendedor', vendedor_uid: uid, limit: 50, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
+    const lista = (r.products || []).map((p) => `<div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--modal-border,#eee)">
+      ${p.imagen1 ? `<img src="${escapeHtml(p.imagen1)}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex:none">` : ''}
+      <div style="text-align:left"><b>${escapeHtml(p.nombre || '')}</b><br><small>$${Number(p.precio || 0).toLocaleString('es-MX')} · ${escapeHtml(p.categoria || '')}</small></div></div>`).join('');
+    const m = document.createElement('div');
+    m.className = 'custom-alert-modal';
+    m.innerHTML = `<div class="custom-alert-content" style="max-height:86vh;display:flex;flex-direction:column"><div class="custom-alert-header"><h3>Productos de ${escapeHtml(nombre)}</h3></div>
+      <div class="custom-alert-body" style="overflow:auto">${!r.ok ? escapeHtml(r.error || 'Error') : lista || '<p>Todavía no sube productos.</p>'}
+      <p style="font-size:12px;opacity:.75">Si apruebas la cuenta, se publican cuando el vendedor entre con la contraseña que le llega por WhatsApp (así se confirma que el número es suyo).</p></div>
+      <div class="custom-alert-footer"><button class="custom-alert-btn confirm">Cerrar</button></div></div>`;
+    document.body.appendChild(m);
+    m.querySelector('.confirm').onclick = () => document.body.removeChild(m);
+  }
   async function aprobarVendedor(uid, btn) { await _vendorAction(uid, 'aprobarVendedor', ' Vendedor aprobado', btn, 'Aprobando…'); }
   async function rechazarVendedor(uid, btn) { await _vendorAction(uid, 'rechazarVendedor', ' Vendedor rechazado', btn, 'Rechazando…'); }
   async function reactivarVendedor(uid, btn) { await _vendorAction(uid, 'reactivarVendedor', ' Vendedor reactivado', btn, 'Reactivando…'); }
@@ -198,6 +215,7 @@
           `Hola ${nombre}, tu cuenta de vendedor en Z&R Comunidad ha sido *aprobada*.\n\n` +
           `*Tu contraseña temporal es:* ${data.codigo}\n\n` +
           `Puedes cambiarla después de iniciar sesión. No la compartas con nadie, ni con soporte de Z&R.\n\n` +
+          (data.enEspera ? `Al entrar con ella se publican los ${data.enEspera} productos que ya subiste.\n\n` : '') +
           ` Accede aquí: znrcommunity.com/vendedor.html\n\n` +
           `¡Bienvenido! `;
         if (isMobile) {
@@ -718,6 +736,7 @@ function verProductoDesdeReporte(reporte) {
     loadVendors,
     loadPendingProducts,
     aprobarVendedor,
+    verProductosSolicitud,
     rechazarVendedor,
     resetPasswordVendedor,
     contactarPorTelefonoPendiente,
