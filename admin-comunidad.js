@@ -66,6 +66,8 @@
     reactivarVendedor: VENDEDORES_API_URL_COMUNIDAD,
     productosPendientes: CATALOGO_API_URL_COMUNIDAD,
     productosPorVendedor: CATALOGO_API_URL_COMUNIDAD,
+    zonasPorRevisar: CATALOGO_API_URL_COMUNIDAD,
+    resolverNombreZona: CATALOGO_API_URL_COMUNIDAD,
     listarTodoComunidad: CATALOGO_API_URL_COMUNIDAD,
     aprobarProductoComunidad: CATALOGO_API_URL_COMUNIDAD,
     rechazarProductoComunidad: CATALOGO_API_URL_COMUNIDAD,
@@ -346,7 +348,36 @@
   }
 
   
+  // Nombres de zona (código postal) que propusieron 2+ vecinos: el staff de la ciudad aprueba (puede editarlo) o rechaza.
+  async function loadZonasNombres() {
+    const cont = document.getElementById('admin-zonas-list');
+    if (!cont) return;
+    const r = await _apiGet({ action: 'zonasPorRevisar', token: getAdminToken() }).catch(() => null);
+    const zonas = (r && r.ok && r.zonas) || [];
+    cont.innerHTML = zonas.length ? `<h3 style="margin:4px 0 8px;font-size:14px">📍 Nombres de zona propuestos</h3>` + zonas.map((z) => `
+      <div class="pending-product-row" style="display:block;padding:10px;margin-bottom:8px">
+        <b>Zona ${escapeHtml(z.cp)}</b> <small>${escapeHtml(z.ciudad || '')}${z.nombre ? ` · hoy: "${escapeHtml(z.nombre)}"` : ' · sin nombre'}</small>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${z.propuestas.map((p) => `
+          <button class="btn-approve" data-click="AdminComunidad.aprobarNombreZona" data-args="${dargs(z.id, p.texto)}">✓ ${escapeHtml(p.texto)} (${p.votos})</button>`).join('')}
+          <button class="btn-reject" data-click="AdminComunidad.rechazarNombreZona" data-args="${dargs(z.id)}">Rechazar</button></div>
+      </div>`).join('') : '';
+  }
+  async function aprobarNombreZona(id, texto) {
+    showCustomPrompt({ title: 'Nombre de la zona', message: 'Puedes ajustarlo antes de aprobar (un código postal abarca varias colonias).', defaultValue: texto, confirmText: 'Aprobar',
+      onConfirm: async (nombre) => {
+        const r = await _apiPost({ action: 'resolverNombreZona', id, nombre, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
+        _msg(r.ok ? ' Nombre aprobado' : ' ' + r.error, r.ok ? 'success' : 'error');
+        loadZonasNombres();
+      } });
+  }
+  async function rechazarNombreZona(id) {
+    const r = await _apiPost({ action: 'resolverNombreZona', id, rechazar: '1', token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
+    _msg(r.ok ? ' Propuesta rechazada' : ' ' + r.error, r.ok ? 'success' : 'error');
+    loadZonasNombres();
+  }
+
   async function loadPendingProducts() {
+    loadZonasNombres();
     const container = document.getElementById('admin-pending-list');
     if (!container) return;
     container.innerHTML = window.znrSkeletonRows(3);
@@ -736,6 +767,8 @@ function verProductoDesdeReporte(reporte) {
     loadVendors,
     loadPendingProducts,
     aprobarVendedor,
+    aprobarNombreZona,
+    rechazarNombreZona,
     verProductosSolicitud,
     rechazarVendedor,
     resetPasswordVendedor,
