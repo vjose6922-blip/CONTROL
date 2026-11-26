@@ -1768,7 +1768,7 @@ async function checkNotifications() {
     const PEDIDOS_API_BADGES = window.PEDIDOS_API_URL;
     const VENTAS_API_BADGES = window.VENTAS_API_URL;
     const HISTORIAS_API_BADGES = window.HISTORIAS_API_URL;
-    const [gasRes, vendRes, pendRes, repRes, benRes, benRepRes, plusRes, liveRes, pedRepRes, fbRes, histRepRes, benEdRes, resetsRes, registrosRes] = await Promise.all([
+    const [gasRes, vendRes, pendRes, repRes, benRes, benRepRes, plusRes, liveRes, pedRepRes, fbRes, histRepRes, benEdRes, resetsRes, registrosRes, zonasRes] = await Promise.all([
       apiFetch(TIENDA_API_BADGES, { action: 'notificationsBatch', page: 1, pageSize: 500, token })
         .then(r => r.json())
         .then(d => ({ ok: d.ok, solicitudes: d.ok ? (d.groups || []).filter(g => g.availableCount > 0).length : 0 }))
@@ -1786,6 +1786,7 @@ async function checkNotifications() {
       apiFetch(BENEFICIARIOS_API_BADGES, { action: 'obtenerSolicitudesBeneficiario', token }).then(r => r.json()).catch(() => ({ ok: false })),
       apiFetch(VENDEDORES_API_BADGES, { action: 'listarResetsComprador', token }).then(r => r.json()).catch(() => ({ ok: false })),
       apiFetch(VENDEDORES_API_BADGES, { action: 'listarRegistrosComprador', token }).then(r => r.json()).catch(() => ({ ok: false })),
+      apiFetch(CATALOGO_API_BADGES, { action: 'zonasPorRevisar', token }).then(r => r.json()).catch(() => ({ ok: false })),
     ]);
 
     const vendors = vendRes.ok ? (vendRes.vendors || []) : [];
@@ -1804,8 +1805,9 @@ async function checkNotifications() {
       reportesPedidos: pedRepRes.ok ? (pedRepRes.reportes || []).length : 0,
       reportesHistorias: histRepRes.ok ? (histRepRes.reportes || []).length : 0,
       feedback: fbRes.ok ? (fbRes.items || []).length : 0,
+      zonas: zonasRes.ok ? (zonasRes.zonas || []).length : 0,
     };
-    data.total = data.solicitudes + data.vendors + data.pending + data.reportes + data.plus + data.beneficiarios + data.reportesLive + data.reportesPedidos + data.reportesHistorias + data.feedback;
+    data.total = data.solicitudes + data.vendors + data.pending + data.reportes + data.plus + data.beneficiarios + data.reportesLive + data.reportesPedidos + data.reportesHistorias + data.feedback + data.zonas;
     if (!data.ok) return;
  
     const count = data.solicitudes;
@@ -1832,6 +1834,7 @@ async function checkNotifications() {
       window._updateNotifTabBadge('feedback', data.feedback);
       window._updateNotifTabBadge('plus', data.plus);
       window._updateNotifTabBadge('beneficiarios', data.beneficiarios);
+      window._updateNotifTabBadge('zonas', data.zonas);
     }
     const secBadge = document.getElementById('notif-badge-header');
     if (secBadge) { secBadge.textContent = data.total; secBadge.style.display = data.total > 0 ? 'inline' : 'none'; }
@@ -1846,6 +1849,7 @@ async function checkNotifications() {
     setBadge('notif-panel-reportes-pedidos-count', data.reportesPedidos);
     setBadge('notif-panel-reportes-historias-count', data.reportesHistorias);
     setBadge('notif-panel-feedback-count', data.feedback);
+    setBadge('notif-panel-zonas-count', data.zonas);
     window.actualizarContadoresHerramientas?.();
  
   } catch(err) {

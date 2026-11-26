@@ -1,6 +1,6 @@
  function switchNotifTab(section, btn) {
 
- ['solicitudes','vendors','pending','reportes','reportes_live','reportes_pedidos','reportes_historias','feedback','plus','beneficiarios'].forEach(s => {
+ ['solicitudes','vendors','pending','reportes','reportes_live','reportes_pedidos','reportes_historias','feedback','plus','beneficiarios','zonas'].forEach(s => {
  const el = document.getElementById('section-' + s);
  if (el) el.style.display = 'none';
  });
@@ -70,7 +70,7 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
 
  window.addEventListener('DOMContentLoaded', () => {
  const hash = window.location.hash.replace('#','');
- if (['solicitudes','vendors','pending','reportes','reportes_live','reportes_pedidos','reportes_historias','feedback','plus','beneficiarios'].includes(hash)) {
+ if (['solicitudes','vendors','pending','reportes','reportes_live','reportes_pedidos','reportes_historias','feedback','plus','beneficiarios','zonas'].includes(hash)) {
  const btn = document.querySelector(`.notif-tab[data-section="${hash}"]`);
  if (btn) switchNotifTab(hash, btn);
  }
@@ -112,7 +112,7 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
  }
  });
 
- window._notifSectionCounts = { solicitudes: 0, vendors: 0, pending: 0, reportes: 0, reportes_live: 0, reportes_pedidos: 0, reportes_historias: 0, feedback: 0, plus: 0, beneficiarios: 0 };
+ window._notifSectionCounts = { solicitudes: 0, vendors: 0, pending: 0, reportes: 0, reportes_live: 0, reportes_pedidos: 0, reportes_historias: 0, feedback: 0, plus: 0, beneficiarios: 0, zonas: 0 };
 
  function _rebuildHeaderBadge() {
  const total = Object.values(window._notifSectionCounts).reduce((a, b) => a + b, 0);

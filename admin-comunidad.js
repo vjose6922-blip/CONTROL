@@ -354,13 +354,14 @@
     if (!cont) return;
     const r = await _apiGet({ action: 'zonasPorRevisar', token: getAdminToken() }).catch(() => null);
     const zonas = (r && r.ok && r.zonas) || [];
-    cont.innerHTML = zonas.length ? `<h3 style="margin:4px 0 8px;font-size:14px">📍 Nombres de zona propuestos</h3>` + zonas.map((z) => `
+    window._updateNotifTabBadge?.('zonas', zonas.length);
+    cont.innerHTML = !zonas.length ? '<p style="color:var(--modal-soft);text-align:center;padding:24px">No hay nombres de zona por revisar. Aparecen aquí cuando 2 vecinos proponen el mismo.</p>' : zonas.map((z) => `
       <div class="pending-product-row" style="display:block;padding:10px;margin-bottom:8px">
         <b>Zona ${escapeHtml(z.cp)}</b> <small>${escapeHtml(z.ciudad || '')}${z.nombre ? ` · hoy: "${escapeHtml(z.nombre)}"` : ' · sin nombre'}</small>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${z.propuestas.map((p) => `
           <button class="btn-approve" data-click="AdminComunidad.aprobarNombreZona" data-args="${dargs(z.id, p.texto)}">✓ ${escapeHtml(p.texto)} (${p.votos})</button>`).join('')}
           <button class="btn-reject" data-click="AdminComunidad.rechazarNombreZona" data-args="${dargs(z.id)}">Rechazar</button></div>
-      </div>`).join('') : '';
+      </div>`).join('');
   }
   async function aprobarNombreZona(id, texto) {
     showCustomPrompt({ title: 'Nombre de la zona', message: 'Puedes ajustarlo antes de aprobar (un código postal abarca varias colonias).', defaultValue: texto, confirmText: 'Aprobar',
@@ -768,6 +769,7 @@ function verProductoDesdeReporte(reporte) {
     loadPendingProducts,
     aprobarVendedor,
     aprobarNombreZona,
+    loadZonasNombres,
     rechazarNombreZona,
     verProductosSolicitud,
     rechazarVendedor,
