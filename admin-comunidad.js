@@ -68,6 +68,8 @@
     productosPorVendedor: CATALOGO_API_URL_COMUNIDAD,
     zonasPorRevisar: CATALOGO_API_URL_COMUNIDAD,
     resolverNombreZona: CATALOGO_API_URL_COMUNIDAD,
+    listarZonas: CATALOGO_API_URL_COMUNIDAD,
+    eliminarZona: CATALOGO_API_URL_COMUNIDAD,
     listarTodoComunidad: CATALOGO_API_URL_COMUNIDAD,
     aprobarProductoComunidad: CATALOGO_API_URL_COMUNIDAD,
     rechazarProductoComunidad: CATALOGO_API_URL_COMUNIDAD,
@@ -368,13 +370,54 @@
       onConfirm: async (nombre) => {
         const r = await _apiPost({ action: 'resolverNombreZona', id, nombre, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
         _msg(r.ok ? ' Nombre aprobado' : ' ' + r.error, r.ok ? 'success' : 'error');
-        loadZonasNombres();
+        loadZonasNombres(); loadTodasZonas();
       } });
   }
   async function rechazarNombreZona(id) {
     const r = await _apiPost({ action: 'resolverNombreZona', id, rechazar: '1', token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
     _msg(r.ok ? ' Propuesta rechazada' : ' ' + r.error, r.ok ? 'success' : 'error');
     loadZonasNombres();
+  }
+
+  // Todas las zonas (con nombre, con propuestas o solo con vendedores): buscar, editar el nombre o eliminarlo.
+  let _zonas = [];
+  async function loadTodasZonas() {
+    const cont = document.getElementById('admin-todas-zonas'), q = document.getElementById('zonas-buscar');
+    if (!cont) return;
+    if (q && !q._ok) { q._ok = true; q.addEventListener('input', pintarTodasZonas); }
+    cont.innerHTML = window.znrSkeletonRows(2);
+    const r = await _apiGet({ action: 'listarZonas', token: getAdminToken() }).catch(() => null);
+    _zonas = (r && r.ok && r.zonas) || [];
+    pintarTodasZonas();
+  }
+  function pintarTodasZonas() {
+    const cont = document.getElementById('admin-todas-zonas'), q = (document.getElementById('zonas-buscar')?.value || '').toLowerCase().trim();
+    const l = _zonas.filter((z) => !q || [z.cp, z.nombre, z.ciudad].join(' ').toLowerCase().includes(q));
+    cont.innerHTML = l.length ? l.map((z) => `<div class="pending-product-row" style="display:flex;align-items:center;gap:8px;padding:10px;margin-bottom:6px">
+      <div style="flex:1;min-width:0"><b>${escapeHtml(z.nombre || 'Zona ' + z.cp)}</b> <small>· CP ${escapeHtml(z.cp)}</small><br>
+      <small style="opacity:.75">${escapeHtml(z.ciudad || 'Sin ciudad')} · ${z.vendedores} vendedor${z.vendedores === 1 ? '' : 'es'}${z.votos ? ` · ${z.votos} voto${z.votos === 1 ? '' : 's'}` : ''}${z.pendiente ? ' · por revisar' : ''}</small></div>
+      <button class="btn-approve" data-click="AdminComunidad.editarZona" data-args="${dargs(z.id)}">Editar</button>
+      ${z.guardada ? `<button class="btn-reject" data-click="AdminComunidad.eliminarZona" data-args="${dargs(z.id)}">Eliminar</button>` : ''}</div>`).join('')
+      : `<p style="color:var(--modal-soft);text-align:center;padding:16px">${_zonas.length ? 'Ninguna zona coincide.' : 'Aún no hay zonas: aparecen cuando los vendedores ponen su código postal.'}</p>`;
+  }
+  function editarZona(id) {
+    const z = _zonas.find((x) => x.id === id); if (!z) return;
+    showCustomPrompt({ title: `Nombre de la zona ${z.cp}`, message: 'Así la verán sus vecinos en Comunidad.', defaultValue: z.nombre, confirmText: 'Guardar',
+      onConfirm: async (nombre) => {
+        const r = await _apiPost({ action: 'resolverNombreZona', id, cp: z.cp, pais: z.pais, ciudad: z.ciudad, nombre, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
+        _msg(r.ok ? ' Nombre guardado' : ' ' + r.error, r.ok ? 'success' : 'error');
+        loadTodasZonas(); loadZonasNombres();
+      } });
+  }
+  function eliminarZona(id) {
+    const z = _zonas.find((x) => x.id === id); if (!z) return;
+    showCustomConfirm({ title: 'Eliminar zona', message: `Se borra el nombre "${z.nombre || 'sin nombre'}" y sus propuestas. Mientras haya vendedores con el código postal ${z.cp}, la zona seguirá apareciendo como "Zona ${z.cp}".`,
+      confirmText: 'Eliminar', cancelText: 'Cancelar',
+      onConfirm: async () => {
+        const r = await _apiPost({ action: 'eliminarZona', id, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
+        _msg(r.ok ? ' Zona eliminada' : ' ' + r.error, r.ok ? 'success' : 'error');
+        loadTodasZonas(); loadZonasNombres();
+      } });
   }
 
   async function loadPendingProducts() {
@@ -770,6 +813,9 @@ function verProductoDesdeReporte(reporte) {
     aprobarVendedor,
     aprobarNombreZona,
     loadZonasNombres,
+    loadTodasZonas,
+    editarZona,
+    eliminarZona,
     rechazarNombreZona,
     verProductosSolicitud,
     rechazarVendedor,

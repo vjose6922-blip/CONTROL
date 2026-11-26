@@ -430,7 +430,10 @@ border-radius: 8px;
  <h2><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true"><use href="#ic-map-pin"/></svg> Nombres de zona propuestos <span class="section-count znr-count zero" id="sc-zonas">0</span></h2>
  <button class="icon-button" data-click="AdminComunidad.loadZonasNombres" title="Actualizar" style="background:rgba(255,255,255,.15);color:#fff;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#ic-refresh"/></svg></button>
  </div>
- <div class="notif-section-body"><div id="admin-zonas-list"></div></div>
+ <div class="notif-section-body"><div id="admin-zonas-list"></div>
+ <div style="display:flex;align-items:center;gap:8px;margin:18px 0 8px"><h3 style="margin:0;font-size:14px;flex:1">Todas las zonas</h3>
+ <input id="zonas-buscar" type="search" placeholder="Buscar código postal, nombre o ciudad" style="flex:1;min-width:0;padding:7px 10px;border-radius:10px;border:1px solid #ddd;font:inherit;font-size:13px"></div>
+ <div id="admin-todas-zonas"></div></div>
  </div>
 
  <div class="notif-section" id="section-plus" style="display:none;">
