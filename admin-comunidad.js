@@ -313,7 +313,7 @@
       modal.innerHTML = `<div class="vendor-stats-box">
         <button id="vstats-close" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--modal-soft);"></button>
         <h3 id="vstats-title">Estadísticas</h3>
-        <div class="vstats-grid" id="vstats-grid"><p style="color:var(--modal-soft);text-align:center;grid-column:span 2">Cargando...</p></div>
+        <div class="vstats-grid" id="vstats-grid"><div style="grid-column:span 2"><span class="znr-carga" role="status" aria-label="Cargando"></span></div></div>
         <div id="vstats-products" style="margin-top:8px;max-height:260px;overflow-y:auto;"></div>
       </div>`;
       document.body.appendChild(modal);
@@ -324,7 +324,7 @@
     document.getElementById('vstats-title').textContent = ` ${nombre}`;
     const grid  = document.getElementById('vstats-grid');
     const prods = document.getElementById('vstats-products');
-    grid.innerHTML = '<p style="color:var(--modal-soft);text-align:center;grid-column:span 2">Cargando...</p>';
+    grid.innerHTML = '<div style="grid-column:span 2"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>';
     prods.innerHTML = '';
     _apiGet({ action: 'listarTodoComunidad', token: getAdminToken(), vendedor_uid: uid })
       .then(data => {
