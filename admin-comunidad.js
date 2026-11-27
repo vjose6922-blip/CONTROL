@@ -313,7 +313,7 @@
       modal.innerHTML = `<div class="vendor-stats-box">
         <button id="vstats-close" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--modal-soft);"></button>
         <h3 id="vstats-title">Estadísticas</h3>
-        <div class="vstats-grid" id="vstats-grid"><div style="grid-column:span 2"><span class="znr-carga" role="status" aria-label="Cargando"></span></div></div>
+        <div class="vstats-grid" id="vstats-grid"></div>
         <div id="vstats-products" style="margin-top:8px;max-height:260px;overflow-y:auto;"></div>
       </div>`;
       document.body.appendChild(modal);
@@ -324,8 +324,8 @@
     document.getElementById('vstats-title').textContent = ` ${nombre}`;
     const grid  = document.getElementById('vstats-grid');
     const prods = document.getElementById('vstats-products');
-    grid.innerHTML = '<div style="grid-column:span 2"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>';
-    prods.innerHTML = '';
+    grid.innerHTML = '<div class="znr-sk-filas" style="display:contents;--sk-alto:70px;--sk-r:12px;--sk-av:0px" role="status" aria-label="Cargando"><i></i><i></i><i></i><i></i></div>';
+    prods.innerHTML = '<div class="znr-sk-filas" style="--sk-alto:61px;--sk-r:0px;--sk-av:44px;--sk-av-r:8px;--sk-x:0px;--sk-gap:0px" role="status" aria-label="Cargando"><i></i><i></i><i></i></div>';
     _apiGet({ action: 'listarTodoComunidad', token: getAdminToken(), vendedor_uid: uid })
       .then(data => {
         const all       = data.products || [];

@@ -3008,13 +3008,19 @@ button, input, select, textarea { font-family: inherit; }
 .znr-carga{display:block;width:36px;height:36px;margin:28px auto;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 15%,#ff7a59,#f0566f,#c026d3);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));animation:znr-gira .8s linear infinite}
 .znr-carga.mini{display:inline-block;width:15px;height:15px;margin:0 6px -2px 0;vertical-align:baseline}
 @keyframes znr-gira{to{transform:rotate(1turn)}}
-.znr-sk,.znr-sk-filas{display:grid;gap:10px;width:100%}.znr-sk{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
-.znr-sk i,.znr-sk-filas i{display:block;position:relative;overflow:hidden;border-radius:16px;background-color:color-mix(in srgb,currentColor 6%,transparent);background-image:linear-gradient(100deg,transparent 30%,color-mix(in srgb,currentColor 9%,transparent) 50%,transparent 70%);background-size:200% 100%;background-repeat:no-repeat;animation:znr-brillo 1.3s linear infinite;box-shadow:none}
-.znr-sk i{height:240px;padding:8px}.znr-sk i::before{content:"";display:block;height:140px;border-radius:12px;background:color-mix(in srgb,currentColor 12%,transparent)}
-.znr-sk i::after{content:"";position:absolute;left:10px;right:10px;top:160px;height:60px;background:linear-gradient(color-mix(in srgb,currentColor 12%,transparent) 0 14px,transparent 14px 24px,color-mix(in srgb,currentColor 12%,transparent) 24px 38px,transparent 38px 48px,color-mix(in srgb,currentColor 8%,transparent) 48px);background-size:70% 100%;background-repeat:no-repeat}
-.znr-sk-filas i{height:64px}.znr-sk-filas i::before{content:"";position:absolute;left:12px;top:12px;width:40px;height:40px;border-radius:50%;background:color-mix(in srgb,currentColor 12%,transparent)}
-.znr-sk-filas i::after{content:"";position:absolute;left:64px;right:30%;top:16px;height:32px;background:linear-gradient(color-mix(in srgb,currentColor 12%,transparent) 0 12px,transparent 12px 20px,color-mix(in srgb,currentColor 8%,transparent) 20px);background-size:100% 100%}
+/* Filas fantasma: alto, espacio, radio y miniatura configurables para imitar cada lista real (medidas a 390 y 1280 px):
+   .acct = cuentas, .staff = estadísticas del personal, .prod = productos (lista o cuadrícula), .bann = banners de temporada. */
+.znr-sk-filas{display:grid;gap:var(--sk-gap,10px);width:100%;box-sizing:border-box}
+.znr-sk-filas i{display:block;position:relative;overflow:hidden;height:var(--sk-alto,64px);border-radius:var(--sk-r,16px);background-color:color-mix(in srgb,currentColor 6%,transparent);background-image:linear-gradient(100deg,transparent 30%,color-mix(in srgb,currentColor 9%,transparent) 50%,transparent 70%);background-size:200% 100%;background-repeat:no-repeat;animation:znr-brillo 1.3s linear infinite}
+.znr-sk-filas i::before{content:"";position:absolute;left:var(--sk-x,12px);top:calc(50% - var(--sk-av,40px)/2);width:var(--sk-av-w,var(--sk-av,40px));height:var(--sk-av,40px);border-radius:var(--sk-av-r,50%);background:color-mix(in srgb,currentColor 12%,transparent)}
+.znr-sk-filas i::after{content:"";position:absolute;left:calc(var(--sk-x,12px) + var(--sk-av-w,var(--sk-av,40px)) + 12px);right:30%;top:calc(50% - 16px);height:32px;background:linear-gradient(color-mix(in srgb,currentColor 12%,transparent) 0 12px,transparent 12px 20px,color-mix(in srgb,currentColor 8%,transparent) 20px)}
+.znr-sk-filas.acct{--sk-alto:150px;--sk-av:42px;--sk-x:15px}.znr-sk-filas.staff{--sk-alto:92px;--sk-r:10px;--sk-av:0px;--sk-gap:0px}
+.znr-sk-filas.prod{--sk-alto:72px;--sk-r:10px;--sk-av:0px;--sk-gap:6px}.znr-sk-filas.bann{--sk-alto:80px;--sk-r:14px;--sk-av:40px;--sk-av-w:96px;--sk-av-r:8px;--sk-x:11px}
+/* Productos en vista cuadrícula: las filas pasan a ser tarjetas (foto 4/3 + 103px de texto y botones), en las columnas reales */
+.admin-products-grid>.znr-sk-filas{display:contents}.admin-products-grid>.znr-sk-filas i{height:auto;padding-bottom:103px;border-radius:12px}
+.admin-products-grid>.znr-sk-filas i::before{position:static;display:block;width:auto;height:auto;aspect-ratio:4/3;border-radius:0}.admin-products-grid>.znr-sk-filas i::after{left:12px;top:auto;bottom:50px}
+@media (min-width:600px){.znr-sk-filas.acct{--sk-alto:109px}.znr-sk-filas.staff{--sk-alto:62px}.znr-sk-filas.prod{--sk-alto:51px;--sk-r:0px;--sk-gap:0px}.znr-sk-filas.bann{--sk-alto:60px}}
 @keyframes znr-brillo{from{background-position:150% 0}to{background-position:-50% 0}}
 .loader-text{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)} /* pantalla completa: solo el círculo */
 .loader-spinner{width:46px!important;height:46px!important;border:0!important;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 15%,#ff7a59,#f0566f,#c026d3)!important;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));animation:znr-gira .8s linear infinite!important}
-@media (prefers-reduced-motion:reduce){.znr-carga,.loader-spinner{animation-duration:2s!important}.znr-sk i,.znr-sk-filas i{animation:none}}
+@media (prefers-reduced-motion:reduce){.znr-carga,.loader-spinner{animation-duration:2s!important}.znr-sk-filas i{animation:none}}
