@@ -1109,7 +1109,6 @@ const _badgeAuto = document.getElementById("product-badge-auto");
 if (_badgeAuto) _badgeAuto.addEventListener("change", () => { document.getElementById("product-badge").disabled = _badgeAuto.checked; });
 
 async function loadAdminProducts() {
-  showLoader("Cargando productos...");
   try {
     const data = await apiRequest("GET", { action: "list" });
 
