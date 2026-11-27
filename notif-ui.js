@@ -19,6 +19,7 @@ if (section === 'beneficiarios' && typeof loadReportesBeneficiarios === 'functio
  if (section === 'reportes_pedidos' && typeof loadReportesPedidos === 'function') loadReportesPedidos();
  if (section === 'reportes_historias' && typeof loadReportesHistorias === 'function') loadReportesHistorias();
  if (section === 'feedback' && typeof loadFeedbackReportes === 'function') loadFeedbackReportes();
+ if (section === 'zonas') window.AdminComunidad?.loadTodasZonas();
  }
 
  function updateTabBadge(section, count) {
