@@ -1884,7 +1884,7 @@ window.openVendorStatsGlobal = async function() {
     modal.addEventListener('click', e => { if (e.target===modal) { modal.style.display='none'; const m=document.getElementById('gvs-action-menu'); if(m) m.style.display='none'; } });
   }
   modal.style.display = 'flex';
-  document.getElementById('gvs-summary').innerHTML = '<div style="grid-column:span 3"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>';
+  document.getElementById('gvs-summary').innerHTML = '<div class="znr-sk-filas" style="display:contents;--sk-alto:68px;--sk-r:14px;--sk-av:0px" role="status" aria-label="Cargando"><i></i><i></i><i></i></div>';
   document.getElementById('gvs-list').innerHTML = '';
   try {
     const [vRes, pRes] = await Promise.all([

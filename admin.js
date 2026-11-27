@@ -441,7 +441,7 @@ let _statsMetrica = "volumen";
 
 async function cargarEstadisticasStaff(dias) {
   const cont = document.getElementById("stats-staff-list");
-  if (cont) cont.innerHTML = '<div class="znr-sk-filas" role="status" aria-label="Cargando"><i></i><i></i><i></i></div>';
+  if (cont) cont.innerHTML = '<div class="znr-sk-filas staff" role="status" aria-label="Cargando"><i></i><i></i><i></i></div>';
   try {
     const diasSel = dias || document.getElementById("stats-dias-select")?.value || 30;
     const data = await apiRequest("GET", { action: "obtenerEstadisticasStaff", dias: diasSel });

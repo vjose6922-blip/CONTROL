@@ -100,7 +100,7 @@
           </div></details>
           <div style="display:flex;gap:8px;"><button type="submit" class="primary-button" style="flex:1">Guardar</button><button type="reset" class="text-button">Limpiar</button></div>
         </form>
-        <div id="banners-lista"><div class="znr-sk-filas" role="status" aria-label="Cargando"><i></i><i></i><i></i></div></div>
+        <div id="banners-lista"><div class="znr-sk-filas bann" role="status" aria-label="Cargando"><i></i><i></i><i></i></div></div>
       </div></div><style>${CSS}</style>`; // el <style> al final: tools-page.js toma el primer hijo como la tarjeta
     document.body.appendChild(modal);
     document.getElementById('btn-close-banners').onclick = () => modal.remove();
