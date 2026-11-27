@@ -1231,7 +1231,7 @@ window.adminVerClipReporteLive = async function(reporteId, btn) {
         <strong>${escapeHtml(titulo || 'Clip del reporte')}<small id="clip-sub"></small></strong>
         <button type="button" class="clip-cerrar" id="clip-cerrar" aria-label="Cerrar">${Icon('x',{size:16})}</button>
       </div>
-      <div id="clip-body"><p class="clip-nota">Cargando clip…</p></div>
+      <div id="clip-body"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>
     </div>`;
   document.body.appendChild(overlay);
 
@@ -1511,7 +1511,7 @@ window.adminVerConversacionPedido = async function(reporteId, btn) {
         <strong id="ped-titulo">Conversación reportada<small id="ped-sub"></small></strong>
         <button type="button" class="ped-cerrar" id="ped-cerrar" aria-label="Cerrar">${Icon('x',{size:16})}</button>
       </div>
-      <div id="ped-body"><p style="text-align:center;color:#cfd3e0;padding:18px;">Cargando conversación…</p></div>
+      <div id="ped-body"><div class="znr-sk-filas" role="status" aria-label="Cargando"><i></i><i></i><i></i></div></div>
     </div>`;
   document.body.appendChild(overlay);
   const onKey = (e) => { if (e.key === 'Escape') cerrar(); };
@@ -1790,7 +1790,7 @@ window.adminVerFeedback = async function(id) {
     <div class="fb-modal" role="dialog" aria-modal="true">
       <div class="fb-head"><strong id="fb-titulo">Reporte de feedback</strong>
         <button type="button" class="fb-cerrar" id="fb-cerrar" aria-label="Cerrar">${Icon('x',{size:16})}</button></div>
-      <div id="fb-body"><p style="text-align:center;color:#cfd3e0;padding:18px;">Cargando…</p></div>
+      <div id="fb-body"><div class="znr-sk-filas" role="status" aria-label="Cargando"><i></i><i></i><i></i></div></div>
     </div>`;
   document.body.appendChild(overlay);
   const onKey = (e) => { if (e.key === 'Escape') cerrar(); };

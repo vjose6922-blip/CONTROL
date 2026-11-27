@@ -735,7 +735,7 @@ async function openDonacionesStatsModal() {
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('heart')} Estadísticas de Donaciones</h2>
       <button id="btn-close-don-stats" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
-    <div id="don-stats-body" style="padding:20px;">Cargando…</div>
+    <div id="don-stats-body" style="padding:20px;"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>
   </div>`;
   document.body.appendChild(modal);
   document.getElementById('btn-close-don-stats').onclick = () => modal.remove();
@@ -889,7 +889,7 @@ async function openAnalyticsModal(period, source) {
     <div style="padding:10px 20px 0;display:flex;gap:6px;">
       ${['day','week','month','all'].map(p => `<button class="an-period-btn" data-period="${p}" style="flex:1;padding:8px 0;border-radius:30px;border:1px solid ${p===period ? 'transparent' : 'rgba(127,127,127,.22)'};background:${p===period ? 'var(--gradient-accent)' : 'rgba(127,127,127,.22)'};color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;">${periodLabels[p]}</button>`).join('')}
     </div>
-    <div id="an-body" style="padding:18px 20px;">Cargando…</div>
+    <div id="an-body" style="padding:18px 20px;"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>
   </div>`;
   document.body.appendChild(modal);
   document.getElementById('btn-close-analytics').onclick = () => modal.remove();
@@ -1157,7 +1157,7 @@ async function openPlanPlusResumenModal() {
       <select id="ppr-estado-select" style="width:100%;padding:10px;margin-bottom:8px;border-radius:10px;border:1.5px solid var(--modal-border);background:var(--modal-bg);color:var(--modal-text);"></select>
       <select id="ppr-ciudad-select" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--modal-border);background:var(--modal-bg);color:var(--modal-text);"></select>
     </div>` : ''}
-    <div id="ppr-body" style="padding:18px 20px;">Cargando…</div>
+    <div id="ppr-body" style="padding:18px 20px;"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>
   </div>`;
   document.body.appendChild(modal);
   if (esMaster) enlazarEstadoCiudad(document.getElementById('ppr-estado-select'), document.getElementById('ppr-ciudad-select'), 'Todas (global)');
@@ -1168,7 +1168,7 @@ async function openPlanPlusResumenModal() {
   const fmtMoney = v => '$' + Number(v || 0).toLocaleString('es-MX');
 
   async function cargar(ciudad) {
-    bodyEl.innerHTML = 'Cargando…';
+    bodyEl.innerHTML = '<span class="znr-carga" role="status" aria-label="Cargando"></span>';
     try {
       if (!token) throw new Error('Sin sesión de admin');
       const params = { action: 'obtenerResumenPlanPlus', token };
@@ -1397,7 +1397,7 @@ function openErrorMonitorModal() {
         </select>
       </div>
       <div id="em-list" style="font-size:13px;line-height:1.6">
-        <p style="color:var(--modal-muted);text-align:center;padding:20px">Cargando...</p>
+        <div class="znr-sk-filas" role="status" aria-label="Cargando"><i></i><i></i><i></i></div>
       </div>
     </div>
   </div>`;
@@ -1412,7 +1412,7 @@ function openErrorMonitorModal() {
 window.loadErrorLog = function() {
   const list = document.getElementById('em-list');
   if (!list) return;
-  list.innerHTML = '<p style="color:var(--modal-muted);text-align:center;padding:20px">' + Icon('clock') + ' Cargando errores...</p>';
+  list.innerHTML = '<div class="znr-sk-filas" role="status" aria-label="Cargando"><i></i><i></i><i></i></div>';
   const api   = window.ADMIN_API_URL;
   const token = getAdminToken();
 
@@ -1558,7 +1558,7 @@ async function openSugerenciasConfiableModal() {
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('lock')} Sugerencias: Vendedor confiable</h2>
       <button id="btn-close-sugerencias-confiable" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
-    <div id="sc-body" style="padding:18px 20px;">Cargando…</div>
+    <div id="sc-body" style="padding:18px 20px;"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>
   </div>`;
   document.body.appendChild(modal);
   document.getElementById('btn-close-sugerencias-confiable').onclick = () => modal.remove();
@@ -1688,7 +1688,7 @@ async function openCatalogoSaludModal() {
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('stats')} Salud del catálogo</h2>
       <button id="btn-close-cat-salud" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
-    <div id="cat-salud-body" style="padding:18px 20px;">Cargando…</div>
+    <div id="cat-salud-body" style="padding:18px 20px;"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>
   </div>`;
   document.body.appendChild(modal);
   document.getElementById('btn-close-cat-salud').onclick = () => modal.remove();
@@ -1738,7 +1738,7 @@ async function openVendedoresSinCiudadModal() {
       <h2 style="margin:0;font-size:1rem;font-weight:800;">${Icon('community')} Vendedores sin ciudad</h2>
       <button id="btn-close-sinciudad" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--modal-muted);">×</button>
     </div>
-    <div id="vsc-body" style="padding:18px 20px;">Cargando…</div>
+    <div id="vsc-body" style="padding:18px 20px;"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>
   </div>`;
   document.body.appendChild(modal);
   document.getElementById('btn-close-sinciudad').onclick = () => modal.remove();
@@ -1884,7 +1884,7 @@ window.openVendorStatsGlobal = async function() {
     modal.addEventListener('click', e => { if (e.target===modal) { modal.style.display='none'; const m=document.getElementById('gvs-action-menu'); if(m) m.style.display='none'; } });
   }
   modal.style.display = 'flex';
-  document.getElementById('gvs-summary').innerHTML = '<p style="color:var(--modal-soft);grid-column:span 3;text-align:center;">Cargando...</p>';
+  document.getElementById('gvs-summary').innerHTML = '<div style="grid-column:span 3"><span class="znr-carga" role="status" aria-label="Cargando"></span></div>';
   document.getElementById('gvs-list').innerHTML = '';
   try {
     const [vRes, pRes] = await Promise.all([

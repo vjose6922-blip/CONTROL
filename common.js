@@ -175,7 +175,7 @@ function populateSizeFilterGlobal() {
 window.fetchFilterOptions = fetchFilterOptions;
 window.populateFilterSelects = populateFilterSelects;
 
-function showLoader(text = "Cargando...") {
+function showLoader(text = "Cargando...") { // pantalla completa: solo el círculo (el texto queda oculto para lectores de pantalla)
 let loader = document.getElementById("global-loader");
 if (!loader) {
 loader = document.createElement("div");
