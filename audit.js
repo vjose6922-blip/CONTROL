@@ -22,7 +22,7 @@ const TIPO_LABELS = {
     aprobarBeneficiario: "Aprobar beneficiario", rechazarBeneficiario: "Rechazar beneficiario",
     aprobarSolicitudBeneficiario: "Aprobar solicitud de beneficiario", rechazarSolicitudBeneficiario: "Rechazar solicitud de beneficiario",
     aprobarProductoComunidad: "Aprobar producto de comunidad", rechazarProductoComunidad: "Rechazar producto de comunidad",
-    aprobarNombreZona: "Aprobar o editar nombre de zona", rechazarNombreZona: "Rechazar nombre de zona", eliminarZona: "Eliminar nombre de zona",
+    aprobarNombreZona: "Aprobar o editar colonias", rechazarNombreZona: "Rechazar colonia propuesta", eliminarZona: "Eliminar colonias de un código postal",
     marcarReporteRevisado: "Marcar reporte revisado", marcarReporteLiveRevisado: "Marcar reporte de live revisado",
     verConversacionPedido: "Revisar conversación reportada", resolverReportePedido: "Resolver reporte de pedido personalizado", resolverReporteHistoria: "Resolver reporte de historia",
     crearAdmin: "Crear admin", desactivarAdmin: "Desactivar admin", reactivarAdmin: "Reactivar admin",

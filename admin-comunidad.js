@@ -357,18 +357,18 @@
     const r = await _apiGet({ action: 'zonasPorRevisar', token: getAdminToken() }).catch(() => null);
     const zonas = (r && r.ok && r.zonas) || [];
     window._updateNotifTabBadge?.('zonas', zonas.length);
-    cont.innerHTML = !zonas.length ? '<p style="color:var(--modal-soft);text-align:center;padding:24px">No hay nombres de zona por revisar. Aparecen aquí cuando 2 vecinos proponen el mismo.</p>' : zonas.map((z) => `
+    cont.innerHTML = !zonas.length ? '<p style="color:var(--modal-soft);text-align:center;padding:24px">No hay colonias por revisar. Aparecen aquí cuando 2 vecinos proponen la misma.</p>' : zonas.map((z) => `
       <div class="pending-product-row" style="display:block;padding:10px;margin-bottom:8px">
-        <b>Zona ${escapeHtml(z.cp)}</b> <small>${escapeHtml(z.ciudad || '')}${z.nombre ? ` · hoy: "${escapeHtml(z.nombre)}"` : ' · sin nombre'}</small>
+        <b>Zona ${escapeHtml(z.cp)}</b> <small>${escapeHtml(z.ciudad || '')} · ${(z.colonias || []).length ? 'ya tiene: ' + escapeHtml(z.colonias.join(', ')) : 'sin colonias'}</small>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${z.propuestas.map((p) => `
           <button class="btn-approve" data-click="AdminComunidad.aprobarNombreZona" data-args="${dargs(z.id, p.texto)}">✓ ${escapeHtml(p.texto)} (${p.votos})</button>`).join('')}
           <button class="btn-reject" data-click="AdminComunidad.rechazarNombreZona" data-args="${dargs(z.id)}">Rechazar</button></div>
       </div>`).join('');
   }
   async function aprobarNombreZona(id, texto) {
-    showCustomPrompt({ title: 'Nombre de la zona', message: 'Puedes ajustarlo antes de aprobar (un código postal abarca varias colonias).', defaultValue: texto, confirmText: 'Aprobar',
+    showCustomPrompt({ title: 'Nueva colonia', message: 'Se agrega como grupo de ese código postal (las que ya tiene se quedan). Puedes ajustar el nombre antes de aprobar.', defaultValue: texto, confirmText: 'Aprobar',
       onConfirm: async (nombre) => {
-        const r = await _apiPost({ action: 'resolverNombreZona', id, nombre, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
+        const r = await _apiPost({ action: 'resolverNombreZona', id, nombre, propuesta: texto, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
         _msg(r.ok ? ' Nombre aprobado' : ' ' + r.error, r.ok ? 'success' : 'error');
         loadZonasNombres(); loadTodasZonas();
       } });
@@ -392,9 +392,9 @@
   }
   function pintarTodasZonas() {
     const cont = document.getElementById('admin-todas-zonas'), q = (document.getElementById('zonas-buscar')?.value || '').toLowerCase().trim();
-    const l = _zonas.filter((z) => !q || [z.cp, z.nombre, z.ciudad].join(' ').toLowerCase().includes(q));
+    const l = _zonas.filter((z) => !q || [z.cp, (z.colonias || []).join(' '), z.ciudad].join(' ').toLowerCase().includes(q));
     cont.innerHTML = l.length ? l.map((z) => `<div class="pending-product-row" style="display:flex;align-items:center;gap:8px;padding:10px;margin-bottom:6px">
-      <div style="flex:1;min-width:0"><b>${escapeHtml(z.nombre || 'Zona ' + z.cp)}</b> <small>· CP ${escapeHtml(z.cp)}</small><br>
+      <div style="flex:1;min-width:0"><b>CP ${escapeHtml(z.cp)}</b> <small>· ${(z.colonias || []).length ? escapeHtml(z.colonias.join(', ')) : 'sin colonias'}</small><br>
       <small style="opacity:.75">${escapeHtml(z.ciudad || 'Sin ciudad')} · ${z.vendedores} vendedor${z.vendedores === 1 ? '' : 'es'}${z.votos ? ` · ${z.votos} voto${z.votos === 1 ? '' : 's'}` : ''}${z.pendiente ? ' · por revisar' : ''}</small></div>
       <button class="btn-approve" data-click="AdminComunidad.editarZona" data-args="${dargs(z.id)}">Editar</button>
       ${z.guardada ? `<button class="btn-reject" data-click="AdminComunidad.eliminarZona" data-args="${dargs(z.id)}">Eliminar</button>` : ''}</div>`).join('')
@@ -402,16 +402,16 @@
   }
   function editarZona(id) {
     const z = _zonas.find((x) => x.id === id); if (!z) return;
-    showCustomPrompt({ title: `Nombre de la zona ${z.cp}`, message: 'Así la verán sus vecinos en Comunidad.', defaultValue: z.nombre, confirmText: 'Guardar',
-      onConfirm: async (nombre) => {
-        const r = await _apiPost({ action: 'resolverNombreZona', id, cp: z.cp, pais: z.pais, ciudad: z.ciudad, nombre, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
+    showCustomPrompt({ title: `Colonias del CP ${z.cp}`, message: 'Sepáralas con comas (ej. Las Torres, El Jardín). Cada una es un grupo en Comunidad; si cambias un nombre, quien estaba en ella tendrá que volver a elegirla.', defaultValue: (z.colonias || []).join(', '), confirmText: 'Guardar',
+      onConfirm: async (colonias) => {
+        const r = await _apiPost({ action: 'resolverNombreZona', id, cp: z.cp, pais: z.pais, ciudad: z.ciudad, colonias, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
         _msg(r.ok ? ' Nombre guardado' : ' ' + r.error, r.ok ? 'success' : 'error');
         loadTodasZonas(); loadZonasNombres();
       } });
   }
   function eliminarZona(id) {
     const z = _zonas.find((x) => x.id === id); if (!z) return;
-    showCustomConfirm({ title: 'Eliminar zona', message: `Se borra el nombre "${z.nombre || 'sin nombre'}" y sus propuestas. Mientras haya vendedores con el código postal ${z.cp}, la zona seguirá apareciendo como "Zona ${z.cp}".`,
+    showCustomConfirm({ title: 'Eliminar zona', message: `Se borran sus colonias (${(z.colonias || []).join(', ') || 'ninguna'}) y sus propuestas. Mientras haya vendedores con el código postal ${z.cp}, la zona seguirá apareciendo como "Zona ${z.cp}".`,
       confirmText: 'Eliminar', cancelText: 'Cancelar',
       onConfirm: async () => {
         const r = await _apiPost({ action: 'eliminarZona', id, token: getAdminToken() }).catch((e) => ({ ok: false, error: e.message }));
