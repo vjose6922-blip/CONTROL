@@ -1,13 +1,9 @@
 // Banners de temporada (Master): imagen sin texto + texto encima + fechas en que se muestran en Comunidad.
 // Se leen de RTDB (banners_temporada) y se guardan por admin-api. La vista previa usa banner-temporada.js (igual que el sitio).
-// Los nombres de temporada deben coincidir con temporadas.js del sitio.
+// Las temporadas salen de temporadas.js del sitio (Tools.html lo carga desde znrcommunity.com): una sola lista.
 (function () {
   const RTDB = 'https://znr-live-default-rtdb.firebaseio.com/banners_temporada.json';
-  const TEMPORADAS = {
-    Festividades: ['Año Nuevo', 'Día de Reyes', 'Día de la Candelaria', 'San Valentín (Amor y Amistad)', 'Día Internacional de la Mujer', 'Semana Santa', 'Día del Niño', 'Día de las Madres', 'Día del Padre', 'Día del Maestro', 'Fiestas Patrias (Septiembre)', 'Halloween', 'Día de Muertos', 'Acción de Gracias', 'Posadas', 'Navidad', 'Fin de Año'],
-    'Festivales escolares': ['Día de la Constitución', 'Día de la Bandera', 'Festival del Amor y la Amistad', 'Festival de primavera', 'Festival del Día del Niño', 'Batalla de Puebla', 'Festival del Día de las Madres', 'Clausura y fin de curso', 'Desfile y kermés de Fiestas Patrias', 'Día de la Raza', 'Día de las Naciones Unidas', 'Festival de Halloween y Día de Muertos', 'Desfile de la Revolución', 'Pastorela y posada escolar'],
-    Temporadas: ['Regreso a clases', 'Vacaciones de verano', 'Vacaciones de invierno', 'Graduaciones', 'Temporada de bodas', 'Hot Sale', 'Buen Fin', 'Black Friday', 'Rebajas de fin de temporada']
-  };
+  const TEMPORADAS = window.ZNR_TEMPORADAS ? window.ZNR_TEMPORADAS.grupos() : {};
   const POS = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'];
   const CSS = `@font-face { font-family: 'ZNR Serif'; font-weight: 700; src: url('fonts/playfair-display-latin-700-normal.woff2') format('woff2'); }
 #banner-form { display: grid; gap: 12px; border: 1px solid var(--modal-border, #eee); border-radius: 16px; padding: 16px; margin-bottom: 18px; }
@@ -79,8 +75,9 @@
           <details name="bt"><summary>Diseño del texto <small data-res="diseno"></small></summary><div class="bt-cuerpo">
             <div class="fila"><label>Posición del texto${pickPos('pos', 'ml')}</label>
               <label>Posición del botón${pickPos('botonPos', '')}<span class="bt-chk"><input type="radio" name="botonPos" value="txt" checked> Debajo del texto</span></label></div>
-            <div class="fila"><label>Tamaño del texto<select name="escala"><option value="0.85">Chico</option><option value="1" selected>Normal</option><option value="1.15">Grande</option><option value="1.3">Muy grande</option></select></label>
+            <div class="fila"><label>Tamaño del texto<select name="escala"><option value="0.55">Mini</option><option value="0.7">Muy chico</option><option value="0.85">Chico</option><option value="1" selected>Normal</option><option value="1.15">Grande</option><option value="1.3">Muy grande</option></select></label>
               <label>Color del texto<select name="tema"><option value="oscuro">Oscuro (imagen clara)</option><option value="claro">Blanco (imagen oscura)</option></select></label></div>
+            <p class="bt-libre" style="margin:0;font-size:12px;color:var(--modal-muted)">💡 Arrastra el texto en la vista previa para ponerlo donde quieras. <button type="button" class="text-button" id="bt-cuadricula" hidden>Volver a la cuadrícula</button><input type="hidden" name="x"><input type="hidden" name="y"></p>
             <label>Fondo detrás del texto<select name="degradado"><option value="si">Sombra suave</option><option value="recuadro">Recuadro (se lee sobre cualquier foto)</option><option value="no">Nada</option></select></label>
           </div></details>
           <details name="bt"><summary>Dónde y cuándo <small data-res="cuando"></small></summary><div class="bt-cuerpo">
@@ -141,10 +138,12 @@
     const preview = (sinSugerencia) => {
       const d = Object.fromEntries(new FormData(form)), img = avisoUrl || imgUrl;
       prev.innerHTML = znrBanner.html({ ...d, imagen: imgUrl });
+      cuadricula.hidden = d.x === '';
+      Object.assign(prev.querySelector('.com-banner-txt').style, { cursor: 'move', touchAction: 'none' }); // solo el texto: el resto deja desplazar
       if (sinSugerencia !== true) sugerir(d, false);
       document.getElementById('banner-aviso').hidden = !znrBanner.desborda(prev.firstElementChild);
       const fecha = (f) => f ? new Date(f + 'T12:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : '?';
-      Object.entries({ texto: d.titulo || 'Falta el título', diseno: { '0.85': 'Chico', 1: 'Normal', '1.15': 'Grande', '1.3': 'Muy grande' }[d.escala] + ' · ' + (d.tema === 'claro' ? 'blanco' : 'oscuro'),
+      Object.entries({ texto: d.titulo || 'Falta el título', diseno: { '0.55': 'Mini', '0.7': 'Muy chico', '0.85': 'Chico', 1: 'Normal', '1.15': 'Grande', '1.3': 'Muy grande' }[d.escala] + ' · ' + (d.tema === 'claro' ? 'blanco' : 'oscuro'),
         cuando: `${fecha(d.inicio)} → ${fecha(d.fin)}`, aviso: d.aviso === 'no' ? 'No avisar' : 'Avisar al empezar' }).forEach(([k, v]) => { form.querySelector(`[data-res="${k}"]`).textContent = v; });
       // Así se verá la notificación en Android (en iPhone sale sin imagen).
       document.getElementById('aviso-prev').innerHTML = d.aviso === 'no' ? '' : `<div class="bt-noti"><i>Z&amp;R</i><div><small>Z&amp;R Comunidad · ${avisoUrl ? 'imagen propia' : 'imagen del banner'}</small>
@@ -164,7 +163,25 @@
       e.target.disabled = false;
     };
     try { form.pruebaTel.value = localStorage.getItem('znr_prueba_tel') || ''; } catch (_) {}
+    // Posición libre: arrastrar el texto en la vista previa guarda x/y (0–100); elegir un punto de la cuadrícula la quita.
+    const cuadricula = document.getElementById('bt-cuadricula'), sinLibre = () => { form.x.value = form.y.value = ''; };
+    cuadricula.onclick = () => { sinLibre(); preview(); };
+    let arrastre = null;
+    prev.onpointerdown = (e) => {
+      const t = e.target.closest('.com-banner-txt'); if (!t) return;
+      const r = t.getBoundingClientRect(); arrastre = { dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: r.height };
+      prev.setPointerCapture(e.pointerId); e.preventDefault();
+    };
+    prev.onpointermove = (e) => {
+      if (!arrastre) return;
+      const B = prev.firstElementChild.getBoundingClientRect(), mx = B.width * .04, my = B.width * .03; // márgenes del banner (4cqw / 3cqw)
+      const pct = (v, libre) => Math.round(Math.min(100, Math.max(0, libre > 0 ? v / libre * 100 : 0)));
+      form.x.value = pct(e.clientX - arrastre.dx - B.left - mx, B.width - 2 * mx - arrastre.w); form.y.value = pct(e.clientY - arrastre.dy - B.top - my, B.height - 2 * my - arrastre.h);
+      preview(true);
+    };
+    prev.onpointerup = prev.onpointercancel = () => { if (arrastre) { arrastre = null; preview(); } };
     form.oninput = (e) => {
+      if (e.target.name === 'pos') sinLibre();
       if (e.target.name === 'archivoAviso' && e.target.files[0]) avisoUrl = URL.createObjectURL(e.target.files[0]);
       if (e.target.name === 'archivo' && e.target.files[0]) { imgUrl = URL.createObjectURL(e.target.files[0]); preview(true); return sugerir(Object.fromEntries(new FormData(form)), true); }
       preview();
